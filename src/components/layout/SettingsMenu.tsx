@@ -42,7 +42,7 @@ export function SettingsMenu() {
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      <mdui-dropdown open={open} onChange={(e: any) => setOpen(e.target.open)}>
+      <mdui-dropdown open={open} onChange={(e) => setOpen((e.target as HTMLElement & { open: boolean }).open)}>
         <mdui-fab slot="trigger" variant="tertiary">
           <Icon icon="mdi:cog" className="h-5 w-5" />
         </mdui-fab>
@@ -90,4 +90,3 @@ export function SettingsMenu() {
     </div>
   );
 }
-

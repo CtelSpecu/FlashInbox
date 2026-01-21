@@ -1,4 +1,4 @@
-import { Database } from 'bun:sqlite';
+import { Database, type SQLQueryBindings } from 'bun:sqlite';
 
 type D1AllResult<T> = { results: T[] };
 type D1FirstResult<T> = T | null;
@@ -6,14 +6,14 @@ type D1RunResult = { meta: { changes: number } };
 
 class D1PreparedStatement {
   private stmt: ReturnType<Database['prepare']>;
-  private params: any[];
+  private params: SQLQueryBindings[];
 
-  constructor(stmt: ReturnType<Database['prepare']>, params: any[] = []) {
+  constructor(stmt: ReturnType<Database['prepare']>, params: SQLQueryBindings[] = []) {
     this.stmt = stmt;
     this.params = params;
   }
 
-  bind(...params: any[]) {
+  bind(...params: SQLQueryBindings[]) {
     return new D1PreparedStatement(this.stmt, params);
   }
 
@@ -53,5 +53,3 @@ export async function createTestDbFromMigrations(): Promise<{ sqlite: Database; 
 
   return { sqlite, d1: createTestD1(sqlite) };
 }
-
-

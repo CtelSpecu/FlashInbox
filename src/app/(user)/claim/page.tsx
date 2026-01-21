@@ -79,11 +79,13 @@ export default function ClaimPage() {
       setKeyExpiresAt(res.data.mailbox.keyExpiresAt);
       setConfirmSaved(false);
       setSessionToken(res.data.session.token);
-    } catch (e: any) {
-      const msg = typeof e?.message === 'string' ? e.message : t.claim.claimFailed;
-      const retryAfterMs = e?.retryAfter
-        ? ` ${format(t.home.retryAfter, { seconds: Math.ceil(e.retryAfter / 1000) })}`
-        : '';
+    } catch (e: unknown) {
+      const err = e as { message?: unknown; retryAfter?: unknown };
+      const msg = typeof err.message === 'string' ? err.message : t.claim.claimFailed;
+      const retryAfterMs =
+        typeof err.retryAfter === 'number'
+          ? ` ${format(t.home.retryAfter, { seconds: Math.ceil(err.retryAfter / 1000) })}`
+          : '';
       setErrorText(`${msg}${retryAfterMs}`);
     } finally {
       setLoading(false);
@@ -120,7 +122,7 @@ export default function ClaimPage() {
           placeholder={format(t.claim.emailPlaceholder, { domain: defaultDomain })}
           clearable
           value={email}
-          onInput={(e: any) => setEmail(e.target.value)}
+          onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
           disabled={loading}
         >
           <Icon icon="mdi:email" slot="icon" />
@@ -163,7 +165,7 @@ export default function ClaimPage() {
             <div className="text-xs opacity-70">
               {format(t.claim.keyExpires, { time: keyExpiresAt ? new Date(keyExpiresAt).toLocaleString() : t.common.na })}
             </div>
-            <mdui-checkbox checked={confirmSaved} onChange={(e: any) => setConfirmSaved(e.target.checked)}>
+            <mdui-checkbox checked={confirmSaved} onChange={(e) => setConfirmSaved((e.target as HTMLInputElement).checked)}>
               {t.claim.keySavedConfirm}
             </mdui-checkbox>
           </div>

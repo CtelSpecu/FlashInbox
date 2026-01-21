@@ -31,7 +31,7 @@ export async function adminApiFetch<T>(
   }
 
   const res = await fetch(path, { ...init, headers });
-  let json: any = null;
+  let json: unknown = null;
   try {
     json = await res.json();
   } catch {
@@ -39,18 +39,27 @@ export async function adminApiFetch<T>(
   }
 
   if (!res.ok) {
+    const jsonRecord =
+      typeof json === 'object' && json !== null ? (json as Record<string, unknown>) : null;
+    const errorValue = jsonRecord?.error;
+    const errorRecord =
+      typeof errorValue === 'object' && errorValue !== null
+        ? (errorValue as Record<string, unknown>)
+        : null;
+    const message = typeof errorRecord?.message === 'string' ? errorRecord.message : null;
+    const retryAfter = typeof jsonRecord?.retryAfter === 'number' ? jsonRecord.retryAfter : undefined;
+
     const err = new AdminApiError(
-      (json && json?.error?.message) || `Request failed (${res.status})`,
+      message || `Request failed (${res.status})`,
       {
         status: res.status,
-        retryAfter: json?.retryAfter,
+        retryAfter,
       }
     );
-    if (json?.error?.code) err.code = String(json.error.code);
+    if (typeof errorRecord?.code === 'string') err.code = errorRecord.code;
     throw err;
   }
 
   return json as T;
 }
-
 

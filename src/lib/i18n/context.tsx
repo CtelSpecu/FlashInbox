@@ -4,7 +4,6 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   useCallback,
   useMemo,
   type ReactNode,
@@ -31,14 +30,7 @@ interface I18nProviderProps {
 }
 
 export function I18nProvider({ children }: I18nProviderProps) {
-  const [locale, setLocaleState] = useState<Locale>('en-US');
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const detected = detectLocale();
-    setLocaleState(detected);
-    setMounted(true);
-  }, []);
+  const [locale, setLocaleState] = useState<Locale>(() => detectLocale());
 
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);
@@ -68,15 +60,6 @@ export function I18nProvider({ children }: I18nProviderProps) {
     [locale, setLocale, t, format]
   );
 
-  // 避免 SSR 水合问题
-  if (!mounted) {
-    return (
-      <I18nContext.Provider value={value}>
-        {children}
-      </I18nContext.Provider>
-    );
-  }
-
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
 
@@ -92,4 +75,3 @@ export function useTranslation() {
   const { t, format } = useI18n();
   return { t, format };
 }
-

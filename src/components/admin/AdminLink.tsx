@@ -18,10 +18,9 @@ export function AdminLink({
   }, [href]);
 
   return (
-    <Link href={trackedHref as any} {...props}>
+    <Link href={trackedHref} {...props}>
       {children}
     </Link>
   );
 }
-
 

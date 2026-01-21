@@ -18,7 +18,7 @@ export interface NextRouteContext<TParams> {
 /**
  * 带管理员认证的 API 处理函数类型
  */
-export type AdminAuthenticatedHandler<TParams = {}> = (
+export type AdminAuthenticatedHandler<TParams = Record<string, never>> = (
   request: NextRequest,
   context: AdminAuthContext,
   routeContext: NextRouteContext<TParams>
@@ -102,7 +102,7 @@ async function verifyAdminSession(
  * 管理员认证中间件
  * 用于保护管理后台 API 路由
  */
-export function withAdminAuth<TParams = {}>(
+export function withAdminAuth<TParams = Record<string, never>>(
   handler: AdminAuthenticatedHandler<TParams>
 ): (request: NextRequest, routeContext: NextRouteContext<TParams>) => Promise<Response> {
   return async (request: NextRequest, routeContext: NextRouteContext<TParams>) => {
@@ -145,4 +145,3 @@ export async function verifyAdminToken(inputToken: string, storedToken: string):
 
   return result === 0;
 }
-

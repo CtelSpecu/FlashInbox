@@ -13,7 +13,7 @@ interface AddDomainRequest {
 async function getHandler(
   _request: NextRequest,
   _context: AdminAuthContext,
-  _routeContext: { params: Promise<{}> }
+  _routeContext: { params: Promise<Record<string, never>> }
 ): Promise<Response> {
   const env = getCloudflareEnv();
   const repos = createRepositories(env.DB);
@@ -36,7 +36,7 @@ async function getHandler(
 async function postHandler(
   request: NextRequest,
   context: AdminAuthContext,
-  _routeContext: { params: Promise<{}> }
+  _routeContext: { params: Promise<Record<string, never>> }
 ): Promise<Response> {
   const env = getCloudflareEnv();
   const repos = createRepositories(env.DB);
@@ -100,5 +100,4 @@ async function postHandler(
 
 export const GET = withAdminAuth(getHandler);
 export const POST = withAdminAuth(postHandler);
-
 

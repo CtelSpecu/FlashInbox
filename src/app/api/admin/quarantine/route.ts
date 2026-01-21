@@ -6,7 +6,7 @@ import { success } from '@/lib/utils/response';
 export const GET = withAdminAuth(async (
   request: NextRequest,
   _context: AdminAuthContext,
-  _routeContext: { params: Promise<{}> }
+  _routeContext: { params: Promise<Record<string, never>> }
 ) => {
   const env = getCloudflareEnv();
 
@@ -74,5 +74,4 @@ export const GET = withAdminAuth(async (
     },
   });
 });
-
 

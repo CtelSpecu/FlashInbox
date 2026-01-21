@@ -53,7 +53,7 @@ describe('API Integration Tests', () => {
       // Verify mailbox was created
       const mailbox = sqlite
         .prepare('SELECT * FROM mailboxes WHERE id = ?')
-        .get(mailboxId) as any;
+        .get(mailboxId) as { username: string; status: string; creation_type: string };
 
       expect(mailbox).toBeTruthy();
       expect(mailbox.username).toBe(username);
@@ -76,7 +76,7 @@ describe('API Integration Tests', () => {
 
       const mailbox = sqlite
         .prepare('SELECT * FROM mailboxes WHERE id = ?')
-        .get(mailboxId) as any;
+        .get(mailboxId) as { username: string; creation_type: string };
 
       expect(mailbox.username).toBe(username);
       expect(mailbox.creation_type).toBe('manual');
@@ -109,7 +109,7 @@ describe('API Integration Tests', () => {
 
       const mailbox = sqlite
         .prepare('SELECT * FROM mailboxes WHERE id = ?')
-        .get(mailboxId) as any;
+        .get(mailboxId) as { status: string; key_hash: string | null; key_expires_at: number | null };
 
       expect(mailbox.status).toBe('claimed');
       expect(mailbox.key_hash).toBeTruthy();
@@ -129,7 +129,7 @@ describe('API Integration Tests', () => {
 
       const mailbox = sqlite
         .prepare('SELECT creation_type FROM mailboxes WHERE id = ?')
-        .get(mailboxId) as any;
+        .get(mailboxId) as { creation_type: string };
 
       // Verify that manual mailboxes should not be claimable
       expect(mailbox.creation_type).toBe('manual');
@@ -161,7 +161,7 @@ describe('API Integration Tests', () => {
 
       const session = sqlite
         .prepare('SELECT * FROM sessions WHERE id = ?')
-        .get(sessionId) as any;
+        .get(sessionId) as { mailbox_id: string; expires_at: number };
 
       expect(session).toBeTruthy();
       expect(session.mailbox_id).toBe(mailboxId);
@@ -191,7 +191,7 @@ describe('API Integration Tests', () => {
 
       const session = sqlite
         .prepare('SELECT * FROM sessions WHERE id = ?')
-        .get(sessionId) as any;
+        .get(sessionId) as { expires_at: number };
 
       expect(session.expires_at).toBeLessThan(now);
     });
@@ -220,7 +220,7 @@ describe('API Integration Tests', () => {
 
       const message = sqlite
         .prepare('SELECT * FROM messages WHERE id = ?')
-        .get(messageId) as any;
+        .get(messageId) as { from_addr: string; subject: string; status: string };
 
       expect(message).toBeTruthy();
       expect(message.from_addr).toBe('sender@other.com');
@@ -246,14 +246,18 @@ describe('API Integration Tests', () => {
       );
 
       // Initially unread
-      let message = sqlite.prepare('SELECT read_at FROM messages WHERE id = ?').get(messageId) as any;
+      let message = sqlite.prepare('SELECT read_at FROM messages WHERE id = ?').get(messageId) as {
+        read_at: number | null;
+      };
       expect(message.read_at).toBeNull();
 
       // Mark as read
       const readAt = Date.now();
       sqlite.exec(`UPDATE messages SET read_at = ${readAt} WHERE id = '${messageId}'`);
 
-      message = sqlite.prepare('SELECT read_at FROM messages WHERE id = ?').get(messageId) as any;
+      message = sqlite.prepare('SELECT read_at FROM messages WHERE id = ?').get(messageId) as {
+        read_at: number | null;
+      };
       expect(message.read_at).toBe(readAt);
     });
   });
@@ -280,7 +284,7 @@ describe('API Integration Tests', () => {
 
       const rateLimit = sqlite
         .prepare('SELECT count FROM rate_limits WHERE key_hash = ? AND action = ?')
-        .get(keyHash, 'create') as any;
+        .get(keyHash, 'create') as { count: number };
 
       expect(rateLimit.count).toBe(3);
     });
@@ -297,7 +301,7 @@ describe('API Integration Tests', () => {
 
       const rateLimit = sqlite
         .prepare('SELECT cooldown_until FROM rate_limits WHERE key_hash = ?')
-        .get(keyHash) as any;
+        .get(keyHash) as { cooldown_until: number | null };
 
       expect(rateLimit.cooldown_until).toBeGreaterThan(now);
     });
@@ -332,7 +336,7 @@ describe('API Integration Tests', () => {
 
       const quarantined = sqlite
         .prepare('SELECT * FROM quarantine WHERE id = ?')
-        .get(quarantineId) as any;
+        .get(quarantineId) as { status: string; matched_rule_id: number | null };
 
       expect(quarantined.status).toBe('pending');
       expect(quarantined.matched_rule_id).toBe(ruleId);
@@ -363,7 +367,7 @@ describe('API Integration Tests', () => {
 
       const quarantined = sqlite
         .prepare('SELECT status FROM quarantine WHERE id = ?')
-        .get(quarantineId) as any;
+        .get(quarantineId) as { status: string };
 
       expect(quarantined.status).toBe('released');
     });
@@ -381,7 +385,7 @@ describe('API Integration Tests', () => {
 
       const audit = sqlite
         .prepare('SELECT * FROM audit_logs WHERE id = ?')
-        .get(auditId) as any;
+        .get(auditId) as { action: string; success: number };
 
       expect(audit.action).toBe('user.create');
       expect(audit.success).toBe(1);
@@ -398,7 +402,7 @@ describe('API Integration Tests', () => {
 
       const audit = sqlite
         .prepare('SELECT * FROM audit_logs WHERE id = ?')
-        .get(auditId) as any;
+        .get(auditId) as { success: number; error_code: string | null };
 
       expect(audit.success).toBe(0);
       expect(audit.error_code).toBe('INVALID_CREDENTIALS');
@@ -419,7 +423,7 @@ describe('API Integration Tests', () => {
 
       const session = sqlite
         .prepare('SELECT * FROM admin_sessions WHERE id = ?')
-        .get(sessionId) as any;
+        .get(sessionId) as { fingerprint: string };
 
       expect(session).toBeTruthy();
       expect(session.fingerprint).toBe('fp-test');
@@ -447,15 +451,14 @@ describe('API Integration Tests', () => {
 
       const domainStat = sqlite
         .prepare('SELECT value FROM stats_daily WHERE date = ? AND domain_id = ? AND metric = ?')
-        .get(dateStr, domainId, 'messages_received') as any;
+        .get(dateStr, domainId, 'messages_received') as { value: number };
 
       const globalStat = sqlite
         .prepare('SELECT value FROM stats_daily WHERE date = ? AND domain_id IS NULL AND metric = ?')
-        .get(dateStr, 'messages_received') as any;
+        .get(dateStr, 'messages_received') as { value: number };
 
       expect(domainStat.value).toBe(42);
       expect(globalStat.value).toBe(100);
     });
   });
 });
-

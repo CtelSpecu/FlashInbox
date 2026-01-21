@@ -97,11 +97,13 @@ export default function HomePage() {
       const token = res.data.session.token;
       setSessionToken(token);
       router.push('/inbox');
-    } catch (e: any) {
-      const msg = typeof e?.message === 'string' ? e.message : t.home.createFailed;
-      const retryAfterMs = e?.retryAfter
-        ? ` ${format(t.home.retryAfter, { seconds: Math.ceil(e.retryAfter / 1000) })}`
-        : '';
+    } catch (e: unknown) {
+      const err = e as { message?: unknown; retryAfter?: unknown };
+      const msg = typeof err.message === 'string' ? err.message : t.home.createFailed;
+      const retryAfterMs =
+        typeof err.retryAfter === 'number'
+          ? ` ${format(t.home.retryAfter, { seconds: Math.ceil(err.retryAfter / 1000) })}`
+          : '';
       setErrorText(`${msg}${retryAfterMs}`);
     } finally {
       setLoading(false);
@@ -121,7 +123,7 @@ export default function HomePage() {
           <mdui-segmented-button-group
             selects="single"
             value={mode}
-            onChange={(e: any) => setMode(e.target.value)}
+            onChange={(e) => setMode((e.target as HTMLElement & { value: string }).value as CreateMode)}
           >
             <mdui-segmented-button value="random">
               <Icon icon="mdi:dice-multiple" slot="icon" />
@@ -139,7 +141,7 @@ export default function HomePage() {
             clearable
             disabled={mode !== 'manual' || loading}
             value={username}
-            onInput={(e: any) => setUsername(e.target.value)}
+            onInput={(e) => setUsername((e.target as HTMLInputElement).value)}
           >
             <Icon icon="mdi:account" slot="icon" />
           </mdui-text-field>
@@ -147,7 +149,7 @@ export default function HomePage() {
           <mdui-select
             label={t.home.domain}
             value={String(domainId ?? '')}
-            onChange={(e: any) => setDomainId(Number(e.target.value))}
+            onChange={(e) => setDomainId(Number((e.target as HTMLElement & { value: string }).value))}
           >
             {domains.length === 0 ? (
               <mdui-menu-item value={String(domainId ?? '')}>@{defaultDomain}</mdui-menu-item>

@@ -46,16 +46,13 @@ function applyAdminTheme(mode: ThemeMode) {
 }
 
 export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>('auto');
-  const [resolved, setResolved] = useState<'light' | 'dark'>('light');
+  const [theme, setThemeState] = useState<ThemeMode>(() => readStoredAdminTheme());
+  const [resolved, setResolved] = useState<'light' | 'dark'>(() =>
+    getResolvedTheme(readStoredAdminTheme())
+  );
 
   useEffect(() => {
-    const initial = readStoredAdminTheme();
-    setThemeState(initial);
-    const r = getResolvedTheme(initial);
-    setResolved(r);
-    applyAdminTheme(initial);
-
+    applyAdminTheme(theme);
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const onChange = () => {
       if (readStoredAdminTheme() !== 'auto') return;
@@ -65,7 +62,7 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
     };
     media.addEventListener('change', onChange);
     return () => media.removeEventListener('change', onChange);
-  }, []);
+  }, [theme]);
 
   const setTheme = useCallback((mode: ThemeMode) => {
     setThemeState(mode);
@@ -84,5 +81,4 @@ export function useAdminTheme(): AdminThemeContextValue {
   if (!ctx) throw new Error('useAdminTheme must be used within AdminThemeProvider');
   return ctx;
 }
-
 

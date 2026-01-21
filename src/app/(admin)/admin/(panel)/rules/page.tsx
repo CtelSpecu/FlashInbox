@@ -46,6 +46,8 @@ interface DomainDto {
   name: string;
 }
 
+type RulePatch = Partial<Pick<RuleDto, 'type' | 'pattern' | 'action' | 'priority' | 'isActive' | 'description' | 'domainId'>>;
+
 export default function AdminRulesPage() {
   const { t } = useAdminI18n();
   const [loading, setLoading] = useState(false);
@@ -120,7 +122,7 @@ export default function AdminRulesPage() {
     }
   }
 
-  async function patchRule(ruleId: number, patch: any) {
+  async function patchRule(ruleId: number, patch: RulePatch) {
     setLoading(true);
     setErrorText(null);
     try {
@@ -393,5 +395,4 @@ export default function AdminRulesPage() {
     </div>
   );
 }
-
 

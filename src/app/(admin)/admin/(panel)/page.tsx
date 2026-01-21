@@ -64,7 +64,7 @@ export default function AdminDashboardPage() {
   const { t } = useAdminI18n();
   const [range, setRange] = useState<RangeKey>('24h');
   const [reloadKey, setReloadKey] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [data, setData] = useState<DashboardData | null>(null);
 
@@ -76,8 +76,6 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setErrorText(null);
 
     adminApiFetch<SuccessResponse<DashboardData>>(`/api/admin/dashboard?range=${range}`)
       .then((res) => {
@@ -109,12 +107,26 @@ export default function AdminDashboardPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-sm text-[color:var(--admin-muted)]">{rangeLabel}</div>
         <div className="flex items-center gap-2">
-          <Select value={range} onChange={(e) => setRange(e.target.value as RangeKey)}>
+          <Select
+            value={range}
+            onChange={(e) => {
+              setErrorText(null);
+              setLoading(true);
+              setRange(e.target.value as RangeKey);
+            }}
+          >
             <option value="24h">24h</option>
             <option value="7d">7d</option>
             <option value="30d">30d</option>
           </Select>
-          <Button variant="outline" onClick={() => setReloadKey((k) => k + 1)}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setErrorText(null);
+              setLoading(true);
+              setReloadKey((k) => k + 1);
+            }}
+          >
             <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
             {t.common.reload}
           </Button>
@@ -254,5 +266,4 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-
 

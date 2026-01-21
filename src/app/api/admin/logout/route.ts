@@ -7,7 +7,7 @@ import { success } from '@/lib/utils/response';
 async function logoutHandler(
   request: NextRequest,
   context: AdminAuthContext,
-  _routeContext: { params: Promise<{}> }
+  _routeContext: { params: Promise<Record<string, never>> }
 ): Promise<Response> {
   const env = getCloudflareEnv();
 
@@ -22,5 +22,4 @@ async function logoutHandler(
 }
 
 export const POST = withAdminAuth(logoutHandler);
-
 

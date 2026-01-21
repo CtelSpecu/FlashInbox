@@ -68,11 +68,13 @@ export default function RecoverPage() {
         setNotice(format(t.recover.keyExpiresNotice, { time: new Date(res.data.mailbox.keyExpiresAt).toLocaleString() }));
       }
       router.push('/inbox');
-    } catch (e: any) {
-      const msg = typeof e?.message === 'string' ? e.message : t.recover.recoverFailed;
-      const retryAfterMs = e?.retryAfter
-        ? ` ${format(t.home.retryAfter, { seconds: Math.ceil(e.retryAfter / 1000) })}`
-        : '';
+    } catch (e: unknown) {
+      const err = e as { message?: unknown; retryAfter?: unknown };
+      const msg = typeof err.message === 'string' ? err.message : t.recover.recoverFailed;
+      const retryAfterMs =
+        typeof err.retryAfter === 'number'
+          ? ` ${format(t.home.retryAfter, { seconds: Math.ceil(err.retryAfter / 1000) })}`
+          : '';
       setErrorText(`${msg}${retryAfterMs}`);
     } finally {
       setLoading(false);
@@ -93,7 +95,7 @@ export default function RecoverPage() {
           placeholder={t.recover.usernamePlaceholder}
           clearable
           value={username}
-          onInput={(e: any) => setUsername(e.target.value)}
+          onInput={(e) => setUsername((e.target as HTMLInputElement).value)}
           disabled={loading}
         >
           <Icon icon="mdi:account" slot="icon" />
@@ -103,7 +105,7 @@ export default function RecoverPage() {
           label={t.recover.domainLabel}
           placeholder={defaultDomain}
           value={domain}
-          onInput={(e: any) => setDomain(e.target.value)}
+          onInput={(e) => setDomain((e.target as HTMLInputElement).value)}
           disabled={loading}
         >
           <Icon icon="mdi:globe" slot="icon" />
@@ -114,7 +116,7 @@ export default function RecoverPage() {
           placeholder={t.recover.keyPlaceholder}
           clearable
           value={key}
-          onInput={(e: any) => setKey(e.target.value)}
+          onInput={(e) => setKey((e.target as HTMLInputElement).value)}
           disabled={loading}
         >
           <Icon icon="mdi:key" slot="icon" />

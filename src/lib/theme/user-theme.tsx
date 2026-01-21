@@ -60,16 +60,13 @@ function applyUserTheme(mode: ThemeMode) {
 }
 
 export function UserThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>('auto');
-  const [resolved, setResolved] = useState<'light' | 'dark'>('light');
+  const [theme, setThemeState] = useState<ThemeMode>(() => readStoredTheme());
+  const [resolved, setResolved] = useState<'light' | 'dark'>(() =>
+    getResolvedTheme(readStoredTheme())
+  );
 
   useEffect(() => {
-    const initial = readStoredTheme();
-    setThemeState(initial);
-    const r = getResolvedTheme(initial);
-    setResolved(r);
-    applyUserTheme(initial);
-
+    applyUserTheme(theme);
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const onChange = () => {
       // Only react to system changes in auto mode
@@ -80,7 +77,7 @@ export function UserThemeProvider({ children }: { children: React.ReactNode }) {
     };
     media.addEventListener('change', onChange);
     return () => media.removeEventListener('change', onChange);
-  }, []);
+  }, [theme]);
 
   const setTheme = useCallback((mode: ThemeMode) => {
     setThemeState(mode);
@@ -100,5 +97,4 @@ export function useUserTheme(): UserThemeContextValue {
   if (!ctx) throw new Error('useUserTheme must be used within UserThemeProvider');
   return ctx;
 }
-
 

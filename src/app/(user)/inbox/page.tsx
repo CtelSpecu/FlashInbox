@@ -127,13 +127,14 @@ export default function InboxPage() {
       if (!selectedId && res.data.messages.length > 0) {
         setSelectedId(res.data.messages[0].id);
       }
-    } catch (e: any) {
-      if (e?.status === 401) {
+    } catch (e: unknown) {
+      const err = e as { status?: unknown; message?: unknown };
+      if (err.status === 401) {
         clearSessionToken();
         router.push('/');
         return;
       }
-      setListError(e?.message || t.inbox.loadFailed);
+      setListError(typeof err.message === 'string' ? err.message : t.inbox.loadFailed);
     } finally {
       setLoadingList(false);
     }
@@ -149,8 +150,9 @@ export default function InboxPage() {
         prev.map((m) => (m.id === id ? { ...m, readAt: res.data.message.readAt ?? Date.now() } : m))
       );
       await loadMailboxInfo();
-    } catch (e: any) {
-      if (e?.status === 401) {
+    } catch (e: unknown) {
+      const err = e as { status?: unknown };
+      if (err.status === 401) {
         clearSessionToken();
         router.push('/');
         return;
@@ -195,16 +197,20 @@ export default function InboxPage() {
     setRenewLoading(true);
     setRenewNotice(null);
     try {
-      const res = await apiFetch<any>('/api/user/renew', { method: 'POST', auth: true });
-      const expiresAt = res?.data?.mailbox?.keyExpiresAt;
+      const res = await apiFetch<{
+        success: true;
+        data: { mailbox: { keyExpiresAt: number | null } };
+      }>('/api/user/renew', { method: 'POST', auth: true });
+      const expiresAt = res.data.mailbox.keyExpiresAt;
       setRenewNotice(
         expiresAt
           ? format(t.inbox.renewedExpires, { time: formatTime(expiresAt) })
           : t.inbox.renewed
       );
       await loadMailboxInfo();
-    } catch (e: any) {
-      setRenewNotice(e?.message || t.inbox.renewFailed);
+    } catch (e: unknown) {
+      const err = e as { message?: unknown };
+      setRenewNotice(typeof err.message === 'string' ? err.message : t.inbox.renewFailed);
     } finally {
       setRenewLoading(false);
     }
@@ -251,12 +257,15 @@ export default function InboxPage() {
               <mdui-text-field
                 label={t.common.search}
                 value={search}
-                onInput={(e: any) => setSearch(e.target.value)}
+                onInput={(e) => setSearch((e.target as HTMLInputElement).value)}
                 clearable
               >
                 <Icon icon="mdi:magnify" slot="icon" />
               </mdui-text-field>
-              <mdui-checkbox checked={unreadOnly} onChange={(e: any) => setUnreadOnly(e.target.checked)}>
+              <mdui-checkbox
+                checked={unreadOnly}
+                onChange={(e) => setUnreadOnly((e.target as HTMLInputElement).checked)}
+              >
                 {t.inbox.unreadOnly}
               </mdui-checkbox>
             </div>
@@ -307,13 +316,18 @@ export default function InboxPage() {
               <mdui-segmented-button-group
                 selects="single"
                 value={detailView}
-                onChange={(e: any) => setDetailView(e.target.value)}
+                onChange={(e) =>
+                  setDetailView(((e.target as HTMLElement & { value: string }).value as 'html' | 'text') || 'html')
+                }
               >
                 <mdui-segmented-button value="html">{t.inbox.htmlView}</mdui-segmented-button>
                 <mdui-segmented-button value="text">{t.inbox.textView}</mdui-segmented-button>
               </mdui-segmented-button-group>
 
-              <mdui-switch checked={loadExternal} onChange={(e: any) => setLoadExternal(e.target.checked)}>
+              <mdui-switch
+                checked={loadExternal}
+                onChange={(e) => setLoadExternal((e.target as HTMLInputElement).checked)}
+              >
                 {t.inbox.loadExternal}
               </mdui-switch>
             </div>

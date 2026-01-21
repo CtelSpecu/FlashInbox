@@ -32,7 +32,7 @@ describe('scheduled cleanup', () => {
     sqlite.exec(
       `INSERT INTO domains (name, status, created_at, updated_at) VALUES ('example.com','enabled',0,0);`
     );
-    const domainId = (sqlite.prepare(`SELECT id FROM domains WHERE name='example.com'`).get() as any).id as number;
+    const domainId = (sqlite.prepare(`SELECT id FROM domains WHERE name='example.com'`).get() as { id: number }).id;
 
     const mailbox = await repos.mailboxes.create({
       domainId,
@@ -77,21 +77,31 @@ describe('scheduled cleanup', () => {
     const processed = await cleanupExpiredKeys(env);
     expect(processed).toBeGreaterThanOrEqual(1);
 
-    const mb = sqlite.prepare('SELECT status FROM mailboxes WHERE id = ?').get(mailbox.id) as any;
+    const mb = sqlite.prepare('SELECT status FROM mailboxes WHERE id = ?').get(mailbox.id) as {
+      status: string;
+    };
     expect(mb.status).toBe('destroyed');
 
-    const msgCount = (sqlite.prepare('SELECT COUNT(*) as c FROM messages WHERE mailbox_id = ?').get(mailbox.id) as any).c as number;
+    const msgCount = (
+      sqlite.prepare('SELECT COUNT(*) as c FROM messages WHERE mailbox_id = ?').get(mailbox.id) as {
+        c: number;
+      }
+    ).c;
     expect(msgCount).toBe(0);
 
-    const qCount = (sqlite.prepare('SELECT COUNT(*) as c FROM quarantine WHERE mailbox_id = ?').get(mailbox.id) as any).c as number;
+    const qCount = (
+      sqlite.prepare('SELECT COUNT(*) as c FROM quarantine WHERE mailbox_id = ?').get(mailbox.id) as { c: number }
+    ).c;
     expect(qCount).toBe(0);
 
-    const sCount = (sqlite.prepare('SELECT COUNT(*) as c FROM sessions WHERE mailbox_id = ?').get(mailbox.id) as any).c as number;
+    const sCount = (
+      sqlite.prepare('SELECT COUNT(*) as c FROM sessions WHERE mailbox_id = ?').get(mailbox.id) as { c: number }
+    ).c;
     expect(sCount).toBe(0);
 
     const audit = sqlite
       .prepare(`SELECT COUNT(*) as c FROM audit_logs WHERE action='mailbox_destroyed' AND target_id = ?`)
-      .get(mailbox.id) as any;
+      .get(mailbox.id) as { c: number };
     expect(audit.c).toBeGreaterThanOrEqual(1);
   });
 
@@ -103,7 +113,7 @@ describe('scheduled cleanup', () => {
     sqlite.exec(
       `INSERT INTO domains (name, status, created_at, updated_at) VALUES ('example.com','enabled',0,0);`
     );
-    const domainId = (sqlite.prepare(`SELECT id FROM domains WHERE name='example.com'`).get() as any).id as number;
+    const domainId = (sqlite.prepare(`SELECT id FROM domains WHERE name='example.com'`).get() as { id: number }).id;
 
     const mailbox = await repos.mailboxes.create({
       domainId,
@@ -126,10 +136,14 @@ describe('scheduled cleanup', () => {
     const processed = await cleanupExpiredUnclaimed(env);
     expect(processed).toBeGreaterThanOrEqual(1);
 
-    const mb = sqlite.prepare('SELECT status FROM mailboxes WHERE id = ?').get(mailbox.id) as any;
+    const mb = sqlite.prepare('SELECT status FROM mailboxes WHERE id = ?').get(mailbox.id) as {
+      status: string;
+    };
     expect(mb.status).toBe('destroyed');
 
-    const msgCount = (sqlite.prepare('SELECT COUNT(*) as c FROM messages WHERE mailbox_id = ?').get(mailbox.id) as any).c as number;
+    const msgCount = (
+      sqlite.prepare('SELECT COUNT(*) as c FROM messages WHERE mailbox_id = ?').get(mailbox.id) as { c: number }
+    ).c;
     expect(msgCount).toBe(0);
   });
 
@@ -140,7 +154,7 @@ describe('scheduled cleanup', () => {
     sqlite.exec(
       `INSERT INTO domains (name, status, created_at, updated_at) VALUES ('example.com','enabled',0,0);`
     );
-    const domainId = (sqlite.prepare(`SELECT id FROM domains WHERE name='example.com'`).get() as any).id as number;
+    const domainId = (sqlite.prepare(`SELECT id FROM domains WHERE name='example.com'`).get() as { id: number }).id;
 
     const mailboxId = crypto.randomUUID();
     sqlite
@@ -174,16 +188,15 @@ describe('scheduled cleanup', () => {
       .prepare(
         `SELECT value FROM stats_daily WHERE date = ? AND domain_id = ? AND metric = 'messages_received'`
       )
-      .get(dateStr, domainId) as any;
+      .get(dateStr, domainId) as { value: number };
     expect(domainRow.value).toBe(2);
 
     const globalRow = sqlite
       .prepare(
         `SELECT value FROM stats_daily WHERE date = ? AND domain_id IS NULL AND metric = 'messages_received'`
       )
-      .get(dateStr) as any;
+      .get(dateStr) as { value: number };
     expect(globalRow.value).toBe(2);
   });
 });
-
 

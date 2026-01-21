@@ -13,10 +13,18 @@ async function parseError(response: Response): Promise<ApiError> {
   err.status = response.status;
 
   try {
-    const data = (await response.json()) as any;
-    if (data?.error?.message) err.message = data.error.message;
-    if (data?.error?.code) err.code = data.error.code;
-    if (data?.retryAfter !== undefined) err.retryAfter = data.retryAfter;
+    const data = (await response.json()) as unknown;
+    if (typeof data !== 'object' || data === null) return err;
+    const record = data as Record<string, unknown>;
+
+    const errorValue = record.error;
+    if (typeof errorValue === 'object' && errorValue !== null) {
+      const errorRecord = errorValue as Record<string, unknown>;
+      if (typeof errorRecord.message === 'string') err.message = errorRecord.message;
+      if (typeof errorRecord.code === 'string') err.code = errorRecord.code;
+    }
+
+    if (typeof record.retryAfter === 'number') err.retryAfter = record.retryAfter;
   } catch {
     // ignore
   }
@@ -45,5 +53,4 @@ export async function apiFetch<T>(
   }
   return (await res.json()) as T;
 }
-
 
