@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getCloudflareEnv, getAppConfig } from '@/lib/env';
+import { createRepositories } from '@/lib/db';
 import { createMailboxService } from '@/lib/services/mailbox';
 import { createRateLimitService } from '@/lib/services/rate-limit';
 import { createTurnstileService } from '@/lib/services/turnstile';
@@ -15,6 +16,7 @@ interface ClaimMailboxRequest {
 export async function POST(request: NextRequest) {
   const env = getCloudflareEnv();
   const config = getAppConfig();
+  const repos = createRepositories(env.DB);
 
   // 限流检查
   const rateLimitService = createRateLimitService(env.DB);
@@ -24,6 +26,15 @@ export async function POST(request: NextRequest) {
   });
 
   if (!rateLimitResult.allowed) {
+    await repos.auditLogs.create({
+      action: 'user.claim',
+      actorType: 'user',
+      success: false,
+      errorCode: ErrorCodes.RATE_LIMITED,
+      ipAddress: request.headers.get('cf-connecting-ip') || undefined,
+      asn: request.headers.get('cf-ipcountry') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+    });
     return rateLimited(rateLimitResult.retryAfter!);
   }
 
@@ -42,6 +53,17 @@ export async function POST(request: NextRequest) {
   const turnstileResult = await turnstileService.verify(body.turnstileToken, remoteIP);
 
   if (!turnstileResult.success) {
+    await repos.auditLogs.create({
+      action: 'user.claim',
+      actorType: 'user',
+      targetType: 'mailbox',
+      targetId: body.mailboxId,
+      success: false,
+      errorCode: ErrorCodes.TURNSTILE_FAILED,
+      ipAddress: remoteIP,
+      asn: request.headers.get('cf-ipcountry') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+    });
     return error(
       ErrorCodes.TURNSTILE_FAILED,
       'Turnstile verification failed',
@@ -54,6 +76,17 @@ export async function POST(request: NextRequest) {
     const result = await mailboxService.claim(body.mailboxId);
 
     // 返回认领结果（包含明文 Key，仅此一次）
+    await repos.auditLogs.create({
+      action: 'user.claim',
+      actorType: 'user',
+      actorId: result.mailbox.id,
+      targetType: 'mailbox',
+      targetId: result.mailbox.id,
+      success: true,
+      ipAddress: remoteIP,
+      asn: request.headers.get('cf-ipcountry') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+    });
     return success({
       mailbox: {
         id: result.mailbox.id,
@@ -79,6 +112,17 @@ export async function POST(request: NextRequest) {
     }
 
     console.error('Claim mailbox error:', err);
+    await repos.auditLogs.create({
+      action: 'user.claim',
+      actorType: 'user',
+      targetType: 'mailbox',
+      targetId: body.mailboxId,
+      success: false,
+      errorCode: ErrorCodes.INTERNAL_ERROR,
+      ipAddress: remoteIP,
+      asn: request.headers.get('cf-ipcountry') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+    });
     return error(ErrorCodes.INTERNAL_ERROR, 'Failed to claim mailbox', 500);
   }
 }

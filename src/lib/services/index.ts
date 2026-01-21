@@ -3,6 +3,7 @@
  */
 
 export { RateLimitService, createRateLimitService } from './rate-limit';
+export { AdminAuthService } from './admin-auth';
 export type { RateLimitResult, RateLimitOptions } from './rate-limit';
 
 export { TurnstileService, createTurnstileService } from './turnstile';

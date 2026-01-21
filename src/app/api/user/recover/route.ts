@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getCloudflareEnv, getAppConfig } from '@/lib/env';
+import { createRepositories } from '@/lib/db';
 import { createMailboxService } from '@/lib/services/mailbox';
 import { createRateLimitService } from '@/lib/services/rate-limit';
 import { success, error, ErrorCodes, parseJsonBody, rateLimited } from '@/lib/utils/response';
@@ -15,6 +16,7 @@ interface RecoverRequest {
 export async function POST(request: NextRequest) {
   const env = getCloudflareEnv();
   const config = getAppConfig();
+  const repos = createRepositories(env.DB);
 
   // 使用指数退避限流检查
   const rateLimitService = createRateLimitService(env.DB);
@@ -24,6 +26,15 @@ export async function POST(request: NextRequest) {
   });
 
   if (!rateLimitResult.allowed) {
+    await repos.auditLogs.create({
+      action: 'user.recover',
+      actorType: 'user',
+      success: false,
+      errorCode: ErrorCodes.RATE_LIMITED,
+      ipAddress: request.headers.get('cf-connecting-ip') || undefined,
+      asn: request.headers.get('cf-ipcountry') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+    });
     return rateLimited(rateLimitResult.retryAfter!);
   }
 
@@ -51,6 +62,17 @@ export async function POST(request: NextRequest) {
     await rateLimitService.resetFailure(request, 'recover');
 
     // 返回恢复结果
+    await repos.auditLogs.create({
+      action: 'user.recover',
+      actorType: 'user',
+      actorId: result.mailbox.id,
+      targetType: 'mailbox',
+      targetId: result.mailbox.id,
+      success: true,
+      ipAddress,
+      asn,
+      userAgent,
+    });
     return success({
       mailbox: {
         id: result.mailbox.id,
@@ -72,6 +94,15 @@ export async function POST(request: NextRequest) {
 
     // 返回统一的错误信息（不泄露邮箱/key 是否存在）
     if (message.includes('Invalid credentials') || message.includes('not found')) {
+      await repos.auditLogs.create({
+        action: 'user.recover',
+        actorType: 'user',
+        success: false,
+        errorCode: ErrorCodes.INVALID_CREDENTIALS,
+        ipAddress,
+        asn,
+        userAgent,
+      });
       return error(
         ErrorCodes.INVALID_CREDENTIALS,
         'Invalid credentials',
@@ -81,6 +112,15 @@ export async function POST(request: NextRequest) {
     }
 
     console.error('Recover mailbox error:', err);
+    await repos.auditLogs.create({
+      action: 'user.recover',
+      actorType: 'user',
+      success: false,
+      errorCode: ErrorCodes.INTERNAL_ERROR,
+      ipAddress,
+      asn,
+      userAgent,
+    });
     return error(ErrorCodes.INTERNAL_ERROR, 'Failed to recover access', 500);
   }
 }

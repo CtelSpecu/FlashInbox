@@ -12,7 +12,7 @@ export type RuleType = 'sender_domain' | 'sender_addr' | 'keyword' | 'ip';
 export type RuleAction = 'drop' | 'quarantine' | 'allow';
 export type QuarantineStatus = 'pending' | 'released' | 'deleted';
 export type ActorType = 'user' | 'admin' | 'system';
-export type RateLimitAction = 'create' | 'claim' | 'recover' | 'renew' | 'read';
+export type RateLimitAction = 'create' | 'claim' | 'recover' | 'renew' | 'read' | 'admin_login';
 
 // === 实体类型 ===
 

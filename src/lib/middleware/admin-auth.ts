@@ -11,12 +11,17 @@ export interface AdminAuthContext {
   session: AdminSession;
 }
 
+export interface NextRouteContext<TParams> {
+  params: Promise<TParams>;
+}
+
 /**
  * 带管理员认证的 API 处理函数类型
  */
-export type AdminAuthenticatedHandler = (
+export type AdminAuthenticatedHandler<TParams = {}> = (
   request: NextRequest,
-  context: AdminAuthContext
+  context: AdminAuthContext,
+  routeContext: NextRouteContext<TParams>
 ) => Promise<Response>;
 
 /**
@@ -97,10 +102,10 @@ async function verifyAdminSession(
  * 管理员认证中间件
  * 用于保护管理后台 API 路由
  */
-export function withAdminAuth(
-  handler: AdminAuthenticatedHandler
-): (request: NextRequest) => Promise<Response> {
-  return async (request: NextRequest) => {
+export function withAdminAuth<TParams = {}>(
+  handler: AdminAuthenticatedHandler<TParams>
+): (request: NextRequest, routeContext: NextRouteContext<TParams>) => Promise<Response> {
+  return async (request: NextRequest, routeContext: NextRouteContext<TParams>) => {
     // 提取凭证
     const { sessionId, sessionToken } = extractAdminCredentials(request);
 
@@ -115,7 +120,7 @@ export function withAdminAuth(
     }
 
     // 调用实际处理函数
-    return handler(request, { session });
+    return handler(request, { session }, routeContext);
   };
 }
 
