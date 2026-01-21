@@ -13,6 +13,7 @@ import { Input } from '@/components/admin/ui/Input';
 import { Select } from '@/components/admin/ui/Select';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/admin/ui/Table';
 import { Modal } from '@/components/admin/ui/Modal';
+import { useAdminI18n } from '@/lib/admin-i18n/context';
 
 interface SuccessResponse<T> {
   success: true;
@@ -46,6 +47,7 @@ interface DomainDto {
 }
 
 export default function AdminRulesPage() {
+  const { t } = useAdminI18n();
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [rules, setRules] = useState<RuleDto[]>([]);
@@ -182,7 +184,7 @@ export default function AdminRulesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Add Rule</CardTitle>
+          <CardTitle>{t.rules.addRule}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-2 md:grid-cols-6">
           <Select value={newType} onChange={(e) => setNewType(e.target.value as RuleType)} disabled={loading}>
@@ -219,11 +221,11 @@ export default function AdminRulesPage() {
           </Select>
           <Button onClick={addRule} disabled={loading || !newPattern.trim()}>
             <Icon icon="lucide:plus" className="h-4 w-4" />
-            Add
+            {t.common.add}
           </Button>
           <div className="md:col-span-6">
             <Input
-              placeholder="description (optional)"
+              placeholder={t.rules.description}
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
               disabled={loading}
@@ -235,10 +237,10 @@ export default function AdminRulesPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between gap-2">
-            <CardTitle>Rules</CardTitle>
+            <CardTitle>{t.rules.rules}</CardTitle>
             <Button variant="outline" size="sm" onClick={load} disabled={loading}>
               <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
-              Reload
+              {t.common.reload}
             </Button>
           </div>
         </CardHeader>
@@ -246,15 +248,15 @@ export default function AdminRulesPage() {
           <Table>
             <THead>
               <TR>
-                <TH>ID</TH>
-                <TH>Type</TH>
-                <TH>Pattern</TH>
-                <TH>Action</TH>
-                <TH>Priority</TH>
-                <TH>Active</TH>
-                <TH>Domain</TH>
-                <TH>Hits</TH>
-                <TH>Actions</TH>
+                <TH>{t.domains.id}</TH>
+                <TH>{t.rules.type}</TH>
+                <TH>{t.rules.pattern}</TH>
+                <TH>{t.rules.action}</TH>
+                <TH>{t.rules.priority}</TH>
+                <TH>{t.rules.active}</TH>
+                <TH>{t.rules.domain}</TH>
+                <TH>{t.rules.hits}</TH>
+                <TH>{t.domains.actions}</TH>
               </TR>
             </THead>
             <TBody>
@@ -274,19 +276,19 @@ export default function AdminRulesPage() {
                       disabled={loading}
                       onClick={() => patchRule(r.id, { isActive: !r.isActive })}
                     >
-                      {r.isActive ? 'On' : 'Off'}
+                      {r.isActive ? t.rules.on : t.rules.off}
                     </Button>
                   </TD>
-                  <TD className="text-slate-600">{r.domainName || '(global)'}</TD>
+                  <TD className="text-slate-600">{r.domainName || t.rules.global}</TD>
                   <TD className="text-slate-600">{r.hitCount}</TD>
                   <TD className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => openEdit(r)} disabled={loading}>
                       <Icon icon="lucide:pencil" className="h-4 w-4" />
-                      Edit
+                      {t.common.edit}
                     </Button>
                     <Button variant="destructive" size="sm" onClick={() => deleteRule(r.id)} disabled={loading}>
                       <Icon icon="lucide:trash-2" className="h-4 w-4" />
-                      Delete
+                      {t.common.delete}
                     </Button>
                   </TD>
                 </TR>
@@ -294,7 +296,7 @@ export default function AdminRulesPage() {
               {rules.length === 0 && !loading ? (
                 <TR>
                   <TD colSpan={9} className="py-6 text-center text-slate-500">
-                    No rules
+                    {t.rules.noRules}
                   </TD>
                 </TR>
               ) : null}
@@ -308,14 +310,14 @@ export default function AdminRulesPage() {
         onOpenChange={(o) => {
           if (!o) setEditId(null);
         }}
-        title="Edit Rule"
+        title={t.rules.editRule}
         footer={
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setEditId(null)} disabled={loading}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button onClick={saveEdit} disabled={loading || !String(editDraft.pattern || '').trim()}>
-              Save
+              {t.common.save}
             </Button>
           </div>
         }
@@ -372,17 +374,17 @@ export default function AdminRulesPage() {
               value={String(editDraft.description ?? '')}
               onChange={(e) => setEditDraft((p) => ({ ...p, description: e.target.value }))}
               disabled={loading}
-              placeholder="description (optional)"
+              placeholder={t.rules.description}
             />
             <div className="flex items-center justify-between rounded-md border border-slate-200 p-2">
-              <div className="text-sm text-slate-700">Active</div>
+              <div className="text-sm text-slate-700">{t.rules.active}</div>
               <Button
                 variant={editDraft.isActive ? 'secondary' : 'outline'}
                 size="sm"
                 onClick={() => setEditDraft((p) => ({ ...p, isActive: !p.isActive }))}
                 disabled={loading}
               >
-                {editDraft.isActive ? 'On' : 'Off'}
+                {editDraft.isActive ? t.rules.on : t.rules.off}
               </Button>
             </div>
           </div>

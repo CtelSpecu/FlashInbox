@@ -9,6 +9,7 @@ import { withAdminTracking } from '@/lib/admin/tracking';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/admin/ui/Card';
 import { Select } from '@/components/admin/ui/Select';
 import { Button } from '@/components/admin/ui/Button';
+import { useAdminI18n } from '@/lib/admin-i18n/context';
 
 type RangeKey = '24h' | '7d' | '30d';
 
@@ -60,6 +61,7 @@ function SparkBars({ data }: { data: Array<{ timestamp: number; value: number }>
 }
 
 export default function AdminDashboardPage() {
+  const { t } = useAdminI18n();
   const [range, setRange] = useState<RangeKey>('24h');
   const [reloadKey, setReloadKey] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -67,10 +69,10 @@ export default function AdminDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
 
   const rangeLabel = useMemo(() => {
-    if (range === '24h') return 'Last 24 hours';
-    if (range === '7d') return 'Last 7 days';
-    return 'Last 30 days';
-  }, [range, reloadKey]);
+    if (range === '24h') return t.dashboard.range24h;
+    if (range === '7d') return t.dashboard.range7d;
+    return t.dashboard.range30d;
+  }, [range, t]);
 
   useEffect(() => {
     let active = true;
@@ -100,7 +102,7 @@ export default function AdminDashboardPage() {
     return () => {
       active = false;
     };
-  }, [range]);
+  }, [range, reloadKey]);
 
   return (
     <div className="space-y-4">
@@ -114,7 +116,7 @@ export default function AdminDashboardPage() {
           </Select>
           <Button variant="outline" onClick={() => setReloadKey((k) => k + 1)}>
             <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
-            Reload
+            {t.common.reload}
           </Button>
         </div>
       </div>
@@ -124,7 +126,7 @@ export default function AdminDashboardPage() {
       <div className="grid gap-3 md:grid-cols-5">
         <Card>
           <CardHeader>
-            <CardTitle>Total Mailboxes</CardTitle>
+            <CardTitle>{t.dashboard.totalMailboxes}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold text-slate-900">{data?.overview.totalMailboxes ?? (loading ? '…' : 0)}</div>
@@ -132,7 +134,7 @@ export default function AdminDashboardPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Claimed</CardTitle>
+            <CardTitle>{t.dashboard.claimed}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold text-slate-900">{data?.overview.claimedMailboxes ?? (loading ? '…' : 0)}</div>
@@ -140,7 +142,7 @@ export default function AdminDashboardPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Unclaimed</CardTitle>
+            <CardTitle>{t.dashboard.unclaimed}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold text-slate-900">{data?.overview.unclaimedMailboxes ?? (loading ? '…' : 0)}</div>
@@ -148,7 +150,7 @@ export default function AdminDashboardPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Total Messages</CardTitle>
+            <CardTitle>{t.dashboard.totalMessages}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold text-slate-900">{data?.overview.totalMessages ?? (loading ? '…' : 0)}</div>
@@ -156,7 +158,7 @@ export default function AdminDashboardPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Quarantine</CardTitle>
+            <CardTitle>{t.dashboard.quarantine}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold text-slate-900">{data?.overview.quarantinedCount ?? (loading ? '…' : 0)}</div>
@@ -167,37 +169,47 @@ export default function AdminDashboardPage() {
       <div className="grid gap-3 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Messages Received</CardTitle>
+            <CardTitle>{t.dashboard.messagesReceived}</CardTitle>
           </CardHeader>
-          <CardContent>{data ? <SparkBars data={data.charts.messagesReceived} /> : <div className="text-sm text-slate-500">Loading...</div>}</CardContent>
+          <CardContent>
+            {data ? <SparkBars data={data.charts.messagesReceived} /> : <div className="text-sm text-slate-500">{t.common.loading}</div>}
+          </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Recover Failures</CardTitle>
+            <CardTitle>{t.dashboard.recoverFailures}</CardTitle>
           </CardHeader>
-          <CardContent>{data ? <SparkBars data={data.charts.recoverFailures} /> : <div className="text-sm text-slate-500">Loading...</div>}</CardContent>
+          <CardContent>
+            {data ? <SparkBars data={data.charts.recoverFailures} /> : <div className="text-sm text-slate-500">{t.common.loading}</div>}
+          </CardContent>
         </Card>
       </div>
 
       <div className="grid gap-3 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Security</CardTitle>
+            <CardTitle>{t.dashboard.security}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 text-sm text-slate-700">
-            <div>Rate limited: {data?.security.rateLimitTriggers ?? (loading ? '…' : 0)}</div>
-            <div>Turnstile failed: {data?.security.turnstileFailures ?? (loading ? '…' : 0)}</div>
-            <div>HTML sanitized: {data?.security.htmlSanitized ?? (loading ? '…' : 0)}</div>
+            <div>
+              {t.dashboard.rateLimited}: {data?.security.rateLimitTriggers ?? (loading ? '…' : 0)}
+            </div>
+            <div>
+              {t.dashboard.turnstileFailed}: {data?.security.turnstileFailures ?? (loading ? '…' : 0)}
+            </div>
+            <div>
+              {t.dashboard.htmlSanitized}: {data?.security.htmlSanitized ?? (loading ? '…' : 0)}
+            </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Top DROP Rules</CardTitle>
+            <CardTitle>{t.dashboard.topDropRules}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 text-sm text-slate-700">
             {(data?.rules.topDropRules || []).length === 0 ? (
-              <div className="text-slate-500">No data</div>
+              <div className="text-slate-500">{t.dashboard.noData}</div>
             ) : (
               data?.rules.topDropRules.map((r) => (
                 <div key={r.ruleId} className="flex items-center justify-between gap-2">
@@ -213,11 +225,11 @@ export default function AdminDashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Top QUARANTINE Rules</CardTitle>
+            <CardTitle>{t.dashboard.topQuarantineRules}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 text-sm text-slate-700">
             {(data?.rules.topQuarantineRules || []).length === 0 ? (
-              <div className="text-slate-500">No data</div>
+              <div className="text-slate-500">{t.dashboard.noData}</div>
             ) : (
               data?.rules.topQuarantineRules.map((r) => (
                 <div key={r.ruleId} className="flex items-center justify-between gap-2">

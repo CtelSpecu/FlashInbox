@@ -11,6 +11,7 @@ import { adminApiFetch, AdminApiError } from '@/lib/admin/api';
 import { getAdminFingerprint } from '@/lib/admin/fingerprint';
 import { setAdminSession } from '@/lib/admin/session-store';
 import { withAdminTracking } from '@/lib/admin/tracking';
+import { useAdminI18n } from '@/lib/admin-i18n/context';
 
 interface AdminLoginResponse {
   success: true;
@@ -23,6 +24,7 @@ interface AdminLoginResponse {
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const { t } = useAdminI18n();
   const [token, setToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -48,7 +50,7 @@ export default function AdminLoginPage() {
       router.replace(withAdminTracking('/admin'));
     } catch (e) {
       const err = e as AdminApiError;
-      const retryAfterMs = err.retryAfter ? ` Retry after ${Math.ceil(err.retryAfter / 1000)}s.` : '';
+      const retryAfterMs = err.retryAfter ? ` ${Math.ceil(err.retryAfter / 1000)}s` : '';
       setErrorText(`${err.message}${retryAfterMs}`.trim());
     } finally {
       setLoading(false);
@@ -64,17 +66,17 @@ export default function AdminLoginPage() {
               <Icon icon="lucide:shield" className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <CardTitle>Admin Login</CardTitle>
-              <div className="text-xs text-slate-500">Token-based access</div>
+              <CardTitle>{t.auth.loginTitle}</CardTitle>
+              <div className="text-xs text-slate-500">{t.auth.loginSubtitle}</div>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="space-y-1">
-            <div className="text-xs font-medium text-slate-700">Admin Token</div>
+            <div className="text-xs font-medium text-slate-700">{t.auth.tokenLabel}</div>
             <Input
               type="password"
-              placeholder="Enter admin token"
+              placeholder={t.auth.tokenPlaceholder}
               value={token}
               onChange={(e) => setToken(e.target.value)}
               disabled={loading}
@@ -84,13 +86,15 @@ export default function AdminLoginPage() {
             />
           </div>
 
-          <div className="text-[11px] text-slate-500">Fingerprint: {fingerprint}</div>
+          <div className="text-[11px] text-slate-500">
+            {t.auth.fingerprint}: {fingerprint}
+          </div>
 
           {errorText ? <div className="text-sm text-red-700">{errorText}</div> : null}
 
           <Button onClick={submit} disabled={loading || !token.trim()} className="w-full">
             <Icon icon="lucide:log-in" className="h-4 w-4" />
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? t.auth.loggingIn : t.auth.login}
           </Button>
         </CardContent>
       </Card>

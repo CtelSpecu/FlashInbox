@@ -12,6 +12,7 @@ import { Button } from '@/components/admin/ui/Button';
 import { Select } from '@/components/admin/ui/Select';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/admin/ui/Table';
 import { Modal } from '@/components/admin/ui/Modal';
+import { useAdminI18n } from '@/lib/admin-i18n/context';
 
 interface SuccessResponse<T> {
   success: true;
@@ -41,6 +42,7 @@ function formatTime(ms: number) {
 }
 
 export default function AdminQuarantinePage() {
+  const { t, format } = useAdminI18n();
   const [status, setStatus] = useState<QStatus>('pending');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
@@ -53,8 +55,8 @@ export default function AdminQuarantinePage() {
 
   const confirmTitle = useMemo(() => {
     if (!confirm) return '';
-    return confirm.action === 'release' ? 'Release quarantined email' : 'Delete quarantined email';
-  }, [confirm]);
+    return confirm.action === 'release' ? t.quarantine.confirmReleaseTitle : t.quarantine.confirmDeleteTitle;
+  }, [confirm, t]);
 
   async function load() {
     setLoading(true);
@@ -124,16 +126,16 @@ export default function AdminQuarantinePage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between gap-2">
-            <CardTitle>Quarantine</CardTitle>
+            <CardTitle>{t.quarantine.title}</CardTitle>
             <div className="flex items-center gap-2">
               <Select value={status} onChange={(e) => setStatus(e.target.value as QStatus)} disabled={loading}>
-                <option value="pending">pending</option>
-                <option value="released">released</option>
-                <option value="deleted">deleted</option>
+                <option value="pending">{t.quarantine.pending}</option>
+                <option value="released">{t.quarantine.released}</option>
+                <option value="deleted">{t.quarantine.deleted}</option>
               </Select>
               <Button variant="outline" size="sm" onClick={load} disabled={loading}>
                 <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
-                Reload
+                {t.common.reload}
               </Button>
             </div>
           </div>
@@ -142,13 +144,13 @@ export default function AdminQuarantinePage() {
           <Table>
             <THead>
               <TR>
-                <TH>Received</TH>
-                <TH>Mailbox</TH>
-                <TH>From</TH>
-                <TH>Subject</TH>
-                <TH>Rule</TH>
-                <TH>Reason</TH>
-                <TH>Actions</TH>
+                <TH>{t.quarantine.received}</TH>
+                <TH>{t.quarantine.mailbox}</TH>
+                <TH>{t.quarantine.from}</TH>
+                <TH>{t.quarantine.subject}</TH>
+                <TH>{t.quarantine.rule}</TH>
+                <TH>{t.quarantine.reason}</TH>
+                <TH>{t.domains.actions}</TH>
               </TR>
             </THead>
             <TBody>
@@ -160,7 +162,7 @@ export default function AdminQuarantinePage() {
                     {q.fromAddr}
                   </TD>
                   <TD className="max-w-[240px] truncate" title={q.subject || ''}>
-                    {q.subject || '(no subject)'}
+                    {q.subject || t.quarantine.noSubject}
                   </TD>
                   <TD className="max-w-[220px] truncate" title={q.matchedRuleName || ''}>
                     {q.matchedRuleName || '-'}
@@ -173,11 +175,11 @@ export default function AdminQuarantinePage() {
                       <>
                         <Button variant="outline" size="sm" disabled={loading} onClick={() => setConfirm({ id: q.id, action: 'release' })}>
                           <Icon icon="lucide:corner-up-right" className="h-4 w-4" />
-                          Release
+                          {t.quarantine.release}
                         </Button>
                         <Button variant="destructive" size="sm" disabled={loading} onClick={() => setConfirm({ id: q.id, action: 'delete' })}>
                           <Icon icon="lucide:trash-2" className="h-4 w-4" />
-                          Delete
+                          {t.quarantine.delete}
                         </Button>
                       </>
                     ) : (
@@ -189,7 +191,7 @@ export default function AdminQuarantinePage() {
               {(data?.items || []).length === 0 && !loading ? (
                 <TR>
                   <TD colSpan={7} className="py-6 text-center text-slate-500">
-                    No items
+                    {t.quarantine.noItems}
                   </TD>
                 </TR>
               ) : null}
@@ -198,13 +200,13 @@ export default function AdminQuarantinePage() {
 
           <div className="flex items-center justify-between pt-3">
             <Button variant="outline" size="sm" disabled={loading || page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-              Prev
+              {t.common.prev}
             </Button>
             <div className="text-xs text-slate-600">
-              Page {data?.pagination.page || page} / {Math.max(1, Math.ceil((data?.pagination.total || 0) / pageSize))}
+              {format(t.quarantine.page, { page: data?.pagination.page || page })} / {Math.max(1, Math.ceil((data?.pagination.total || 0) / pageSize))}
             </div>
             <Button variant="outline" size="sm" disabled={loading || !(data?.pagination.hasMore)} onClick={() => setPage((p) => p + 1)}>
-              Next
+              {t.common.next}
             </Button>
           </div>
         </CardContent>
@@ -219,7 +221,7 @@ export default function AdminQuarantinePage() {
         footer={
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setConfirm(null)} disabled={loading}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button
               variant={confirm?.action === 'delete' ? 'destructive' : 'default'}
@@ -230,15 +232,15 @@ export default function AdminQuarantinePage() {
               }}
               disabled={loading}
             >
-              {confirm?.action === 'release' ? 'Release' : 'Delete'}
+              {confirm?.action === 'release' ? t.quarantine.release : t.quarantine.delete}
             </Button>
           </div>
         }
       >
         <div className="text-sm text-slate-700">
           {confirm?.action === 'release'
-            ? 'This will move the email into the normal inbox.'
-            : 'This will permanently delete the quarantined email record.'}
+            ? t.quarantine.confirmReleaseText
+            : t.quarantine.confirmDeleteText}
         </div>
       </Modal>
     </div>

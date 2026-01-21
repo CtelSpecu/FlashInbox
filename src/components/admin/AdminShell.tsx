@@ -7,18 +7,21 @@ import { Icon } from '@iconify/react';
 import { cn } from '@/lib/utils/cn';
 import { AdminLink } from './AdminLink';
 import { Button } from '@/components/admin/ui/Button';
+import { Select } from '@/components/admin/ui/Select';
 import { clearAdminSession, getAdminSession } from '@/lib/admin/session-store';
 import { adminApiFetch } from '@/lib/admin/api';
 import { withAdminTracking } from '@/lib/admin/tracking';
+import { useAdminI18n } from '@/lib/admin-i18n/context';
+import { adminLocaleNames, type AdminLocale } from '@/lib/admin-i18n';
 
-type NavItem = { href: string; label: string; icon: string };
+type NavItem = { href: string; key: 'dashboard' | 'domains' | 'rules' | 'quarantine' | 'audit'; icon: string };
 
 const navItems: NavItem[] = [
-  { href: '/admin', label: 'Dashboard', icon: 'lucide:layout-dashboard' },
-  { href: '/admin/domains', label: 'Domains', icon: 'lucide:globe' },
-  { href: '/admin/rules', label: 'Rules', icon: 'lucide:filter' },
-  { href: '/admin/quarantine', label: 'Quarantine', icon: 'lucide:shield-alert' },
-  { href: '/admin/audit', label: 'Audit Logs', icon: 'lucide:clipboard-list' },
+  { href: '/admin', key: 'dashboard', icon: 'lucide:layout-dashboard' },
+  { href: '/admin/domains', key: 'domains', icon: 'lucide:globe' },
+  { href: '/admin/rules', key: 'rules', icon: 'lucide:filter' },
+  { href: '/admin/quarantine', key: 'quarantine', icon: 'lucide:shield-alert' },
+  { href: '/admin/audit', key: 'audit', icon: 'lucide:clipboard-list' },
 ];
 
 export function AdminShell({
@@ -28,6 +31,7 @@ export function AdminShell({
   title?: string;
   children: React.ReactNode;
 }) {
+  const { t, locale, setLocale } = useAdminI18n();
   const pathname = usePathname();
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -41,8 +45,16 @@ export function AdminShell({
 
   const derivedTitle = useMemo(() => {
     const item = navItems.find((i) => i.href === activeHref);
-    return item?.label || 'Admin';
-  }, [activeHref]);
+    if (!item) return t.common.admin;
+    const map = {
+      dashboard: t.nav.dashboard,
+      domains: t.nav.domains,
+      rules: t.nav.rules,
+      quarantine: t.nav.quarantine,
+      audit: t.nav.audit,
+    } as const;
+    return map[item.key] || t.common.admin;
+  }, [activeHref, t]);
 
   async function logout() {
     setLoggingOut(true);
@@ -69,14 +81,24 @@ export function AdminShell({
               <Icon icon="lucide:mail" className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <div className="text-sm font-semibold text-slate-900">FlashInbox</div>
-              <div className="text-xs text-slate-500">Admin</div>
+              <div className="text-sm font-semibold text-slate-900">{t.common.appName}</div>
+              <div className="text-xs text-slate-500">{t.common.admin}</div>
             </div>
           </div>
 
           <nav className="px-2 pb-4">
             {navItems.map((item) => {
               const active = item.href === activeHref;
+              const label =
+                item.key === 'dashboard'
+                  ? t.nav.dashboard
+                  : item.key === 'domains'
+                    ? t.nav.domains
+                    : item.key === 'rules'
+                      ? t.nav.rules
+                      : item.key === 'quarantine'
+                        ? t.nav.quarantine
+                        : t.nav.audit;
               return (
                 <AdminLink
                   key={item.href}
@@ -87,7 +109,7 @@ export function AdminShell({
                   )}
                 >
                   <Icon icon={item.icon} className="h-4 w-4" />
-                  <span>{item.label}</span>
+                  <span>{label}</span>
                 </AdminLink>
               );
             })}
@@ -107,17 +129,26 @@ export function AdminShell({
                   size="icon"
                   className="md:hidden"
                   onClick={() => setMobileNavOpen(true)}
-                  aria-label="Menu"
+                  aria-label={t.nav.menu}
                 >
                   <Icon icon="lucide:menu" className="h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => router.refresh()}>
                   <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
-                  Refresh
+                  {t.common.reload}
                 </Button>
+                <Select
+                  value={locale}
+                  onChange={(e) => setLocale(e.target.value as AdminLocale)}
+                  className="hidden md:block w-[140px]"
+                  aria-label={t.language.label}
+                >
+                  <option value="zh-CN">{adminLocaleNames['zh-CN']}</option>
+                  <option value="zh-TW">{adminLocaleNames['zh-TW']}</option>
+                </Select>
                 <Button variant="destructive" size="sm" onClick={logout} disabled={loggingOut}>
                   <Icon icon="lucide:log-out" className="h-4 w-4" />
-                  {loggingOut ? 'Logging out...' : 'Logout'}
+                  {loggingOut ? t.auth.loggingOut : t.auth.logout}
                 </Button>
               </div>
             </div>
@@ -133,14 +164,29 @@ export function AdminShell({
                 onMouseDown={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-                  <div className="text-sm font-semibold text-slate-900">Navigation</div>
-                  <Button variant="ghost" size="icon" onClick={() => setMobileNavOpen(false)} aria-label="Close">
+                  <div className="text-sm font-semibold text-slate-900">{t.nav.navigation}</div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setMobileNavOpen(false)}
+                    aria-label={t.common.close}
+                  >
                     <span className="text-lg leading-none">×</span>
                   </Button>
                 </div>
                 <nav className="p-2">
                   {navItems.map((item) => {
                     const active = item.href === activeHref;
+                    const label =
+                      item.key === 'dashboard'
+                        ? t.nav.dashboard
+                        : item.key === 'domains'
+                          ? t.nav.domains
+                          : item.key === 'rules'
+                            ? t.nav.rules
+                            : item.key === 'quarantine'
+                              ? t.nav.quarantine
+                              : t.nav.audit;
                     return (
                       <AdminLink
                         key={item.href}
@@ -152,7 +198,7 @@ export function AdminShell({
                         onClick={() => setMobileNavOpen(false)}
                       >
                         <Icon icon={item.icon} className="h-4 w-4" />
-                        <span>{item.label}</span>
+                        <span>{label}</span>
                       </AdminLink>
                     );
                   })}
