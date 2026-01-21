@@ -1,0 +1,53 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "flashinbox"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# 主应用入口
+main = ".open-next/worker.js"
+
+# 资源目录
+assets = { directory = ".open-next/assets", binding = "ASSETS" }
+
+# D1 数据库绑定
+[[d1_databases]]
+binding = "DB"
+database_name = "flashinbox-db"
+database_id = "local-dev-placeholder" # 部署时填写实际 ID
+
+# 环境变量（非敏感配置）
+[vars]
+DEFAULT_DOMAIN = "example.com"
+KEY_EXPIRE_DAYS = "15"
+UNCLAIMED_EXPIRE_DAYS = "7"
+SESSION_EXPIRE_HOURS = "24"
+ADMIN_SESSION_EXPIRE_HOURS = "4"
+MAX_BODY_TEXT = "102400"
+MAX_BODY_HTML = "512000"
+
+# Secrets（通过 wrangler secret put 设置）
+# - ADMIN_TOKEN
+# - KEY_PEPPER
+# - SESSION_SECRET
+# - TURNSTILE_SECRET_KEY
+# - TURNSTILE_SITE_KEY
+
+# 开发环境配置
+[env.dev]
+name = "flashinbox-dev"
+
+[[env.dev.d1_databases]]
+binding = "DB"
+database_name = "flashinbox-db-dev"
+database_id = "" # 开发数据库 ID
+
+# 生产环境配置
+[env.production]
+name = "flashinbox"
+routes = [{ pattern = "mail.example.com", custom_domain = true }]
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "flashinbox-db"
+database_id = "" # 生产数据库 ID
+

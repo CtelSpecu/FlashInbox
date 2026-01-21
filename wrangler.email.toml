@@ -1,0 +1,21 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "flashinbox-email"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+main = "src/workers/email/index.ts"
+
+# D1 数据库绑定
+[[d1_databases]]
+binding = "DB"
+database_name = "flashinbox-db"
+database_id = "" # 部署时填写实际 ID
+
+# 环境变量
+[vars]
+MAX_BODY_TEXT = "102400"
+MAX_BODY_HTML = "512000"
+
+# Email Routing 配置
+# 需要在 Cloudflare Dashboard 中配置 Email Routing 指向此 Worker
+

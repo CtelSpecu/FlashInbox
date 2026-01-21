@@ -1,0 +1,43 @@
+@import "tailwindcss";
+@import "mdui/mdui.css";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* MDUI 主题配置 */
+:root {
+  --mdui-color-primary: #4f46e5;
+  --mdui-color-on-primary: #ffffff;
+  --mdui-color-primary-container: #e0e7ff;
+  --mdui-color-on-primary-container: #312e81;
+}
+
+/* 暗色主题 */
+.mdui-theme-dark {
+  --mdui-color-primary: #818cf8;
+  --mdui-color-on-primary: #1e1b4b;
+  --mdui-color-primary-container: #3730a3;
+  --mdui-color-on-primary-container: #e0e7ff;
+}
