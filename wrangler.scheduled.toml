@@ -1,0 +1,25 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "flashinbox-scheduled"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+main = "src/workers/scheduled/cleanup.ts"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "flashinbox-db"
+database_id = "" # 部署时填写实际 ID
+
+[vars]
+DEFAULT_DOMAIN = "example.com"
+KEY_EXPIRE_DAYS = "15"
+UNCLAIMED_EXPIRE_DAYS = "7"
+SESSION_EXPIRE_HOURS = "24"
+ADMIN_SESSION_EXPIRE_HOURS = "4"
+MAX_BODY_TEXT = "102400"
+MAX_BODY_HTML = "512000"
+
+[triggers]
+crons = ["0 * * * *", "0 0 * * *"]
+
+

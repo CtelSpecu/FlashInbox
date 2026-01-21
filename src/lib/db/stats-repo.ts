@@ -8,6 +8,13 @@ export interface IncrementStatInput {
   increment?: number;
 }
 
+export interface UpsertStatValueInput {
+  date: string;
+  metric: string;
+  domainId?: number;
+  value: number;
+}
+
 export class StatsRepository extends BaseRepository<StatsDaily, StatsDailyRow> {
   constructor(db: D1Database) {
     super(db, 'stats_daily');
@@ -27,6 +34,23 @@ export class StatsRepository extends BaseRepository<StatsDaily, StatsDailyRow> {
          DO UPDATE SET value = value + ?`
       )
       .bind(date, domainId || null, metric, increment, increment)
+      .run();
+  }
+
+  /**
+   * 写入指标绝对值（幂等 upsert）
+   */
+  async upsertValue(input: UpsertStatValueInput): Promise<void> {
+    const { date, metric, domainId, value } = input;
+
+    await this.db
+      .prepare(
+        `INSERT INTO stats_daily (date, domain_id, metric, value)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT (date, domain_id, metric)
+         DO UPDATE SET value = ?`
+      )
+      .bind(date, domainId ?? null, metric, value, value)
       .run();
   }
 

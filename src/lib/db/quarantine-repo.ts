@@ -145,5 +145,18 @@ export class QuarantineRepository extends BaseRepository<Quarantine, QuarantineR
 
     return result?.count ?? 0;
   }
+
+  /**
+   * 删除邮箱相关的所有隔离记录（物理删除）
+   * 用于销毁/清理时避免外键约束阻塞
+   */
+  async deleteByMailboxId(mailboxId: string): Promise<number> {
+    const result = await this.db
+      .prepare('DELETE FROM quarantine WHERE mailbox_id = ?')
+      .bind(mailboxId)
+      .run();
+
+    return result.meta.changes;
+  }
 }
 

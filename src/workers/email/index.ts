@@ -119,17 +119,31 @@ const emailWorker = {
 
       // 检查邮箱状态
       if (mailbox.status === 'destroyed') {
-        await auditLogRepo.create({
-          action: 'email_rejected',
-          actorType: 'system',
-          targetType: 'mailbox',
-          targetId: mailbox.id,
-          details: { reason: 'Mailbox is destroyed' },
-          success: false,
-          errorCode: 'MAILBOX_DESTROYED',
-        });
-        message.setReject('Mailbox is no longer active');
-        return;
+        // 允许 destroyed 邮箱在再次收信时回到 UNCLAIMED（同一 mailbox identity，不会复用给其他人）
+        const revived = await mailboxRepo.reviveToUnclaimed(mailbox.id);
+        if (revived) {
+          mailbox = revived;
+          await auditLogRepo.create({
+            action: 'mailbox_revived',
+            actorType: 'system',
+            targetType: 'mailbox',
+            targetId: mailbox.id,
+            details: { reason: 'inbound_after_destroyed' },
+            success: true,
+          });
+        } else {
+          await auditLogRepo.create({
+            action: 'email_rejected',
+            actorType: 'system',
+            targetType: 'mailbox',
+            targetId: mailbox.id,
+            details: { reason: 'Mailbox is destroyed (revive failed)' },
+            success: false,
+            errorCode: 'MAILBOX_DESTROYED',
+          });
+          message.setReject('Mailbox is no longer active');
+          return;
+        }
       }
 
       // 4. 读取并解析邮件内容

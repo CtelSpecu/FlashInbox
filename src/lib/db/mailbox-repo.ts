@@ -124,6 +124,28 @@ export class MailboxRepository extends BaseRepository<Mailbox, MailboxRow> {
   }
 
   /**
+   * 将 DESTROYED 邮箱恢复为 UNCLAIMED（再次入站邮件触发）
+   * 注意：保持同一 mailbox identity，不会允许 username@domain 复用给其他人
+   */
+  async reviveToUnclaimed(id: string): Promise<Mailbox | null> {
+    const result = await this.db
+      .prepare(
+        `UPDATE mailboxes
+         SET status = 'unclaimed',
+             key_hash = NULL,
+             key_created_at = NULL,
+             key_expires_at = NULL,
+             claimed_at = NULL
+         WHERE id = ? AND status = 'destroyed'
+         RETURNING *`
+      )
+      .bind(id)
+      .first<MailboxRow>();
+
+    return result ? this.mapRow(result) : null;
+  }
+
+  /**
    * 更新最后收信时间
    */
   async updateLastMailAt(id: string): Promise<void> {
