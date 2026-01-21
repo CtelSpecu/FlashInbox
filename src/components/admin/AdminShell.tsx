@@ -81,7 +81,7 @@ export function AdminShell({
         <aside className="hidden w-64 border-r border-[color:var(--admin-border)] bg-[color:var(--admin-surface)] md:block">
           <div className="flex items-center gap-2 px-4 py-4">
             <div className="flex h-9 w-9 items-center justify-center rounded-md bg-[color:var(--admin-primary)] text-[color:var(--admin-primary-text)]">
-              <Icon icon="lucide:mail" className="h-5 w-5" />
+              <img src="/FlashInbox.svg" alt="FlashInbox" className="h-5 w-5" draggable={false} />
             </div>
             <div className="min-w-0">
               <div className="text-sm font-semibold text-[color:var(--admin-text)]">{t.common.appName}</div>
@@ -255,5 +255,4 @@ export function AdminShell({
     </div>
   );
 }
-
 

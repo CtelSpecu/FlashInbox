@@ -63,7 +63,7 @@ export default function AdminLoginPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-md bg-slate-900 text-white">
-              <Icon icon="lucide:shield" className="h-5 w-5" />
+              <img src="/FlashInbox.svg" alt="FlashInbox" className="h-5 w-5" draggable={false} />
             </div>
             <div className="min-w-0">
               <CardTitle>{t.auth.loginTitle}</CardTitle>
@@ -101,5 +101,4 @@ export default function AdminLoginPage() {
     </div>
   );
 }
-
 

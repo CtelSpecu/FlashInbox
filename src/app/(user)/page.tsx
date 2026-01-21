@@ -114,7 +114,12 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col items-center justify-center p-6">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <Icon icon="mdi:email-fast" className="mx-auto h-14 w-14 text-[color:var(--mdui-color-primary)]" />
+          <img
+            src="/FlashInbox_Animated.svg"
+            alt="FlashInbox"
+            className="mx-auto h-14 w-14"
+            draggable={false}
+          />
           <h1 className="mt-3 text-2xl font-semibold">{t.home.title}</h1>
           <p className="mt-1 text-sm opacity-80">{t.home.subtitle}</p>
         </div>
