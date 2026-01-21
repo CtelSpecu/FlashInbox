@@ -6,6 +6,7 @@ import { Icon } from '@iconify/react';
 
 import { apiFetch } from '@/lib/client/api';
 import { setSessionToken } from '@/lib/client/session-store';
+import { useI18n } from '@/lib/i18n/context';
 
 interface UserConfigResponse {
   success: true;
@@ -22,6 +23,7 @@ interface RecoverResponse {
 
 export default function RecoverPage() {
   const router = useRouter();
+  const { t, format } = useI18n();
 
   const [defaultDomain, setDefaultDomain] = useState('example.com');
   const [username, setUsername] = useState('');
@@ -63,13 +65,15 @@ export default function RecoverPage() {
 
       setSessionToken(res.data.session.token);
       if (res.data.mailbox.keyExpiresAt) {
-        setNotice(`Key expires at ${new Date(res.data.mailbox.keyExpiresAt).toLocaleString()}.`);
+        setNotice(format(t.recover.keyExpiresNotice, { time: new Date(res.data.mailbox.keyExpiresAt).toLocaleString() }));
       }
       router.push('/inbox');
     } catch (e: any) {
-      const msg = typeof e?.message === 'string' ? e.message : 'Failed to recover access';
-      const retryAfterMs = e?.retryAfter ? ` Retry after ${Math.ceil(e.retryAfter / 1000)}s.` : '';
-      setErrorText(`${msg}.${retryAfterMs}`.replace('..', '.'));
+      const msg = typeof e?.message === 'string' ? e.message : t.recover.recoverFailed;
+      const retryAfterMs = e?.retryAfter
+        ? ` ${format(t.home.retryAfter, { seconds: Math.ceil(e.retryAfter / 1000) })}`
+        : '';
+      setErrorText(`${msg}${retryAfterMs}`);
     } finally {
       setLoading(false);
     }
@@ -80,13 +84,13 @@ export default function RecoverPage() {
       <div className="w-full max-w-md space-y-4">
         <div className="text-center">
           <Icon icon="mdi:history" className="mx-auto h-12 w-12 text-[color:var(--mdui-color-primary)]" />
-          <h1 className="mt-2 text-xl font-semibold">Recover access</h1>
-          <p className="mt-1 text-sm opacity-80">Use username + key to restore inbox access.</p>
+          <h1 className="mt-2 text-xl font-semibold">{t.recover.title}</h1>
+          <p className="mt-1 text-sm opacity-80">{t.recover.subtitle}</p>
         </div>
 
         <mdui-text-field
-          label="Username"
-          placeholder="BluePanda23"
+          label={t.recover.usernameLabel}
+          placeholder={t.recover.usernamePlaceholder}
           clearable
           value={username}
           onInput={(e: any) => setUsername(e.target.value)}
@@ -96,7 +100,7 @@ export default function RecoverPage() {
         </mdui-text-field>
 
         <mdui-text-field
-          label="Domain"
+          label={t.recover.domainLabel}
           placeholder={defaultDomain}
           value={domain}
           onInput={(e: any) => setDomain(e.target.value)}
@@ -106,8 +110,8 @@ export default function RecoverPage() {
         </mdui-text-field>
 
         <mdui-text-field
-          label="Key"
-          placeholder="32-character key"
+          label={t.recover.keyLabel}
+          placeholder={t.recover.keyPlaceholder}
           clearable
           value={key}
           onInput={(e: any) => setKey(e.target.value)}
@@ -121,17 +125,15 @@ export default function RecoverPage() {
 
         <mdui-button variant="filled" full-width loading={loading} disabled={!canSubmit} onClick={submit}>
           <Icon icon="mdi:login" slot="icon" />
-          Recover
+          {t.recover.recoverButton}
         </mdui-button>
 
         <div className="flex justify-center">
           <mdui-button variant="text" onClick={() => router.push('/')}>
-            Back
+            {t.common.back}
           </mdui-button>
         </div>
       </div>
     </div>
   );
 }
-
-
