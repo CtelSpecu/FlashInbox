@@ -4,8 +4,6 @@ import { createRepositories } from '@/lib/db';
 import { withAdminAuth, AdminAuthContext } from '@/lib/middleware/admin-auth';
 import { success, error, ErrorCodes, parseJsonBody } from '@/lib/utils/response';
 
-export const runtime = 'edge';
-
 interface UpdateRuleRequest {
   type?: 'sender_domain' | 'sender_addr' | 'keyword' | 'ip';
   pattern?: string;

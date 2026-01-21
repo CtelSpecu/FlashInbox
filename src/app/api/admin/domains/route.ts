@@ -4,8 +4,6 @@ import { createRepositories } from '@/lib/db';
 import { withAdminAuth, AdminAuthContext } from '@/lib/middleware/admin-auth';
 import { success, error, ErrorCodes, parseJsonBody } from '@/lib/utils/response';
 
-export const runtime = 'edge';
-
 interface AddDomainRequest {
   name: string;
   status?: 'enabled' | 'disabled' | 'readonly';

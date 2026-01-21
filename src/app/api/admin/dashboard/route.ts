@@ -3,8 +3,6 @@ import { getCloudflareEnv } from '@/lib/env';
 import { withAdminAuth, AdminAuthContext } from '@/lib/middleware/admin-auth';
 import { success, error, ErrorCodes } from '@/lib/utils/response';
 
-export const runtime = 'edge';
-
 type RangeKey = '24h' | '7d' | '30d';
 
 function getRange(range: RangeKey): { start: number; end: number; bucketMs: number; points: number } {

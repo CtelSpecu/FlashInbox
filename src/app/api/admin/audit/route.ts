@@ -4,8 +4,6 @@ import { createRepositories } from '@/lib/db';
 import { withAdminAuth, AdminAuthContext } from '@/lib/middleware/admin-auth';
 import { success } from '@/lib/utils/response';
 
-export const runtime = 'edge';
-
 function parseDateToMs(date: string, endOfDay = false): number | null {
   // 期望格式 YYYY-MM-DD
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;

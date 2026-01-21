@@ -3,8 +3,6 @@ import { getCloudflareEnv } from '@/lib/env';
 import { withAdminAuth, AdminAuthContext } from '@/lib/middleware/admin-auth';
 import { success } from '@/lib/utils/response';
 
-export const runtime = 'edge';
-
 export const GET = withAdminAuth(async (
   request: NextRequest,
   _context: AdminAuthContext,

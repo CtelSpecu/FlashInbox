@@ -5,8 +5,6 @@ import { createRateLimitService } from '@/lib/services/rate-limit';
 import { withAuth, AuthContext } from '@/lib/middleware/auth';
 import { success, error, ErrorCodes, rateLimited } from '@/lib/utils/response';
 
-export const runtime = 'edge';
-
 interface RouteParams {
   params: Promise<{ id: string }>;
 }

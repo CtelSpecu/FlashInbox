@@ -5,8 +5,6 @@ import { createRateLimitService } from '@/lib/services/rate-limit';
 import { withAuth, AuthContext } from '@/lib/middleware/auth';
 import { success, rateLimited } from '@/lib/utils/response';
 
-export const runtime = 'edge';
-
 async function inboxHandler(
   request: NextRequest,
   context: AuthContext

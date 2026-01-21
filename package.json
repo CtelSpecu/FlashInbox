@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:wrangler": "wrangler dev",
+    "build:webpack": "next build --webpack",
+    "build:worker": "bun run build:webpack && bunx opennextjs-cloudflare build --skipNextBuild",
+    "dev:wrangler": "bun run build:worker && wrangler dev",
     "dev:all": "concurrently \"bun run dev\" \"bun run dev:wrangler\"",
     "build": "next build",
     "start": "next start",
@@ -14,7 +16,7 @@
     "test": "bun test",
     "test:unit": "bun test tests/unit",
     "test:integration": "bun test tests/integration",
-    "deploy": "wrangler deploy"
+    "deploy": "bun run build:worker && wrangler deploy"
   },
   "dependencies": {
     "@cloudflare/next-on-pages": "^1.13.16",

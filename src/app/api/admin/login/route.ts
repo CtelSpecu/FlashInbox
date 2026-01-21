@@ -3,8 +3,6 @@ import { getCloudflareEnv } from '@/lib/env';
 import { AdminAuthService } from '@/lib/services/admin-auth';
 import { success, error, ErrorCodes, parseJsonBody, rateLimited } from '@/lib/utils/response';
 
-export const runtime = 'edge';
-
 interface AdminLoginRequest {
   token: string;
   fingerprint: string;

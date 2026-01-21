@@ -5,8 +5,6 @@ import { createMailboxService } from '@/lib/services/mailbox';
 import { createRateLimitService } from '@/lib/services/rate-limit';
 import { success, error, ErrorCodes, parseJsonBody, rateLimited } from '@/lib/utils/response';
 
-export const runtime = 'edge';
-
 interface RecoverRequest {
   username: string;
   domain: string;

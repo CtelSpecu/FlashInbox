@@ -4,8 +4,6 @@ import { createRepositories } from '@/lib/db';
 import { withAdminAuth, AdminAuthContext } from '@/lib/middleware/admin-auth';
 import { success, error, ErrorCodes } from '@/lib/utils/response';
 
-export const runtime = 'edge';
-
 export const DELETE = withAdminAuth<{ id: string }>(async (
   _request: NextRequest,
   context: AdminAuthContext,

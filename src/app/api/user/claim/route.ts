@@ -4,12 +4,14 @@ import { createRepositories } from '@/lib/db';
 import { createMailboxService } from '@/lib/services/mailbox';
 import { createRateLimitService } from '@/lib/services/rate-limit';
 import { createTurnstileService } from '@/lib/services/turnstile';
+import { calculateSessionExpiry } from '@/lib/types/env';
+import { createSessionService } from '@/lib/services/session';
+import { canonicalizeUsername, parseEmailAddress } from '@/lib/utils/username';
 import { success, error, ErrorCodes, parseJsonBody, rateLimited } from '@/lib/utils/response';
 
-export const runtime = 'edge';
-
 interface ClaimMailboxRequest {
-  mailboxId: string;
+  mailboxId?: string;
+  email?: string;
   turnstileToken: string;
 }
 
@@ -40,8 +42,10 @@ export async function POST(request: NextRequest) {
 
   // 解析请求
   const body = await parseJsonBody<ClaimMailboxRequest>(request);
-  if (!body?.mailboxId) {
-    return error(ErrorCodes.INVALID_REQUEST, 'Mailbox ID is required', 400);
+  const mailboxIdFromBody = body?.mailboxId;
+  const emailFromBody = body?.email;
+  if (!mailboxIdFromBody && !emailFromBody) {
+    return error(ErrorCodes.INVALID_REQUEST, 'Mailbox ID or email is required', 400);
   }
   if (!body.turnstileToken) {
     return error(ErrorCodes.INVALID_REQUEST, 'Turnstile token is required', 400);
@@ -57,7 +61,7 @@ export async function POST(request: NextRequest) {
       action: 'user.claim',
       actorType: 'user',
       targetType: 'mailbox',
-      targetId: body.mailboxId,
+      targetId: mailboxIdFromBody || undefined,
       success: false,
       errorCode: ErrorCodes.TURNSTILE_FAILED,
       ipAddress: remoteIP,
@@ -73,7 +77,42 @@ export async function POST(request: NextRequest) {
 
   try {
     const mailboxService = createMailboxService(env.DB, config, env.KEY_PEPPER);
-    const result = await mailboxService.claim(body.mailboxId);
+    let mailboxId = mailboxIdFromBody;
+    if (!mailboxId && emailFromBody) {
+      const parsed = parseEmailAddress(emailFromBody.trim());
+      if (!parsed) {
+        return error(ErrorCodes.INVALID_REQUEST, 'Invalid email', 400);
+      }
+
+      const domain = await repos.domains.findByName(parsed.domain);
+      if (!domain) {
+        // do not reveal; treat as not found
+        return error(ErrorCodes.INVALID_REQUEST, 'Invalid request', 400);
+      }
+
+      const mailbox = await repos.mailboxes.findByDomainAndCanonical(
+        domain.id,
+        canonicalizeUsername(parsed.username)
+      );
+      if (!mailbox) {
+        return error(ErrorCodes.INVALID_REQUEST, 'Invalid request', 400);
+      }
+      mailboxId = mailbox.id;
+    }
+
+    const result = await mailboxService.claim(mailboxId!);
+
+    // create a user session for immediate inbox access
+    const sessionService = createSessionService(env.DB);
+    const { session, token } = await sessionService.create(
+      result.mailbox.id,
+      calculateSessionExpiry(config),
+      {
+        ipAddress: remoteIP,
+        asn: request.headers.get('cf-ipcountry') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+      }
+    );
 
     // 返回认领结果（包含明文 Key，仅此一次）
     await repos.auditLogs.create({
@@ -97,6 +136,10 @@ export async function POST(request: NextRequest) {
         claimedAt: result.mailbox.claimedAt,
       },
       key: result.key,
+      session: {
+        token,
+        expiresAt: session.expiresAt,
+      },
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
@@ -116,7 +159,7 @@ export async function POST(request: NextRequest) {
       action: 'user.claim',
       actorType: 'user',
       targetType: 'mailbox',
-      targetId: body.mailboxId,
+      targetId: mailboxIdFromBody || undefined,
       success: false,
       errorCode: ErrorCodes.INTERNAL_ERROR,
       ipAddress: remoteIP,

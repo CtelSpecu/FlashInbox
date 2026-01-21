@@ -4,8 +4,6 @@ import { AdminAuthService } from '@/lib/services/admin-auth';
 import { withAdminAuth, AdminAuthContext } from '@/lib/middleware/admin-auth';
 import { success } from '@/lib/utils/response';
 
-export const runtime = 'edge';
-
 async function logoutHandler(
   request: NextRequest,
   context: AdminAuthContext,

@@ -5,8 +5,6 @@ import { withAdminAuth, AdminAuthContext } from '@/lib/middleware/admin-auth';
 import { success, error, ErrorCodes, parseJsonBody } from '@/lib/utils/response';
 import type { RuleRow } from '@/lib/types/entities';
 
-export const runtime = 'edge';
-
 interface AddRuleRequest {
   type: 'sender_domain' | 'sender_addr' | 'keyword' | 'ip';
   pattern: string;

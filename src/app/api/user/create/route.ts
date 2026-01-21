@@ -1,11 +1,10 @@
 import { NextRequest } from 'next/server';
 import { getCloudflareEnv, getAppConfig } from '@/lib/env';
 import { createRepositories } from '@/lib/db';
+import { DomainRepository } from '@/lib/db/domain-repo';
 import { createMailboxService } from '@/lib/services/mailbox';
 import { createRateLimitService } from '@/lib/services/rate-limit';
 import { success, error, ErrorCodes, parseJsonBody, rateLimited } from '@/lib/utils/response';
-
-export const runtime = 'edge';
 
 interface CreateMailboxRequest {
   username?: string;
@@ -48,6 +47,19 @@ export async function POST(request: NextRequest) {
   const userAgent = request.headers.get('user-agent') || undefined;
 
   try {
+    // DX: ensure default domain exists when client doesn't specify domainId
+    if (!body?.domainId) {
+      const domainRepo = new DomainRepository(env.DB);
+      const existing = await domainRepo.findByName(config.defaultDomain);
+      if (!existing) {
+        try {
+          await domainRepo.create({ name: config.defaultDomain, status: 'enabled', note: 'auto-created for local dev' });
+        } catch {
+          // ignore
+        }
+      }
+    }
+
     const mailboxService = createMailboxService(env.DB, config, env.KEY_PEPPER);
 
     const result = await mailboxService.create(

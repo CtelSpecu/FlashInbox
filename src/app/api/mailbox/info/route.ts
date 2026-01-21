@@ -5,8 +5,6 @@ import { DomainRepository } from '@/lib/db/domain-repo';
 import { withAuth, AuthContext } from '@/lib/middleware/auth';
 import { success } from '@/lib/utils/response';
 
-export const runtime = 'edge';
-
 async function mailboxInfoHandler(
   request: NextRequest,
   context: AuthContext
