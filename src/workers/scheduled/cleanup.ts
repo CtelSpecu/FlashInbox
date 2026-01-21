@@ -27,7 +27,7 @@ function getUtcDayRange(dateStr: string): { start: number; end: number } {
   return { start, end };
 }
 
-async function cleanupExpiredKeys(env: ScheduledEnv): Promise<number> {
+export async function cleanupExpiredKeys(env: ScheduledEnv): Promise<number> {
   const repos = createRepositories(env.DB);
   let processed = 0;
 
@@ -62,7 +62,7 @@ async function cleanupExpiredKeys(env: ScheduledEnv): Promise<number> {
   return processed;
 }
 
-async function cleanupExpiredUnclaimed(env: ScheduledEnv): Promise<number> {
+export async function cleanupExpiredUnclaimed(env: ScheduledEnv): Promise<number> {
   const config = getConfig(env);
   const repos = createRepositories(env.DB);
 
@@ -99,7 +99,7 @@ async function cleanupExpiredUnclaimed(env: ScheduledEnv): Promise<number> {
   return processed;
 }
 
-async function aggregateDailyStats(env: ScheduledEnv, dateStr: string): Promise<void> {
+export async function aggregateDailyStats(env: ScheduledEnv, dateStr: string): Promise<void> {
   const repos = createRepositories(env.DB);
   const { start, end } = getUtcDayRange(dateStr);
 
@@ -179,7 +179,7 @@ async function aggregateDailyStats(env: ScheduledEnv, dateStr: string): Promise<
   });
 }
 
-async function hourly(env: ScheduledEnv): Promise<void> {
+export async function hourly(env: ScheduledEnv): Promise<void> {
   const repos = createRepositories(env.DB);
 
   await cleanupExpiredKeys(env);
@@ -193,7 +193,7 @@ async function hourly(env: ScheduledEnv): Promise<void> {
   await rateLimit.cleanup();
 }
 
-async function daily(env: ScheduledEnv): Promise<void> {
+export async function daily(env: ScheduledEnv): Promise<void> {
   await cleanupExpiredUnclaimed(env);
 
   // aggregate yesterday
