@@ -1,0 +1,144 @@
+export interface AdminTranslations {
+  common: {
+    appName: string;
+    admin: string;
+    loading: string;
+    reload: string;
+    save: string;
+    cancel: string;
+    close: string;
+    confirm: string;
+    delete: string;
+    edit: string;
+    add: string;
+    prev: string;
+    next: string;
+    yes: string;
+    no: string;
+    empty: string;
+  };
+  language: {
+    label: string;
+    enUS: string;
+    zhCN: string;
+    zhTW: string;
+  };
+  nav: {
+    dashboard: string;
+    domains: string;
+    rules: string;
+    quarantine: string;
+    audit: string;
+    navigation: string;
+    menu: string;
+  };
+  auth: {
+    loginTitle: string;
+    loginSubtitle: string;
+    tokenLabel: string;
+    tokenPlaceholder: string;
+    fingerprint: string;
+    login: string;
+    loggingIn: string;
+    logout: string;
+    loggingOut: string;
+  };
+  dashboard: {
+    range24h: string;
+    range7d: string;
+    range30d: string;
+    totalMailboxes: string;
+    claimed: string;
+    unclaimed: string;
+    totalMessages: string;
+    quarantine: string;
+    messagesReceived: string;
+    recoverFailures: string;
+    security: string;
+    rateLimited: string;
+    turnstileFailed: string;
+    htmlSanitized: string;
+    topDropRules: string;
+    topQuarantineRules: string;
+    noData: string;
+  };
+  domains: {
+    addDomain: string;
+    domains: string;
+    domainPlaceholder: string;
+    notePlaceholder: string;
+    statusEnabled: string;
+    statusDisabled: string;
+    statusReadonly: string;
+    id: string;
+    domain: string;
+    status: string;
+    mailboxes: string;
+    note: string;
+    actions: string;
+    confirmDeleteTitle: string;
+    confirmDeleteText: string; // {name}
+    deleteBlockedHint: string;
+    noDomains: string;
+  };
+  rules: {
+    addRule: string;
+    rules: string;
+    type: string;
+    pattern: string;
+    action: string;
+    priority: string;
+    active: string;
+    domain: string;
+    hits: string;
+    description: string;
+    global: string;
+    on: string;
+    off: string;
+    editRule: string;
+    noRules: string;
+  };
+  quarantine: {
+    title: string;
+    status: string;
+    pending: string;
+    released: string;
+    deleted: string;
+    received: string;
+    mailbox: string;
+    from: string;
+    subject: string;
+    rule: string;
+    reason: string;
+    release: string;
+    delete: string;
+    confirmReleaseTitle: string;
+    confirmDeleteTitle: string;
+    confirmReleaseText: string;
+    confirmDeleteText: string;
+    noItems: string;
+    noSubject: string;
+    page: string; // {page}
+  };
+  audit: {
+    title: string;
+    actionPlaceholder: string;
+    actorTypeAll: string;
+    results: string;
+    total: string;
+    time: string;
+    action: string;
+    actor: string;
+    target: string;
+    ip: string;
+    success: string;
+    error: string;
+    details: string;
+    view: string;
+    detailsTitle: string;
+    copy: string;
+    empty: string;
+  };
+}
+
+

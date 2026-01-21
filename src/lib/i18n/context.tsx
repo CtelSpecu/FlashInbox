@@ -11,7 +11,6 @@ import {
 } from 'react';
 import {
   type Locale,
-  type TranslationKeys,
   detectLocale,
   saveLocale,
   getTranslations,
@@ -21,7 +20,7 @@ import {
 interface I18nContextValue {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: TranslationKeys;
+  t: ReturnType<typeof getTranslations>;
   format: (template: string, params?: Record<string, string | number>) => string;
 }
 
@@ -32,7 +31,7 @@ interface I18nProviderProps {
 }
 
 export function I18nProvider({ children }: I18nProviderProps) {
-  const [locale, setLocaleState] = useState<Locale>('zh-CN');
+  const [locale, setLocaleState] = useState<Locale>('en-US');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

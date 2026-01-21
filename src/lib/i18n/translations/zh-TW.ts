@@ -1,6 +1,8 @@
 /**
  * 繁體中文翻譯
  */
+import type { UserTranslations } from '../schema';
+
 export const zhTW = {
   // 通用
   common: {
@@ -123,6 +125,7 @@ export const zhTW = {
   // 語言
   language: {
     label: '語言',
+    enUS: 'English (US)',
     zhCN: '简体中文',
     zhTW: '繁體中文',
   },
@@ -134,5 +137,5 @@ export const zhTW = {
     dark: '深色',
     system: '跟隨系統',
   },
-} as const;
+} satisfies UserTranslations;
 

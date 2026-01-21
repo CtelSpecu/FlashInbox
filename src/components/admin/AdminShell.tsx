@@ -12,7 +12,7 @@ import { clearAdminSession, getAdminSession } from '@/lib/admin/session-store';
 import { adminApiFetch } from '@/lib/admin/api';
 import { withAdminTracking } from '@/lib/admin/tracking';
 import { useAdminI18n } from '@/lib/admin-i18n/context';
-import { adminLocaleNames, type AdminLocale } from '@/lib/admin-i18n';
+import { type AdminLocale } from '@/lib/admin-i18n';
 
 type NavItem = { href: string; key: 'dashboard' | 'domains' | 'rules' | 'quarantine' | 'audit'; icon: string };
 
@@ -143,8 +143,9 @@ export function AdminShell({
                   className="hidden md:block w-[140px]"
                   aria-label={t.language.label}
                 >
-                  <option value="zh-CN">{adminLocaleNames['zh-CN']}</option>
-                  <option value="zh-TW">{adminLocaleNames['zh-TW']}</option>
+                  <option value="en-US">{t.language.enUS}</option>
+                  <option value="zh-CN">{t.language.zhCN}</option>
+                  <option value="zh-TW">{t.language.zhTW}</option>
                 </Select>
                 <Button variant="destructive" size="sm" onClick={logout} disabled={loggingOut}>
                   <Icon icon="lucide:log-out" className="h-4 w-4" />
@@ -175,6 +176,19 @@ export function AdminShell({
                   </Button>
                 </div>
                 <nav className="p-2">
+                  <div className="px-3 pb-2">
+                    <div className="text-xs font-medium text-slate-600">{t.language.label}</div>
+                    <Select
+                      value={locale}
+                      onChange={(e) => setLocale(e.target.value as AdminLocale)}
+                      className="mt-1"
+                      aria-label={t.language.label}
+                    >
+                      <option value="en-US">{t.language.enUS}</option>
+                      <option value="zh-CN">{t.language.zhCN}</option>
+                      <option value="zh-TW">{t.language.zhTW}</option>
+                    </Select>
+                  </div>
                   {navItems.map((item) => {
                     const active = item.href === activeHref;
                     const label =

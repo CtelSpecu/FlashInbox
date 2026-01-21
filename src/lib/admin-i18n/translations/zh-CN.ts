@@ -1,6 +1,8 @@
 /**
  * Admin 简体中文翻译（独立于用户端 i18n）
  */
+import type { AdminTranslations } from '../schema';
+
 export const adminZhCN = {
   common: {
     appName: '闪收箱',
@@ -22,6 +24,7 @@ export const adminZhCN = {
   },
   language: {
     label: '语言',
+    enUS: 'English (US)',
     zhCN: '简体中文',
     zhTW: '繁體中文',
   },
@@ -69,9 +72,9 @@ export const adminZhCN = {
     domains: '域名列表',
     domainPlaceholder: 'example.com',
     notePlaceholder: '备注（可选）',
-    statusEnabled: 'enabled',
-    statusDisabled: 'disabled',
-    statusReadonly: 'readonly',
+    statusEnabled: '启用',
+    statusDisabled: '禁用',
+    statusReadonly: '只读',
     id: 'ID',
     domain: '域名',
     status: '状态',
@@ -103,9 +106,9 @@ export const adminZhCN = {
   quarantine: {
     title: '隔离队列',
     status: '状态',
-    pending: 'pending',
-    released: 'released',
-    deleted: 'deleted',
+    pending: '待处理',
+    released: '已释放',
+    deleted: '已删除',
     received: '收到时间',
     mailbox: '邮箱',
     from: '发件人',
@@ -141,8 +144,8 @@ export const adminZhCN = {
     copy: '复制',
     empty: '暂无日志',
   },
-} as const;
+} satisfies AdminTranslations;
 
-export type AdminTranslationKeys = typeof adminZhCN;
+export type AdminTranslationKeys = AdminTranslations;
 
 

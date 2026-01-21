@@ -1,6 +1,8 @@
 /**
  * 简体中文翻译
  */
+import type { UserTranslations } from '../schema';
+
 export const zhCN = {
   // 通用
   common: {
@@ -123,6 +125,7 @@ export const zhCN = {
   // 语言
   language: {
     label: '语言',
+    enUS: 'English (US)',
     zhCN: '简体中文',
     zhTW: '繁體中文',
   },
@@ -134,7 +137,5 @@ export const zhCN = {
     dark: '深色',
     system: '跟随系统',
   },
-} as const;
-
-export type TranslationKeys = typeof zhCN;
+} satisfies UserTranslations;
 

@@ -1,6 +1,8 @@
 /**
  * Admin 繁體中文翻譯（獨立於用戶端 i18n）
  */
+import type { AdminTranslations } from '../schema';
+
 export const adminZhTW = {
   common: {
     appName: '閃收箱',
@@ -22,6 +24,7 @@ export const adminZhTW = {
   },
   language: {
     label: '語言',
+    enUS: 'English (US)',
     zhCN: '简体中文',
     zhTW: '繁體中文',
   },
@@ -69,9 +72,9 @@ export const adminZhTW = {
     domains: '網域列表',
     domainPlaceholder: 'example.com',
     notePlaceholder: '備註（可選）',
-    statusEnabled: 'enabled',
-    statusDisabled: 'disabled',
-    statusReadonly: 'readonly',
+    statusEnabled: '啟用',
+    statusDisabled: '停用',
+    statusReadonly: '唯讀',
     id: 'ID',
     domain: '網域',
     status: '狀態',
@@ -103,9 +106,9 @@ export const adminZhTW = {
   quarantine: {
     title: '隔離佇列',
     status: '狀態',
-    pending: 'pending',
-    released: 'released',
-    deleted: 'deleted',
+    pending: '待處理',
+    released: '已釋放',
+    deleted: '已刪除',
     received: '收到時間',
     mailbox: '郵箱',
     from: '寄件人',
@@ -141,6 +144,6 @@ export const adminZhTW = {
     copy: '複製',
     empty: '暫無日誌',
   },
-} as const;
+} satisfies AdminTranslations;
 
 

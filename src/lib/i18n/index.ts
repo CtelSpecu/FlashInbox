@@ -1,26 +1,27 @@
 /**
  * i18n 国际化模块
- * 支持简体中文 (zh-CN) 和繁体中文 (zh-TW)
+ * 支持美式英文 (en-US)、简体中文 (zh-CN) 和繁体中文 (zh-TW)
  */
 
-import { zhCN, type TranslationKeys } from './translations/zh-CN';
+import { zhCN } from './translations/zh-CN';
 import { zhTW } from './translations/zh-TW';
+import { enUS } from './translations/en-US';
+import type { UserTranslations } from './schema';
 
-export type Locale = 'zh-CN' | 'zh-TW';
+export type Locale = 'en-US' | 'zh-CN' | 'zh-TW';
 
-export const locales: Locale[] = ['zh-CN', 'zh-TW'];
+export const locales: Locale[] = ['en-US', 'zh-CN', 'zh-TW'];
 
 export const localeNames: Record<Locale, string> = {
+  'en-US': 'English (US)',
   'zh-CN': '简体中文',
   'zh-TW': '繁體中文',
 };
 
-// Use a more flexible type to allow different string values
-type TranslationsMap = Record<Locale, TranslationKeys>;
-
-const translations: TranslationsMap = {
+const translations: Record<Locale, UserTranslations> = {
+  'en-US': enUS,
   'zh-CN': zhCN,
-  'zh-TW': zhTW as unknown as TranslationKeys,
+  'zh-TW': zhTW,
 };
 
 /**
@@ -28,7 +29,7 @@ const translations: TranslationsMap = {
  */
 export function detectLocale(): Locale {
   if (typeof window === 'undefined') {
-    return 'zh-CN'; // SSR 默认
+    return 'en-US'; // SSR 默认
   }
 
   // 1. 检查 localStorage
@@ -37,20 +38,25 @@ export function detectLocale(): Locale {
     return stored as Locale;
   }
 
-  // 2. 检查浏览器语言
-  const browserLang = navigator.language || (navigator as any).userLanguage || '';
+  // 2. 检查浏览器语言（优先 languages 列表）
+  const candidates = Array.from(
+    new Set([...(navigator.languages || []), navigator.language || ''].filter(Boolean))
+  );
 
-  // 繁体中文变体
-  if (
-    browserLang.toLowerCase().startsWith('zh-tw') ||
-    browserLang.toLowerCase().startsWith('zh-hk') ||
-    browserLang.toLowerCase().startsWith('zh-hant')
-  ) {
-    return 'zh-TW';
+  for (const lang of candidates) {
+    const l = lang.toLowerCase();
+
+    if (l.startsWith('en')) return 'en-US';
+
+    // 繁体中文变体
+    if (l.startsWith('zh-tw') || l.startsWith('zh-hk') || l.startsWith('zh-hant')) {
+      return 'zh-TW';
+    }
+
+    if (l.startsWith('zh')) return 'zh-CN';
   }
 
-  // 默认简体中文
-  return 'zh-CN';
+  return 'en-US';
 }
 
 /**
@@ -65,8 +71,8 @@ export function saveLocale(locale: Locale): void {
 /**
  * 获取翻译对象
  */
-export function getTranslations(locale: Locale): TranslationKeys {
-  return translations[locale] || translations['zh-CN'];
+export function getTranslations(locale: Locale): UserTranslations {
+  return translations[locale] || translations['en-US'];
 }
 
 /**
@@ -83,6 +89,5 @@ export function formatMessage(
     return params[key] !== undefined ? String(params[key]) : `{${key}}`;
   });
 }
-
-export type { TranslationKeys };
+export type { UserTranslations };
 

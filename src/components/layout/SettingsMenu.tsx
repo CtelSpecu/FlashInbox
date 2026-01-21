@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
 import { useI18n } from '@/lib/i18n/context';
-import { type Locale, locales, localeNames } from '@/lib/i18n';
+import { type Locale, locales } from '@/lib/i18n';
 
 type Theme = 'light' | 'dark' | 'auto';
 
@@ -89,7 +89,7 @@ export function SettingsMenu() {
               onClick={() => handleLocaleChange(loc)}
             >
               {locale === loc && <Icon icon="mdi:check" slot="icon" />}
-              {localeNames[loc]}
+              {loc === 'en-US' ? t.language.enUS : loc === 'zh-CN' ? t.language.zhCN : t.language.zhTW}
             </mdui-menu-item>
           ))}
 
