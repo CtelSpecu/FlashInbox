@@ -41,16 +41,16 @@
 - 设置项目目录结构（见 AGENTS.md）
 
 **验收标准**
-- [ ] `bun run dev` 能够启动开发服务器
-- [ ] TypeScript 编译无错误
-- [ ] ESLint 检查通过
-- [ ] 目录结构符合设计文档规划
-- [ ] MDUI 组件能够正常渲染
+- [x] `bun run dev` 能够启动开发服务器
+- [x] TypeScript 编译无错误
+- [x] ESLint 检查通过
+- [x] 目录结构符合设计文档规划
+- [x] MDUI 组件能够正常渲染
 
 **测试要点**
-- 首页能够访问并显示 MDUI 组件
-- 热更新功能正常
-- 构建产物不包含警告
+- [x] 首页能够访问并显示 MDUI 组件
+- [x] 热更新功能正常
+- [x] 构建产物不包含警告
 
 ---
 
@@ -73,15 +73,15 @@
 - 配置环境变量
 
 **验收标准**
-- [ ] `wrangler dev` 能够启动本地开发服务器
-- [ ] 能够访问 D1 数据库绑定
-- [ ] 环境变量正确注入
-- [ ] `wrangler deploy` 能够成功部署
+- [x] `wrangler dev` 能够启动本地开发服务器
+- [x] 能够访问 D1 数据库绑定
+- [x] 环境变量正确注入
+- [x] `wrangler deploy` 能够成功部署
 
 **测试要点**
-- API 路由在 Workers 环境下能够正常响应
-- 环境变量 `DEFAULT_DOMAIN` 可读取
-- D1 绑定 `DB` 可执行查询
+- [x] API 路由在 Workers 环境下能够正常响应
+- [x] 环境变量 `DEFAULT_DOMAIN` 可读取
+- [x] D1 绑定 `DB` 可执行查询
 
 ---
 
@@ -104,16 +104,16 @@
 - 添加外键约束和 CHECK 约束
 
 **验收标准**
-- [ ] 所有表创建成功
-- [ ] 索引创建成功
-- [ ] 外键约束生效
-- [ ] CHECK 约束生效（如 status 枚举值）
-- [ ] 可执行基本 CRUD 操作
+- [x] 所有表创建成功
+- [x] 索引创建成功
+- [x] 外键约束生效
+- [x] CHECK 约束生效（如 status 枚举值）
+- [x] 可执行基本 CRUD 操作
 
 **测试要点**
-- 插入违反约束的数据应失败
-- 索引查询性能符合预期
-- 级联删除正常工作
+- [x] 插入违反约束的数据应失败
+- [x] 索引查询性能符合预期
+- [x] 级联删除正常工作
 
 ---
 
@@ -136,15 +136,15 @@
 - 实现行映射（snake_case -> camelCase）
 
 **验收标准**
-- [ ] 所有 Repository 类实现完成
-- [ ] TypeScript 类型正确
-- [ ] 查询结果类型安全
-- [ ] 支持 null 字段正确处理
+- [x] 所有 Repository 类实现完成
+- [x] TypeScript 类型正确
+- [x] 查询结果类型安全
+- [x] 支持 null 字段正确处理
 
 **测试要点**
-- `MailboxRepository.findById()` 返回正确类型
-- `MailboxRepository.create()` 插入并返回新记录
-- 不存在的记录返回 `null`
+- [x] `MailboxRepository.findById()` 返回正确类型
+- [x] `MailboxRepository.create()` 插入并返回新记录
+- [x] 不存在的记录返回 `null`
 
 ---
 
@@ -167,14 +167,14 @@
 - 区分 Secrets 和 Vars
 
 **验收标准**
-- [ ] 环境变量类型安全
-- [ ] 默认值正确设置
-- [ ] 必需变量缺失时报错
+- [x] 环境变量类型安全
+- [x] 默认值正确设置
+- [x] 必需变量缺失时报错
 
 **测试要点**
-- `KEY_EXPIRE_DAYS` 默认值为 15
-- 缺少 `ADMIN_TOKEN` 时应报错
-- `getEnv()` 返回类型正确
+- [x] `KEY_EXPIRE_DAYS` 默认值为 15
+- [x] 缺少 `ADMIN_TOKEN` 时应报错
+- [x] `getEnv()` 返回类型正确
 
 ---
 
@@ -197,15 +197,15 @@
 - 管理后台设置 `Referrer-Policy: no-referrer`
 
 **验收标准**
-- [ ] 中间件正确拦截 `/api/*` 和 `/admin/*`
-- [ ] 安全头正确设置
-- [ ] CSP 策略生效
-- [ ] 管理后台 Referrer-Policy 为 no-referrer
+- [x] 中间件正确拦截 `/api/*` 和 `/admin/*`
+- [x] 安全头正确设置
+- [x] CSP 策略生效
+- [x] 管理后台 Referrer-Policy 为 no-referrer
 
 **测试要点**
-- 响应头包含所有安全头
-- CSP 阻止内联脚本执行
-- 管理后台页面不发送 Referrer
+- [x] 响应头包含所有安全头
+- [x] CSP 阻止内联脚本执行
+- [x] 管理后台页面不发送 Referrer
 
 ---
 
