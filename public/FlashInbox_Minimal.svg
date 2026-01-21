@@ -1,0 +1,25 @@
+<!-- Static Logo B (Outline Minimal) -->
+<svg width="256" height="256" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Logo B">
+  <defs>
+    <linearGradient id="logoB_fill" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#93C5FD"/>
+      <stop offset="100%" stop-color="#3B82F6"/>
+    </linearGradient>
+
+    <linearGradient id="logoB_bolt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Envelope outline -->
+  <rect x="64" y="176" width="384" height="256" rx="28" fill="url(#logoB_fill)" fill-opacity="0.18" stroke="#2563EB" stroke-width="10"/>
+  <path d="M64 200L256 320L448 200" stroke="#2563EB" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M104 404H408" stroke="#2563EB" stroke-opacity="0.25" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- Bolt -->
+  <path d="M244 88L196 208H268L220 352L356 200H284L332 88H244Z"
+        fill="url(#logoB_bolt)"
+        stroke="#92400E" stroke-opacity="0.25" stroke-width="6"
+        stroke-linejoin="round"/>
+</svg>

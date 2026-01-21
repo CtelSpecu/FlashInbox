@@ -1,0 +1,51 @@
+<!-- Static Logo A -->
+<svg width="256" height="256" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Logo A">
+  <defs>
+    <linearGradient id="logoA_inbox" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60A5FA"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+
+    <linearGradient id="logoA_flap" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1D4ED8" stop-opacity="0.40"/>
+      <stop offset="100%" stop-color="#1E3A8A" stop-opacity="0.10"/>
+    </linearGradient>
+
+    <linearGradient id="logoA_bolt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+
+    <filter id="logoA_shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="12"/>
+      <feOffset dx="0" dy="12" result="ob"/>
+      <feFlood flood-color="#2563EB" flood-opacity="0.25"/>
+      <feComposite in2="ob" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="logoA_boltShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+      <feOffset dx="0" dy="4" result="ob"/>
+      <feFlood flood-color="#000000" flood-opacity="0.20"/>
+      <feComposite in2="ob" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <g filter="url(#logoA_shadow)">
+    <rect x="40" y="160" width="432" height="288" rx="32" fill="url(#logoA_inbox)"/>
+    <path d="M40 160L256 296L472 160V384C472 406.1 454.1 424 432 424H80C57.9 424 40 406.1 40 384V160Z" fill="url(#logoA_flap)"/>
+    <path d="M40 400C40 400 80 420 256 420C432 420 472 400 472 400" stroke="white" stroke-opacity="0.10" stroke-width="2" fill="none"/>
+  </g>
+
+  <g filter="url(#logoA_boltShadow)">
+    <path d="M224 56L168 200H256L200 376L376 168H288L344 56H224Z" fill="url(#logoA_bolt)"/>
+  </g>
+</svg>
