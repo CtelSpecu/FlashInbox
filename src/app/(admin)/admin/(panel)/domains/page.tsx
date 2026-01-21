@@ -1,0 +1,276 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import { Icon } from '@iconify/react';
+
+import { adminApiFetch, AdminApiError } from '@/lib/admin/api';
+import { clearAdminSession } from '@/lib/admin/session-store';
+import { withAdminTracking } from '@/lib/admin/tracking';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/admin/ui/Card';
+import { Button } from '@/components/admin/ui/Button';
+import { Input } from '@/components/admin/ui/Input';
+import { Select } from '@/components/admin/ui/Select';
+import { Table, TBody, TD, TH, THead, TR } from '@/components/admin/ui/Table';
+import { Modal } from '@/components/admin/ui/Modal';
+
+interface SuccessResponse<T> {
+  success: true;
+  data: T;
+}
+
+type DomainStatus = 'enabled' | 'disabled' | 'readonly';
+
+interface DomainDto {
+  id: number;
+  name: string;
+  status: DomainStatus;
+  note: string | null;
+  mailboxCount: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+interface DomainsList {
+  domains: DomainDto[];
+}
+
+export default function AdminDomainsPage() {
+  const [loading, setLoading] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
+  const [domains, setDomains] = useState<DomainDto[]>([]);
+
+  const [newName, setNewName] = useState('');
+  const [newStatus, setNewStatus] = useState<DomainStatus>('enabled');
+  const [newNote, setNewNote] = useState('');
+
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const deleteTarget = useMemo(() => domains.find((d) => d.id === deleteId) || null, [domains, deleteId]);
+
+  async function load() {
+    setLoading(true);
+    setErrorText(null);
+    try {
+      const res = await adminApiFetch<SuccessResponse<DomainsList>>('/api/admin/domains');
+      setDomains(res.data.domains);
+    } catch (e) {
+      const err = e as AdminApiError;
+      if (err.status === 401) {
+        clearAdminSession();
+        window.location.href = withAdminTracking('/admin/login');
+        return;
+      }
+      setErrorText(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function addDomain() {
+    setLoading(true);
+    setErrorText(null);
+    try {
+      const res = await adminApiFetch<SuccessResponse<{ domain: DomainDto }>>('/api/admin/domains', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: newName.trim(),
+          status: newStatus,
+          note: newNote.trim() || undefined,
+        }),
+      });
+      setDomains((prev) => [res.data.domain, ...prev]);
+      setNewName('');
+      setNewNote('');
+    } catch (e) {
+      const err = e as AdminApiError;
+      setErrorText(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function updateDomain(domainId: number, patch: { status?: DomainStatus; note?: string | null }) {
+    setLoading(true);
+    setErrorText(null);
+    try {
+      const res = await adminApiFetch<SuccessResponse<{ domain: DomainDto }>>(`/api/admin/domains/${domainId}`, {
+        method: 'PUT',
+        body: JSON.stringify(patch),
+      });
+      setDomains((prev) => prev.map((d) => (d.id === domainId ? res.data.domain : d)));
+    } catch (e) {
+      const err = e as AdminApiError;
+      setErrorText(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function deleteDomain(domainId: number) {
+    setLoading(true);
+    setErrorText(null);
+    try {
+      await adminApiFetch<SuccessResponse<{ success: true }>>(`/api/admin/domains/${domainId}`, {
+        method: 'DELETE',
+      });
+      setDomains((prev) => prev.filter((d) => d.id !== domainId));
+      setDeleteId(null);
+    } catch (e) {
+      const err = e as AdminApiError;
+      setErrorText(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {errorText ? <div className="text-sm text-red-700">{errorText}</div> : null}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Add Domain</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-2 md:grid-cols-4">
+          <Input
+            placeholder="example.com"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            disabled={loading}
+          />
+          <Select value={newStatus} onChange={(e) => setNewStatus(e.target.value as DomainStatus)} disabled={loading}>
+            <option value="enabled">enabled</option>
+            <option value="disabled">disabled</option>
+            <option value="readonly">readonly</option>
+          </Select>
+          <Input
+            placeholder="Note (optional)"
+            value={newNote}
+            onChange={(e) => setNewNote(e.target.value)}
+            disabled={loading}
+          />
+          <Button onClick={addDomain} disabled={loading || !newName.trim()}>
+            <Icon icon="lucide:plus" className="h-4 w-4" />
+            Add
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle>Domains</CardTitle>
+            <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+              <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
+              Reload
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <Table>
+            <THead>
+              <TR>
+                <TH>ID</TH>
+                <TH>Domain</TH>
+                <TH>Status</TH>
+                <TH>Mailboxes</TH>
+                <TH>Note</TH>
+                <TH>Actions</TH>
+              </TR>
+            </THead>
+            <TBody>
+              {domains.map((d) => (
+                <TR key={d.id}>
+                  <TD className="text-slate-500">{d.id}</TD>
+                  <TD className="font-medium">{d.name}</TD>
+                  <TD>
+                    <Select
+                      value={d.status}
+                      onChange={(e) => updateDomain(d.id, { status: e.target.value as DomainStatus })}
+                      disabled={loading}
+                    >
+                      <option value="enabled">enabled</option>
+                      <option value="disabled">disabled</option>
+                      <option value="readonly">readonly</option>
+                    </Select>
+                  </TD>
+                  <TD className="text-slate-600">{d.mailboxCount}</TD>
+                  <TD>
+                    <Input
+                      value={d.note || ''}
+                      placeholder="-"
+                      onChange={(e) =>
+                        setDomains((prev) =>
+                          prev.map((x) => (x.id === d.id ? { ...x, note: e.target.value } : x))
+                        )
+                      }
+                      onBlur={(e) => updateDomain(d.id, { note: e.target.value.trim() || null })}
+                      disabled={loading}
+                    />
+                  </TD>
+                  <TD>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={loading}
+                      onClick={() => setDeleteId(d.id)}
+                    >
+                      <Icon icon="lucide:trash-2" className="h-4 w-4" />
+                      Delete
+                    </Button>
+                  </TD>
+                </TR>
+              ))}
+              {domains.length === 0 && !loading ? (
+                <TR>
+                  <TD colSpan={6} className="py-6 text-center text-slate-500">
+                    No domains
+                  </TD>
+                </TR>
+              ) : null}
+            </TBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Modal
+        open={deleteId !== null}
+        onOpenChange={(o) => setDeleteId(o ? deleteId : null)}
+        title="Confirm delete"
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDeleteId(null)} disabled={loading}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => (deleteId !== null ? deleteDomain(deleteId) : undefined)}
+              disabled={loading}
+            >
+              Delete
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-2 text-sm text-slate-700">
+          <div>
+            Delete domain <span className="font-medium">{deleteTarget?.name || ''}</span>?
+          </div>
+          {deleteTarget && deleteTarget.mailboxCount > 0 ? (
+            <div className="rounded-md border border-yellow-200 bg-yellow-50 p-2 text-xs text-yellow-800">
+              This domain has existing mailboxes. The API will reject deletion until mailbox count is 0.
+            </div>
+          ) : null}
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+

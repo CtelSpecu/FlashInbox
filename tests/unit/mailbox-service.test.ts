@@ -13,6 +13,16 @@ function createConfig(overrides?: Partial<AppConfig>): AppConfig {
     adminSessionExpireHours: 4,
     maxBodyText: 102400,
     maxBodyHtml: 512000,
+    rateLimit: {
+      create: { count: 10, windowMinutes: 10, cooldownMinutes: 10 },
+      claim: { count: 5, windowMinutes: 60, cooldownMinutes: 60 },
+      recover: { count: 5, windowMinutes: 60, cooldownMinutes: 60 },
+      renew: { count: 10, windowMinutes: 10, cooldownMinutes: 10 },
+    },
+    turnstile: {
+      siteKey: 'test-site-key',
+      secretKey: 'test-secret-key',
+    },
     ...overrides,
   };
 }

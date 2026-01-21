@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { MduiProvider } from '@/components/layout/MduiProvider';
 
 export const metadata: Metadata = {
   title: 'FlashInbox',
@@ -14,13 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body className="font-sans antialiased">
-        <MduiProvider>
-          <mdui-layout>
-            <mdui-layout-main>{children}</mdui-layout-main>
-          </mdui-layout>
-        </MduiProvider>
-      </body>
+      <body className="font-sans antialiased">{children}</body>
     </html>
   );
 }
