@@ -156,7 +156,7 @@ export default function AdminQuarantinePage() {
             <TBody>
               {(data?.items || []).map((q) => (
                 <TR key={q.id}>
-                  <TD className="text-slate-600">{formatTime(q.receivedAt)}</TD>
+                  <TD className="text-[color:var(--admin-muted)]">{formatTime(q.receivedAt)}</TD>
                   <TD className="font-medium">{q.mailboxEmail}</TD>
                   <TD className="max-w-[220px] truncate" title={q.fromAddr}>
                     {q.fromAddr}
@@ -183,14 +183,14 @@ export default function AdminQuarantinePage() {
                         </Button>
                       </>
                     ) : (
-                      <span className="text-xs text-slate-500">{q.status}</span>
+                      <span className="text-xs text-[color:var(--admin-muted)]">{q.status}</span>
                     )}
                   </TD>
                 </TR>
               ))}
               {(data?.items || []).length === 0 && !loading ? (
                 <TR>
-                  <TD colSpan={7} className="py-6 text-center text-slate-500">
+                  <TD colSpan={7} className="py-6 text-center text-[color:var(--admin-muted)]">
                     {t.quarantine.noItems}
                   </TD>
                 </TR>
@@ -202,7 +202,7 @@ export default function AdminQuarantinePage() {
             <Button variant="outline" size="sm" disabled={loading || page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
               {t.common.prev}
             </Button>
-            <div className="text-xs text-slate-600">
+            <div className="text-xs text-[color:var(--admin-muted)]">
               {format(t.quarantine.page, { page: data?.pagination.page || page })} / {Math.max(1, Math.ceil((data?.pagination.total || 0) / pageSize))}
             </div>
             <Button variant="outline" size="sm" disabled={loading || !(data?.pagination.hasMore)} onClick={() => setPage((p) => p + 1)}>
@@ -237,7 +237,7 @@ export default function AdminQuarantinePage() {
           </div>
         }
       >
-        <div className="text-sm text-slate-700">
+        <div className="text-sm text-[color:var(--admin-text)]">
           {confirm?.action === 'release'
             ? t.quarantine.confirmReleaseText
             : t.quarantine.confirmDeleteText}

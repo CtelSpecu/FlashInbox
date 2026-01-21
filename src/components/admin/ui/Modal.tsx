@@ -30,17 +30,20 @@ export function Modal({
       onMouseDown={() => onOpenChange(false)}
     >
       <div
-        className={cn('w-full max-w-lg rounded-lg bg-white shadow-lg', className)}
+        className={cn(
+          'w-full max-w-lg rounded-lg bg-[color:var(--admin-surface)] text-[color:var(--admin-text)] shadow-lg',
+          className
+        )}
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-slate-200 p-4">
-          <div className="text-sm font-semibold text-slate-900">{title}</div>
+        <div className="flex items-center justify-between border-b border-[color:var(--admin-border)] p-4">
+          <div className="text-sm font-semibold text-[color:var(--admin-text)]">{title}</div>
           <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} aria-label="Close">
             <span className="text-lg leading-none">×</span>
           </Button>
         </div>
         <div className="p-4">{children}</div>
-        {footer && <div className="border-t border-slate-200 p-4">{footer}</div>}
+        {footer && <div className="border-t border-[color:var(--admin-border)] p-4">{footer}</div>}
       </div>
     </div>
   );

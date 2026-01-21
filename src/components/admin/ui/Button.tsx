@@ -6,15 +6,19 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils/cn';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--admin-ring)] disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        default: 'bg-slate-900 text-white hover:bg-slate-800',
-        secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200',
-        outline: 'border border-slate-200 bg-white hover:bg-slate-50 text-slate-900',
-        destructive: 'bg-red-600 text-white hover:bg-red-700',
-        ghost: 'hover:bg-slate-100 text-slate-900',
+        default:
+          'bg-[color:var(--admin-primary)] text-[color:var(--admin-primary-text)] hover:bg-[color:var(--admin-primary-hover)]',
+        secondary:
+          'bg-[color:var(--admin-secondary)] text-[color:var(--admin-secondary-text)] hover:bg-[color:var(--admin-secondary-hover)]',
+        outline:
+          'border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)] hover:bg-[color:var(--admin-hover)] text-[color:var(--admin-text)]',
+        destructive:
+          'bg-[color:var(--admin-danger)] text-[color:var(--admin-danger-text)] hover:bg-[color:var(--admin-danger-hover)]',
+        ghost: 'hover:bg-[color:var(--admin-hover)] text-[color:var(--admin-text)]',
       },
       size: {
         default: 'h-9 px-4',

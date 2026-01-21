@@ -13,6 +13,8 @@ import { adminApiFetch } from '@/lib/admin/api';
 import { withAdminTracking } from '@/lib/admin/tracking';
 import { useAdminI18n } from '@/lib/admin-i18n/context';
 import { type AdminLocale } from '@/lib/admin-i18n';
+import { useAdminTheme } from '@/lib/theme/admin-theme';
+import type { ThemeMode } from '@/lib/theme/types';
 
 type NavItem = { href: string; key: 'dashboard' | 'domains' | 'rules' | 'quarantine' | 'audit'; icon: string };
 
@@ -32,6 +34,7 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   const { t, locale, setLocale } = useAdminI18n();
+  const { theme, setTheme } = useAdminTheme();
   const pathname = usePathname();
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -73,16 +76,16 @@ export function AdminShell({
   const sessionHint = session?.sessionId ? `sid:${session.sessionId.slice(0, 8)}` : '';
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[color:var(--admin-bg)] text-[color:var(--admin-text)]">
       <div className="flex min-h-screen">
-        <aside className="hidden w-64 border-r border-slate-200 bg-white md:block">
+        <aside className="hidden w-64 border-r border-[color:var(--admin-border)] bg-[color:var(--admin-surface)] md:block">
           <div className="flex items-center gap-2 px-4 py-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-slate-900 text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-[color:var(--admin-primary)] text-[color:var(--admin-primary-text)]">
               <Icon icon="lucide:mail" className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <div className="text-sm font-semibold text-slate-900">{t.common.appName}</div>
-              <div className="text-xs text-slate-500">{t.common.admin}</div>
+              <div className="text-sm font-semibold text-[color:var(--admin-text)]">{t.common.appName}</div>
+              <div className="text-xs text-[color:var(--admin-muted)]">{t.common.admin}</div>
             </div>
           </div>
 
@@ -104,8 +107,8 @@ export function AdminShell({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'flex items-center gap-2 rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100',
-                    active && 'bg-slate-100 font-medium text-slate-900'
+                    'flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[color:var(--admin-text)] hover:bg-[color:var(--admin-hover)]',
+                    active && 'bg-[color:var(--admin-hover)] font-medium'
                   )}
                 >
                   <Icon icon={item.icon} className="h-4 w-4" />
@@ -117,11 +120,11 @@ export function AdminShell({
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-10 border-b border-slate-200 bg-white">
+          <header className="sticky top-0 z-10 border-b border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]">
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-slate-900">{title || derivedTitle}</div>
-                {sessionHint ? <div className="text-xs text-slate-500">{sessionHint}</div> : null}
+                <div className="text-sm font-semibold text-[color:var(--admin-text)]">{title || derivedTitle}</div>
+                {sessionHint ? <div className="text-xs text-[color:var(--admin-muted)]">{sessionHint}</div> : null}
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -137,6 +140,16 @@ export function AdminShell({
                   <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
                   {t.common.reload}
                 </Button>
+                <Select
+                  value={theme}
+                  onChange={(e) => setTheme(e.target.value as ThemeMode)}
+                  className="hidden md:block w-[140px]"
+                  aria-label={t.theme.label}
+                >
+                  <option value="light">{t.theme.light}</option>
+                  <option value="dark">{t.theme.dark}</option>
+                  <option value="auto">{t.theme.system}</option>
+                </Select>
                 <Select
                   value={locale}
                   onChange={(e) => setLocale(e.target.value as AdminLocale)}
@@ -161,11 +174,11 @@ export function AdminShell({
               onMouseDown={() => setMobileNavOpen(false)}
             >
               <div
-                className="h-full w-72 bg-white shadow-lg"
+                className="h-full w-72 bg-[color:var(--admin-surface)] shadow-lg"
                 onMouseDown={(e) => e.stopPropagation()}
               >
-                <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-                  <div className="text-sm font-semibold text-slate-900">{t.nav.navigation}</div>
+                <div className="flex items-center justify-between border-b border-[color:var(--admin-border)] px-4 py-3">
+                  <div className="text-sm font-semibold text-[color:var(--admin-text)]">{t.nav.navigation}</div>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -177,7 +190,7 @@ export function AdminShell({
                 </div>
                 <nav className="p-2">
                   <div className="px-3 pb-2">
-                    <div className="text-xs font-medium text-slate-600">{t.language.label}</div>
+                    <div className="text-xs font-medium text-[color:var(--admin-muted)]">{t.language.label}</div>
                     <Select
                       value={locale}
                       onChange={(e) => setLocale(e.target.value as AdminLocale)}
@@ -187,6 +200,19 @@ export function AdminShell({
                       <option value="en-US">{t.language.enUS}</option>
                       <option value="zh-CN">{t.language.zhCN}</option>
                       <option value="zh-TW">{t.language.zhTW}</option>
+                    </Select>
+                  </div>
+                  <div className="px-3 pb-2">
+                    <div className="text-xs font-medium text-[color:var(--admin-muted)]">{t.theme.label}</div>
+                    <Select
+                      value={theme}
+                      onChange={(e) => setTheme(e.target.value as ThemeMode)}
+                      className="mt-1"
+                      aria-label={t.theme.label}
+                    >
+                      <option value="light">{t.theme.light}</option>
+                      <option value="dark">{t.theme.dark}</option>
+                      <option value="auto">{t.theme.system}</option>
                     </Select>
                   </div>
                   {navItems.map((item) => {
@@ -206,8 +232,8 @@ export function AdminShell({
                         key={item.href}
                         href={item.href}
                         className={cn(
-                          'flex items-center gap-2 rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100',
-                          active && 'bg-slate-100 font-medium text-slate-900'
+                          'flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[color:var(--admin-text)] hover:bg-[color:var(--admin-hover)]',
+                          active && 'bg-[color:var(--admin-hover)] font-medium'
                         )}
                         onClick={() => setMobileNavOpen(false)}
                       >

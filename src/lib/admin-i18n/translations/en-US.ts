@@ -28,6 +28,12 @@ export const adminEnUS = {
     zhCN: '简体中文',
     zhTW: '繁體中文',
   },
+  theme: {
+    label: 'Theme',
+    light: 'Light',
+    dark: 'Dark',
+    system: 'System',
+  },
   nav: {
     dashboard: 'Dashboard',
     domains: 'Domains',

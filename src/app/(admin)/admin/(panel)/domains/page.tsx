@@ -189,7 +189,7 @@ export default function AdminDomainsPage() {
             <TBody>
               {domains.map((d) => (
                 <TR key={d.id}>
-                  <TD className="text-slate-500">{d.id}</TD>
+                  <TD className="text-[color:var(--admin-muted)]">{d.id}</TD>
                   <TD className="font-medium">{d.name}</TD>
                   <TD>
                     <Select
@@ -202,7 +202,7 @@ export default function AdminDomainsPage() {
                       <option value="readonly">{t.domains.statusReadonly}</option>
                     </Select>
                   </TD>
-                  <TD className="text-slate-600">{d.mailboxCount}</TD>
+                  <TD className="text-[color:var(--admin-muted)]">{d.mailboxCount}</TD>
                   <TD>
                     <Input
                       value={d.note || ''}
@@ -231,7 +231,7 @@ export default function AdminDomainsPage() {
               ))}
               {domains.length === 0 && !loading ? (
                 <TR>
-                  <TD colSpan={6} className="py-6 text-center text-slate-500">
+                  <TD colSpan={6} className="py-6 text-center text-[color:var(--admin-muted)]">
                     {t.domains.noDomains}
                   </TD>
                 </TR>
@@ -260,7 +260,7 @@ export default function AdminDomainsPage() {
           </div>
         }
       >
-        <div className="space-y-2 text-sm text-slate-700">
+        <div className="space-y-2 text-sm text-[color:var(--admin-text)]">
           <div>
             {format(t.domains.confirmDeleteText, { name: deleteTarget?.name || '' })}
           </div>

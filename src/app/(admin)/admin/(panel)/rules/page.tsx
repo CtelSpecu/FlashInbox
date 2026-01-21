@@ -262,7 +262,7 @@ export default function AdminRulesPage() {
             <TBody>
               {rules.map((r) => (
                 <TR key={r.id}>
-                  <TD className="text-slate-500">{r.id}</TD>
+                  <TD className="text-[color:var(--admin-muted)]">{r.id}</TD>
                   <TD>{r.type}</TD>
                   <TD className="max-w-[320px] truncate" title={r.pattern}>
                     {r.pattern}
@@ -279,8 +279,8 @@ export default function AdminRulesPage() {
                       {r.isActive ? t.rules.on : t.rules.off}
                     </Button>
                   </TD>
-                  <TD className="text-slate-600">{r.domainName || t.rules.global}</TD>
-                  <TD className="text-slate-600">{r.hitCount}</TD>
+                  <TD className="text-[color:var(--admin-muted)]">{r.domainName || t.rules.global}</TD>
+                  <TD className="text-[color:var(--admin-muted)]">{r.hitCount}</TD>
                   <TD className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => openEdit(r)} disabled={loading}>
                       <Icon icon="lucide:pencil" className="h-4 w-4" />
@@ -295,7 +295,7 @@ export default function AdminRulesPage() {
               ))}
               {rules.length === 0 && !loading ? (
                 <TR>
-                  <TD colSpan={9} className="py-6 text-center text-slate-500">
+                  <TD colSpan={9} className="py-6 text-center text-[color:var(--admin-muted)]">
                     {t.rules.noRules}
                   </TD>
                 </TR>
@@ -376,8 +376,8 @@ export default function AdminRulesPage() {
               disabled={loading}
               placeholder={t.rules.description}
             />
-            <div className="flex items-center justify-between rounded-md border border-slate-200 p-2">
-              <div className="text-sm text-slate-700">{t.rules.active}</div>
+            <div className="flex items-center justify-between rounded-md border border-[color:var(--admin-border)] p-2">
+              <div className="text-sm text-[color:var(--admin-text)]">{t.rules.active}</div>
               <Button
                 variant={editDraft.isActive ? 'secondary' : 'outline'}
                 size="sm"

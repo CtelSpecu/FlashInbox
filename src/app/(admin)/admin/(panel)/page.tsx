@@ -51,7 +51,7 @@ function SparkBars({ data }: { data: Array<{ timestamp: number; value: number }>
       {data.map((d) => (
         <div
           key={d.timestamp}
-          className="flex-1 rounded-sm bg-slate-900/80"
+          className="flex-1 rounded-sm bg-[color:var(--admin-primary)] opacity-80"
           style={{ height: `${Math.max(2, Math.round((d.value / max) * 40))}px` }}
           title={`${d.value}`}
         />
@@ -107,7 +107,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-sm text-slate-600">{rangeLabel}</div>
+        <div className="text-sm text-[color:var(--admin-muted)]">{rangeLabel}</div>
         <div className="flex items-center gap-2">
           <Select value={range} onChange={(e) => setRange(e.target.value as RangeKey)}>
             <option value="24h">24h</option>
@@ -129,7 +129,7 @@ export default function AdminDashboardPage() {
             <CardTitle>{t.dashboard.totalMailboxes}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold text-slate-900">{data?.overview.totalMailboxes ?? (loading ? '…' : 0)}</div>
+            <div className="text-2xl font-semibold text-[color:var(--admin-text)]">{data?.overview.totalMailboxes ?? (loading ? '…' : 0)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -137,7 +137,7 @@ export default function AdminDashboardPage() {
             <CardTitle>{t.dashboard.claimed}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold text-slate-900">{data?.overview.claimedMailboxes ?? (loading ? '…' : 0)}</div>
+            <div className="text-2xl font-semibold text-[color:var(--admin-text)]">{data?.overview.claimedMailboxes ?? (loading ? '…' : 0)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -145,7 +145,7 @@ export default function AdminDashboardPage() {
             <CardTitle>{t.dashboard.unclaimed}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold text-slate-900">{data?.overview.unclaimedMailboxes ?? (loading ? '…' : 0)}</div>
+            <div className="text-2xl font-semibold text-[color:var(--admin-text)]">{data?.overview.unclaimedMailboxes ?? (loading ? '…' : 0)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -153,7 +153,7 @@ export default function AdminDashboardPage() {
             <CardTitle>{t.dashboard.totalMessages}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold text-slate-900">{data?.overview.totalMessages ?? (loading ? '…' : 0)}</div>
+            <div className="text-2xl font-semibold text-[color:var(--admin-text)]">{data?.overview.totalMessages ?? (loading ? '…' : 0)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -161,7 +161,7 @@ export default function AdminDashboardPage() {
             <CardTitle>{t.dashboard.quarantine}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold text-slate-900">{data?.overview.quarantinedCount ?? (loading ? '…' : 0)}</div>
+            <div className="text-2xl font-semibold text-[color:var(--admin-text)]">{data?.overview.quarantinedCount ?? (loading ? '…' : 0)}</div>
           </CardContent>
         </Card>
       </div>
@@ -172,7 +172,11 @@ export default function AdminDashboardPage() {
             <CardTitle>{t.dashboard.messagesReceived}</CardTitle>
           </CardHeader>
           <CardContent>
-            {data ? <SparkBars data={data.charts.messagesReceived} /> : <div className="text-sm text-slate-500">{t.common.loading}</div>}
+            {data ? (
+              <SparkBars data={data.charts.messagesReceived} />
+            ) : (
+              <div className="text-sm text-[color:var(--admin-muted)]">{t.common.loading}</div>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -180,7 +184,11 @@ export default function AdminDashboardPage() {
             <CardTitle>{t.dashboard.recoverFailures}</CardTitle>
           </CardHeader>
           <CardContent>
-            {data ? <SparkBars data={data.charts.recoverFailures} /> : <div className="text-sm text-slate-500">{t.common.loading}</div>}
+            {data ? (
+              <SparkBars data={data.charts.recoverFailures} />
+            ) : (
+              <div className="text-sm text-[color:var(--admin-muted)]">{t.common.loading}</div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -190,7 +198,7 @@ export default function AdminDashboardPage() {
           <CardHeader>
             <CardTitle>{t.dashboard.security}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-1 text-sm text-slate-700">
+          <CardContent className="space-y-1 text-sm text-[color:var(--admin-text)]">
             <div>
               {t.dashboard.rateLimited}: {data?.security.rateLimitTriggers ?? (loading ? '…' : 0)}
             </div>
@@ -207,16 +215,16 @@ export default function AdminDashboardPage() {
           <CardHeader>
             <CardTitle>{t.dashboard.topDropRules}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-1 text-sm text-slate-700">
+          <CardContent className="space-y-1 text-sm text-[color:var(--admin-text)]">
             {(data?.rules.topDropRules || []).length === 0 ? (
-              <div className="text-slate-500">{t.dashboard.noData}</div>
+              <div className="text-[color:var(--admin-muted)]">{t.dashboard.noData}</div>
             ) : (
               data?.rules.topDropRules.map((r) => (
                 <div key={r.ruleId} className="flex items-center justify-between gap-2">
                   <div className="truncate" title={r.pattern}>
                     {r.pattern}
                   </div>
-                  <div className="shrink-0 text-slate-500">{r.hitCount}</div>
+                  <div className="shrink-0 text-[color:var(--admin-muted)]">{r.hitCount}</div>
                 </div>
               ))
             )}
@@ -227,16 +235,16 @@ export default function AdminDashboardPage() {
           <CardHeader>
             <CardTitle>{t.dashboard.topQuarantineRules}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-1 text-sm text-slate-700">
+          <CardContent className="space-y-1 text-sm text-[color:var(--admin-text)]">
             {(data?.rules.topQuarantineRules || []).length === 0 ? (
-              <div className="text-slate-500">{t.dashboard.noData}</div>
+              <div className="text-[color:var(--admin-muted)]">{t.dashboard.noData}</div>
             ) : (
               data?.rules.topQuarantineRules.map((r) => (
                 <div key={r.ruleId} className="flex items-center justify-between gap-2">
                   <div className="truncate" title={r.pattern}>
                     {r.pattern}
                   </div>
-                  <div className="shrink-0 text-slate-500">{r.hitCount}</div>
+                  <div className="shrink-0 text-[color:var(--admin-muted)]">{r.hitCount}</div>
                 </div>
               ))
             )}

@@ -4,59 +4,29 @@ import { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
 import { useI18n } from '@/lib/i18n/context';
 import { type Locale, locales } from '@/lib/i18n';
+import { useUserTheme } from '@/lib/theme/user-theme';
 
 type Theme = 'light' | 'dark' | 'auto';
 
 function getInitialTheme(): Theme {
   if (typeof window === 'undefined') return 'auto';
-  const stored = localStorage.getItem('theme');
-  if (stored === 'light' || stored === 'dark' || stored === 'auto') {
-    return stored;
-  }
-  return 'auto';
-}
-
-function applyTheme(theme: Theme) {
-  if (typeof window === 'undefined') return;
-
-  const root = document.documentElement;
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-  if (theme === 'dark' || (theme === 'auto' && prefersDark)) {
-    root.classList.add('mdui-theme-dark');
-    root.classList.remove('mdui-theme-light');
-  } else {
-    root.classList.add('mdui-theme-light');
-    root.classList.remove('mdui-theme-dark');
-  }
-
-  localStorage.setItem('theme', theme);
+  // user theme is handled by UserThemeProvider; this is a fallback only
+  const stored = localStorage.getItem('user:theme') || localStorage.getItem('theme');
+  return stored === 'light' || stored === 'dark' || stored === 'auto' ? stored : 'auto';
 }
 
 export function SettingsMenu() {
   const { locale, setLocale, t } = useI18n();
-  const [theme, setTheme] = useState<Theme>('auto');
+  const { theme, setTheme } = useUserTheme();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const initial = getInitialTheme();
     setTheme(initial);
-    applyTheme(initial);
-
-    // 监听系统主题变化
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = () => {
-      if (theme === 'auto') {
-        applyTheme('auto');
-      }
-    };
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [theme]);
+  }, [setTheme]);
 
   function handleThemeChange(newTheme: Theme) {
     setTheme(newTheme);
-    applyTheme(newTheme);
   }
 
   function handleLocaleChange(newLocale: Locale) {

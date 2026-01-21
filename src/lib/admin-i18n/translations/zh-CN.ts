@@ -28,6 +28,12 @@ export const adminZhCN = {
     zhCN: '简体中文',
     zhTW: '繁體中文',
   },
+  theme: {
+    label: '主题',
+    light: '浅色',
+    dark: '深色',
+    system: '跟随系统',
+  },
   nav: {
     dashboard: '仪表盘',
     domains: '域名',

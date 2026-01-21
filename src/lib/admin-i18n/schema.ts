@@ -23,6 +23,12 @@ export interface AdminTranslations {
     zhCN: string;
     zhTW: string;
   };
+  theme: {
+    label: string;
+    light: string;
+    dark: string;
+    system: string;
+  };
   nav: {
     dashboard: string;
     domains: string;

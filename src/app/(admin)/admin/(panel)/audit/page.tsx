@@ -144,7 +144,7 @@ export default function AdminAuditPage() {
         <CardHeader>
           <div className="flex items-center justify-between gap-2">
             <CardTitle>{t.audit.results}</CardTitle>
-            <div className="text-xs text-slate-600">
+            <div className="text-xs text-[color:var(--admin-muted)]">
               {t.audit.total}: {data?.pagination.total ?? (loading ? '…' : 0)}
             </div>
           </div>
@@ -166,22 +166,22 @@ export default function AdminAuditPage() {
             <TBody>
               {(data?.logs || []).map((l) => (
                 <TR key={l.id}>
-                  <TD className="text-slate-600">{formatTime(l.createdAt)}</TD>
+                  <TD className="text-[color:var(--admin-muted)]">{formatTime(l.createdAt)}</TD>
                   <TD className="font-medium">{l.action}</TD>
-                  <TD className="text-slate-700">
+                  <TD className="text-[color:var(--admin-text)]">
                     {l.actorType}
-                    {l.actorId ? <span className="text-slate-500">:{l.actorId.slice(0, 8)}</span> : null}
+                    {l.actorId ? <span className="text-[color:var(--admin-muted)]">:{l.actorId.slice(0, 8)}</span> : null}
                   </TD>
-                  <TD className="text-slate-700">
+                  <TD className="text-[color:var(--admin-text)]">
                     {l.targetType ? `${l.targetType}:${l.targetId || ''}` : '-'}
                   </TD>
-                  <TD className="text-slate-600">{l.ipAddress || '-'}</TD>
+                  <TD className="text-[color:var(--admin-muted)]">{l.ipAddress || '-'}</TD>
                   <TD>
                     <span className={l.success ? 'text-green-700' : 'text-red-700'}>
                       {l.success ? t.common.yes : t.common.no}
                     </span>
                   </TD>
-                  <TD className="text-slate-600">{l.errorCode || '-'}</TD>
+                  <TD className="text-[color:var(--admin-muted)]">{l.errorCode || '-'}</TD>
                   <TD>
                     <Button variant="outline" size="sm" onClick={() => openDetails(l.details)} disabled={loading}>
                       <Icon icon="lucide:eye" className="h-4 w-4" />
@@ -192,7 +192,7 @@ export default function AdminAuditPage() {
               ))}
               {(data?.logs || []).length === 0 && !loading ? (
                 <TR>
-                  <TD colSpan={8} className="py-6 text-center text-slate-500">
+                  <TD colSpan={8} className="py-6 text-center text-[color:var(--admin-muted)]">
                     {t.audit.empty}
                   </TD>
                 </TR>
@@ -204,7 +204,7 @@ export default function AdminAuditPage() {
             <Button variant="outline" size="sm" disabled={loading || page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
               {t.common.prev}
             </Button>
-            <div className="text-xs text-slate-600">
+            <div className="text-xs text-[color:var(--admin-muted)]">
               {formatAdminMessage(t.quarantine.page, { page: data?.pagination.page || page })}
             </div>
             <Button variant="outline" size="sm" disabled={loading || !(data?.pagination.hasMore)} onClick={() => setPage((p) => p + 1)}>

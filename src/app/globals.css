@@ -4,6 +4,27 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Admin theme tokens (default: light) */
+  --admin-bg: #f8fafc;
+  --admin-surface: #ffffff;
+  --admin-border: #e2e8f0;
+  --admin-text: #0f172a;
+  --admin-muted: #64748b;
+  --admin-hover: #f1f5f9;
+  --admin-ring: #94a3b8;
+
+  --admin-primary: #0f172a;
+  --admin-primary-text: #ffffff;
+  --admin-primary-hover: #1e293b;
+
+  --admin-secondary: #f1f5f9;
+  --admin-secondary-text: #0f172a;
+  --admin-secondary-hover: #e2e8f0;
+
+  --admin-danger: #dc2626;
+  --admin-danger-text: #ffffff;
+  --admin-danger-hover: #b91c1c;
 }
 
 @theme inline {
@@ -18,6 +39,48 @@
     --background: #0a0a0a;
     --foreground: #ededed;
   }
+}
+
+/* User theme override (independent from admin theme) */
+.user-theme-light {
+  --background: #ffffff;
+  --foreground: #171717;
+  color-scheme: light;
+}
+
+.user-theme-dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  color-scheme: dark;
+}
+
+/* Admin theme override (independent from user theme) */
+.admin-theme-light {
+  color-scheme: light;
+}
+
+.admin-theme-dark {
+  --admin-bg: #0b1220;
+  --admin-surface: #0f172a;
+  --admin-border: #243041;
+  --admin-text: #e5e7eb;
+  --admin-muted: #94a3b8;
+  --admin-hover: #111c2e;
+  --admin-ring: #60a5fa;
+
+  --admin-primary: #3b82f6;
+  --admin-primary-text: #0b1220;
+  --admin-primary-hover: #2563eb;
+
+  --admin-secondary: #111c2e;
+  --admin-secondary-text: #e5e7eb;
+  --admin-secondary-hover: #16243a;
+
+  --admin-danger: #ef4444;
+  --admin-danger-text: #0b1220;
+  --admin-danger-hover: #dc2626;
+
+  color-scheme: dark;
 }
 
 body {
