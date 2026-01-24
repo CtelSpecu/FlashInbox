@@ -1,6 +1,18 @@
-﻿# FlashInbox / 闪收箱
+# FlashInbox / 闪收箱
+
+![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-f38020?logo=cloudflare&logoColor=fff)
+![D1](https://img.shields.io/badge/Cloudflare-D1-f38020?logo=cloudflare&logoColor=fff)
+![Next.js](https://img.shields.io/badge/Next.js-App%20Router-000?logo=nextdotjs&logoColor=fff)
+![bun](https://img.shields.io/badge/bun-package%20manager-000?logo=bun&logoColor=fff)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=fff)
 
 基于 Cloudflare Workers + D1 的临时邮箱服务（不含附件），支持匿名创建邮箱、接收邮件、认领获取 Key、通过 `username + key` 恢复访问（默认 15 天有效期，可续期），并提供管理后台用于域名/规则/隔离/审计与数据看板。
+
+**快速入口**
+- 文档：`spec/01spec.md`（需求） / `spec/02design.md`（设计） / `spec/03task.md`（任务）
+- 本地开发：见「本地开发」
+- 部署上线：见「部署」
+- API：见「API 概览」
 
 ## 一键部署（主应用）
 
@@ -10,19 +22,24 @@
 - 将链接中的 `https://github.com/<OWNER>/<REPO>` 替换为你 fork 后的仓库地址
 - 一键部署通常只会部署 `wrangler.toml` 对应的主应用；Email Worker 与 Scheduled Worker 仍需按下方流程手动部署与配置
 
-相关文档：
-- `spec/01spec.md`：需求规格
-- `spec/02design.md`：系统设计
-- `spec/03task.md`：任务清单
-
-## 功能概览
+## 功能
 
 - 邮箱创建：随机生成或手动指定用户名（`random` / `manual`）
 - 入站收信：Email Worker 解析并存储邮件（正文可截断，HTML 会净化；附件不存储）
 - 认领系统：未认领邮箱可通过 Turnstile 验证后认领，返回一次性明文 Key
 - 恢复访问：`username + domain + key` 恢复并创建会话（错误信息不区分邮箱不存在与 key 错误）
 - 管理后台：域名管理、规则（drop/quarantine/allow）、隔离队列、审计与仪表盘
-- 安全机制：CSP、安全响应头、限流（含恢复接口指数退避）
+
+## 架构概览
+
+```mermaid
+flowchart LR
+  U[User Browser] -->|HTTPS| W[Main Worker: Next.js (OpenNext)]
+  MTA[Cloudflare Email Routing] -->|Inbound Email| EW[Email Worker]
+  SW[Scheduled Worker] -->|Cron| D1[(D1 Database)]
+  W --> D1
+  EW --> D1
+```
 
 ## 技术栈
 
@@ -33,7 +50,12 @@
 - 管理端：TailAdmin + shadcn/ui（Tailwind 体系）+ Iconify（lucide）
 - 包管理器：bun（禁止使用 npm / yarn / pnpm）
 
-## 快速开始（本地开发）
+## 本地开发
+
+### 前置条件
+
+- `bun`（包管理与脚本执行）
+- `wrangler`（本项目已在 `devDependencies` 中提供，可用 `bunx wrangler`）
 
 ### 1) 安装依赖
 
@@ -41,7 +63,7 @@
 bun install
 ```
 
-### 2) 本地测试（推荐先跑）
+### 2) 本地测试
 
 ```bash
 # 全部测试
@@ -52,26 +74,35 @@ bun run test:unit
 bun run test:integration
 ```
 
-### 3) 准备 Cloudflare 绑定与配置
+### 3) 准备配置
 
-本项目运行在 Cloudflare Workers 环境中，通过 `wrangler.toml` / `wrangler.*.toml` 配置 D1 绑定与环境变量。
+本项目运行在 Cloudflare Workers 环境中，通过 `wrangler.toml` / `wrangler.email.toml` / `wrangler.scheduled.toml` 配置 D1 绑定与环境变量。
 
-必需 Secrets（通过 `wrangler secret put` 设置）：
-- `ADMIN_TOKEN`：管理后台登录令牌
-- `KEY_PEPPER`：Key 哈希 pepper（用于 `SHA-256(key + pepper)`）
-- `SESSION_SECRET`：会话签名密钥
-- `TURNSTILE_SECRET_KEY`：Turnstile 服务端密钥
-- `TURNSTILE_SITE_KEY`：Turnstile 前端 site key
+**主应用 Secrets（必需）**
 
-常用 Vars（见 `wrangler.toml`）：
-- `DEFAULT_DOMAIN`：默认邮箱域名
-- `KEY_EXPIRE_DAYS` / `UNCLAIMED_EXPIRE_DAYS` / `SESSION_EXPIRE_HOURS` / `ADMIN_SESSION_EXPIRE_HOURS`
-- `MAX_BODY_TEXT` / `MAX_BODY_HTML`
-- `RATE_LIMIT_CREATE` / `RATE_LIMIT_CLAIM` / `RATE_LIMIT_RECOVER` / `RATE_LIMIT_RENEW`（如 `10/10m`）
+| Key | 用途 |
+| --- | --- |
+| `ADMIN_TOKEN` | 管理后台登录令牌 |
+| `KEY_PEPPER` | Key 哈希 pepper（`SHA-256(key + pepper)`） |
+| `SESSION_SECRET` | 会话签名密钥 |
+| `TURNSTILE_SECRET_KEY` | Turnstile 服务端密钥 |
+| `TURNSTILE_SITE_KEY` | Turnstile 前端 site key |
+
+**常用 Vars（见 `wrangler.toml`）**
+
+| Key | 说明 |
+| --- | --- |
+| `DEFAULT_DOMAIN` | 默认邮箱域名 |
+| `KEY_EXPIRE_DAYS` | Key 有效期（天） |
+| `UNCLAIMED_EXPIRE_DAYS` | 未认领邮箱过期（天） |
+| `SESSION_EXPIRE_HOURS` | 用户会话有效期（小时） |
+| `ADMIN_SESSION_EXPIRE_HOURS` | 管理会话有效期（小时） |
+| `MAX_BODY_TEXT` / `MAX_BODY_HTML` | 正文截断上限 |
+| `RATE_LIMIT_*` | 限流规则（如 `10/10m`） |
 
 说明：配置解析与校验逻辑在 `src/lib/types/env.ts`。
 
-### 4) 初始化 D1 数据库（本地）
+### 4) 初始化 D1（本地）
 
 ```bash
 # 创建本地 D1（名称可自行调整）
@@ -94,23 +125,19 @@ bun run dev:wrangler
 bun run dev:all
 ```
 
-## 本地联调（可选）
-
-用于在本地完整走一遍接口（建议配合 `bun run dev:wrangler`）：
+### 6) 本地联调（可选）
 
 ```bash
-# 例：获取前端配置
 curl -s http://127.0.0.1:8787/api/user/config
 ```
 
-## 部署（完整流程）
+## 部署
 
 ### 0) 前置条件
 
 - Cloudflare 账号（已开通 Workers、D1、Email Routing）
 - 已准备一个可托管的邮箱域名（用于收信），并在 Cloudflare 托管 DNS
 - 已创建 Turnstile 小组件，拿到 `TURNSTILE_SITE_KEY` 与 `TURNSTILE_SECRET_KEY`
-- 本机已安装 `bun` 与 `wrangler`（本项目已内置 `wrangler` 依赖，可用 `bunx wrangler`）
 
 ### 1) 登录 Cloudflare
 
@@ -118,7 +145,7 @@ curl -s http://127.0.0.1:8787/api/user/config
 wrangler login
 ```
 
-### 2) 创建 D1 数据库（远程）
+### 2) 创建 D1（远程）
 
 ```bash
 wrangler d1 create flashinbox-db
@@ -137,15 +164,13 @@ wrangler d1 execute flashinbox-db --remote --file=migrations/0001_init.sql
 wrangler d1 execute flashinbox-db-dev --remote --file=migrations/0001_init.sql
 ```
 
-### 4) 配置主应用域名路由
+### 4) 配置主应用域名路由与默认域名
 
-修改 `wrangler.toml` 中生产环境路由：
+修改 `wrangler.toml` 的生产环境配置：
 - `env.production.routes[0].pattern` 例如 `mail.yourdomain.com`
 - `DEFAULT_DOMAIN` 设置为你的收信域名（例如 `yourdomain.com`）
 
-### 5) 设置 Secrets（生产环境）
-
-主应用（`wrangler.toml`）：
+### 5) 设置主应用 Secrets（生产环境）
 
 ```bash
 wrangler secret put ADMIN_TOKEN --env production
@@ -162,10 +187,7 @@ wrangler secret put TURNSTILE_SITE_KEY --env production
 ### 6) 部署主应用（Next.js -> Workers）
 
 ```bash
-# 构建 OpenNext Worker
 bun run build:worker
-
-# 部署生产环境（读取 wrangler.toml 的 [env.production]）
 wrangler deploy --env production
 ```
 
@@ -223,14 +245,19 @@ wrangler deploy --config wrangler.scheduled.toml
 - HTML 邮件会净化后再渲染（避免 XSS）
 - 中间件统一设置安全响应头与 CSP：用户站点允许 Turnstile，管理后台更严格（见 `src/middleware.ts`）
 
-## 开发命令
+## 常用命令
 
-```bash
-bun run lint
-bun run typecheck
-bun run format
-bun test
-```
+| 目的 | 命令 |
+| --- | --- |
+| 本地开发 | `bun run dev` |
+| 本地 Workers | `bun run dev:wrangler` |
+| 同时启动 | `bun run dev:all` |
+| 构建 Worker | `bun run build:worker` |
+| 部署主应用 | `wrangler deploy --env production` |
+| 格式化 | `bun run format` |
+| Lint | `bun run lint` |
+| 类型检查 | `bun run typecheck` |
+| 测试 | `bun test` |
 
 ## 目录结构（简化）
 
