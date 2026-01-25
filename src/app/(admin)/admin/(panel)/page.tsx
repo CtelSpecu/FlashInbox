@@ -28,6 +28,7 @@ interface DashboardData {
   };
   charts: {
     messagesReceived: Array<{ timestamp: number; value: number }>;
+    mailboxesCreated: Array<{ timestamp: number; value: number }>;
     createRequests: Array<{ timestamp: number; value: number }>;
     claimRequests: Array<{ timestamp: number; value: number }>;
     recoverRequests: Array<{ timestamp: number; value: number }>;
@@ -202,7 +203,19 @@ export default function AdminDashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t.dashboard.mailboxesCreated}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {data ? (
+              <SparkBars data={data.charts.mailboxesCreated} />
+            ) : (
+              <div className="text-sm text-[color:var(--admin-muted)]">{t.common.loading}</div>
+            )}
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader>
             <CardTitle>{t.dashboard.messagesReceived}</CardTitle>
@@ -290,4 +303,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-

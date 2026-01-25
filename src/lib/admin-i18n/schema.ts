@@ -68,6 +68,7 @@ export interface AdminTranslations {
     unclaimed: string;
     totalMessages: string;
     quarantine: string;
+    mailboxesCreated: string;
     messagesReceived: string;
     recoverFailures: string;
     security: string;
@@ -169,5 +170,4 @@ export interface AdminTranslations {
     note: string;
   };
 }
-
 

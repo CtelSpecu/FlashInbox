@@ -73,6 +73,7 @@ export const adminEnUS = {
     unclaimed: 'Unclaimed',
     totalMessages: 'Total Messages',
     quarantine: 'Quarantine',
+    mailboxesCreated: 'Mailboxes Created',
     messagesReceived: 'Messages Received',
     recoverFailures: 'Recover Failures',
     security: 'Security',
@@ -174,5 +175,4 @@ export const adminEnUS = {
     note: 'Note: These settings are stored as environment variables. Changes require redeployment to take effect.',
   },
 } satisfies AdminTranslations;
-
 

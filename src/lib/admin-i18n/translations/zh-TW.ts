@@ -73,6 +73,7 @@ export const adminZhTW = {
     unclaimed: '未認領',
     totalMessages: '郵件總數',
     quarantine: '隔離數量',
+    mailboxesCreated: '郵箱建立趨勢',
     messagesReceived: '收信趨勢',
     recoverFailures: '恢復失敗趨勢',
     security: '安全指標',
@@ -174,4 +175,3 @@ export const adminZhTW = {
     note: '注意：這些設定儲存為環境變數。更改後需要重新部署才能生效。',
   },
 } satisfies AdminTranslations;
-

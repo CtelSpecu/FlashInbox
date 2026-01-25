@@ -3,24 +3,140 @@ import { getCloudflareEnv } from '@/lib/env';
 import { withAdminAuth, AdminAuthContext } from '@/lib/middleware/admin-auth';
 import { success, error, ErrorCodes } from '@/lib/utils/response';
 
-type RangeKey = '24h' | '7d' | '30d';
+type RangeKey =
+  | 'today'
+  | '24h'
+  | 'week'
+  | '7d'
+  | 'month'
+  | '30d'
+  | '90d'
+  | 'year'
+  | '6m'
+  | '12m'
+  | 'all';
 
-function getRange(range: RangeKey): { start: number; end: number; bucketMs: number; points: number } {
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function startOfUtcDayMs(ts: number): number {
+  const d = new Date(ts);
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+}
+
+function startOfUtcWeekMs(ts: number): number {
+  const d = new Date(ts);
+  const day = d.getUTCDay(); // 0=Sun..6=Sat
+  const diffFromMonday = (day + 6) % 7; // 0 if Monday
+  const dayStart = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  return dayStart - diffFromMonday * DAY_MS;
+}
+
+function startOfUtcMonthMs(ts: number): number {
+  const d = new Date(ts);
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
+}
+
+function startOfUtcYearMs(ts: number): number {
+  const d = new Date(ts);
+  return Date.UTC(d.getUTCFullYear(), 0, 1);
+}
+
+function daysInUtcMonth(ts: number): number {
+  const d = new Date(ts);
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+}
+
+async function getRange(
+  db: D1Database,
+  range: RangeKey
+): Promise<{ start: number; end: number; bucketMs: number; points: number }> {
   const now = Date.now();
 
+  if (range === 'today') {
+    const start = startOfUtcDayMs(now);
+    const bucketMs = HOUR_MS;
+    const points = 24;
+    const end = start + points * bucketMs;
+    return { start, end, bucketMs, points };
+  }
+
   if (range === '24h') {
-    const bucketMs = 60 * 60 * 1000;
+    const bucketMs = HOUR_MS;
     const end = Math.floor(now / bucketMs) * bucketMs + bucketMs;
     const points = 24;
     const start = end - points * bucketMs;
     return { start, end, bucketMs, points };
   }
 
-  // 7d / 30d: daily buckets (UTC)
-  const bucketMs = 24 * 60 * 60 * 1000;
-  const end = Math.floor(now / bucketMs) * bucketMs + bucketMs;
-  const points = range === '7d' ? 7 : 30;
-  const start = end - points * bucketMs;
+  if (range === 'week') {
+    const start = startOfUtcWeekMs(now);
+    const bucketMs = DAY_MS;
+    const points = 7;
+    const end = start + points * bucketMs;
+    return { start, end, bucketMs, points };
+  }
+
+  if (range === 'month') {
+    const start = startOfUtcMonthMs(now);
+    const bucketMs = DAY_MS;
+    const points = daysInUtcMonth(now);
+    const end = start + points * bucketMs;
+    return { start, end, bucketMs, points };
+  }
+
+  if (range === '30d' || range === '7d' || range === '90d') {
+    const bucketMs = DAY_MS;
+    const points = range === '7d' ? 7 : range === '30d' ? 30 : 90;
+    const end = Math.floor(now / bucketMs) * bucketMs + bucketMs;
+    const start = end - points * bucketMs;
+    return { start, end, bucketMs, points };
+  }
+
+  if (range === '6m' || range === '12m' || range === 'year') {
+    const bucketMs = 7 * DAY_MS;
+    const end = startOfUtcWeekMs(now) + 7 * DAY_MS;
+    const points = range === '6m' ? 26 : range === '12m' ? 52 : Math.ceil((end - startOfUtcYearMs(now)) / bucketMs);
+    const start = range === 'year' ? startOfUtcYearMs(now) : end - points * bucketMs;
+    return { start, end, bucketMs, points };
+  }
+
+  // all time: pick a reasonable bucket size based on data span
+  const minResult = await db
+    .prepare(
+      `SELECT MIN(v) as minTs FROM (
+         SELECT MIN(created_at) as v FROM mailboxes
+         UNION ALL SELECT MIN(received_at) as v FROM messages
+         UNION ALL SELECT MIN(created_at) as v FROM audit_logs
+       )`
+    )
+    .first<{ minTs: number | null }>();
+
+  const minTs = minResult?.minTs ?? null;
+  if (!minTs) {
+    const bucketMs = DAY_MS;
+    const points = 30;
+    const end = Math.floor(now / bucketMs) * bucketMs + bucketMs;
+    const start = end - points * bucketMs;
+    return { start, end, bucketMs, points };
+  }
+
+  let bucketMs = DAY_MS;
+  let start = Math.floor(minTs / bucketMs) * bucketMs;
+  let end = Math.floor(now / bucketMs) * bucketMs + bucketMs;
+  let points = Math.ceil((end - start) / bucketMs);
+
+  const bump = (newBucketMs: number) => {
+    bucketMs = newBucketMs;
+    start = Math.floor(minTs / bucketMs) * bucketMs;
+    end = Math.floor(now / bucketMs) * bucketMs + bucketMs;
+    points = Math.ceil((end - start) / bucketMs);
+  };
+
+  if (points > 120) bump(7 * DAY_MS); // weekly
+  if (points > 120) bump(30 * DAY_MS); // monthly-ish
+  if (points > 120) bump(365 * DAY_MS); // yearly-ish
+
   return { start, end, bucketMs, points };
 }
 
@@ -55,11 +171,11 @@ export const GET = withAdminAuth(async (
 
   const url = new URL(request.url);
   const range = (url.searchParams.get('range') || '24h') as RangeKey;
-  if (!['24h', '7d', '30d'].includes(range)) {
+  if (!['today', '24h', 'week', '7d', 'month', '30d', '90d', 'year', '6m', '12m', 'all'].includes(range)) {
     return error(ErrorCodes.INVALID_REQUEST, 'Invalid range', 400);
   }
 
-  const { start, end, bucketMs, points } = getRange(range);
+  const { start, end, bucketMs, points } = await getRange(env.DB, range);
 
   // overview
   const [
@@ -82,6 +198,18 @@ export const GET = withAdminAuth(async (
     `SELECT CAST(((received_at - ?) / ?) AS INTEGER) as idx, COUNT(*) as count
      FROM messages
      WHERE received_at >= ? AND received_at < ?
+     GROUP BY idx`,
+    [start, bucketMs, start, end],
+    start,
+    bucketMs,
+    points
+  );
+
+  const mailboxesCreated = await buildTimeSeries(
+    env.DB,
+    `SELECT CAST(((created_at - ?) / ?) AS INTEGER) as idx, COUNT(*) as count
+     FROM mailboxes
+     WHERE created_at >= ? AND created_at < ?
      GROUP BY idx`,
     [start, bucketMs, start, end],
     start,
@@ -184,6 +312,7 @@ export const GET = withAdminAuth(async (
     },
     charts: {
       messagesReceived,
+      mailboxesCreated,
       createRequests,
       claimRequests,
       recoverRequests,
@@ -200,4 +329,3 @@ export const GET = withAdminAuth(async (
     },
   });
 });
-

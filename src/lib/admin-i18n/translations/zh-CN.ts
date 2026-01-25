@@ -73,6 +73,7 @@ export const adminZhCN = {
     unclaimed: '未认领',
     totalMessages: '邮件总数',
     quarantine: '隔离数量',
+    mailboxesCreated: '邮箱创建趋势',
     messagesReceived: '收信趋势',
     recoverFailures: '恢复失败趋势',
     security: '安全指标',
@@ -176,5 +177,4 @@ export const adminZhCN = {
 } satisfies AdminTranslations;
 
 export type AdminTranslationKeys = AdminTranslations;
-
 
