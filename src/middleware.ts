@@ -33,11 +33,11 @@ function getSecurityHeaders(isAdmin: boolean): Record<string, string> {
     // 用户站点 CSP（允许 Turnstile）
     headers['Content-Security-Policy'] = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://static.cloudflareinsights.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",
       "font-src 'self'",
-      "connect-src 'self' https://challenges.cloudflare.com",
+      "connect-src 'self' https://challenges.cloudflare.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com",
       "frame-src https://challenges.cloudflare.com",
       "object-src 'none'",
       "base-uri 'self'",
@@ -102,4 +102,3 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.svg$).*)',
   ],
 };
-

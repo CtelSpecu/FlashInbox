@@ -1,9 +1,9 @@
 /**
  * 环境变量访问入口
- * 在 Cloudflare Workers 中通过 getRequestContext 获取
+ * 在 Cloudflare Workers（OpenNext）中通过 getCloudflareContext 获取
  */
 
-import { getRequestContext } from '@cloudflare/next-on-pages';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 import type { AppConfig } from '@/lib/types/env';
 import { getConfig } from '@/lib/types/env';
 
@@ -14,8 +14,7 @@ export { getConfig, calculateKeyExpiry, calculateSessionExpiry, calculateAdminSe
  * 获取当前请求的 Cloudflare 环境
  */
 export function getCloudflareEnv(): CloudflareEnv {
-  const context = getRequestContext();
-  return context.env;
+  return getCloudflareContext().env;
 }
 
 /**
@@ -36,10 +35,6 @@ export function getAppConfig(): AppConfig {
  * 获取 Cloudflare 请求上下文（包含 cf 对象）
  */
 export function getRequestInfo() {
-  const context = getRequestContext();
-  return {
-    env: context.env,
-    ctx: context.ctx,
-    cf: context.cf,
-  };
+  const context = getCloudflareContext();
+  return { env: context.env, ctx: context.ctx, cf: context.cf };
 }

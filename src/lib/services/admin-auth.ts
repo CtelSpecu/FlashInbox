@@ -28,6 +28,9 @@ export class AdminAuthService {
   private storedAdminToken: string;
 
   constructor(db: D1Database, env: CloudflareEnv) {
+    if (!env.ADMIN_TOKEN) {
+      throw new Error('Missing required secret: ADMIN_TOKEN');
+    }
     this.db = db;
     this.config = getConfig(env);
     this.storedAdminToken = env.ADMIN_TOKEN;
@@ -192,5 +195,4 @@ export class AdminAuthService {
     return { success: true };
   }
 }
-
 
