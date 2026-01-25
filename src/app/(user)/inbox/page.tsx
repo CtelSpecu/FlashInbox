@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@iconify/react';
 
@@ -106,6 +106,8 @@ export default function InboxPage() {
   const [renewNotice, setRenewNotice] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const languageSelectRef = useRef<HTMLElement | null>(null);
+  const themeSelectRef = useRef<HTMLElement | null>(null);
 
   const queryString = useMemo(() => {
     const params = new URLSearchParams();
@@ -231,6 +233,78 @@ export default function InboxPage() {
       // ignore
     }
   }
+
+  function installSelectViewportGuard(selectEl: HTMLElement | null) {
+    if (!selectEl) return () => {};
+
+    const margin = 12;
+    const applyMenuGuard = () => {
+      const root = (selectEl as HTMLElement & { shadowRoot?: ShadowRoot | null }).shadowRoot;
+      const menu = root?.querySelector('mdui-menu') as HTMLElement | null;
+      if (!menu) return;
+
+      menu.style.overflowY = 'auto';
+      menu.style.overscrollBehavior = 'contain';
+
+      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const menuRect = menu.getBoundingClientRect();
+      const available = Math.floor(viewportHeight - margin - menuRect.top);
+      if (available > 0) {
+        menu.style.maxHeight = `${available}px`;
+      }
+    };
+
+    const preparePlacement = () => {
+      const rect = selectEl.getBoundingClientRect();
+      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const nextPlacement = spaceBelow < 240 && spaceAbove > spaceBelow ? 'top' : 'bottom';
+      selectEl.setAttribute('placement', nextPlacement);
+    };
+
+    const onOpen = () => {
+      preparePlacement();
+      requestAnimationFrame(() => applyMenuGuard());
+      window.addEventListener('resize', applyMenuGuard, { passive: true });
+      window.visualViewport?.addEventListener('resize', applyMenuGuard, { passive: true });
+    };
+
+    const onOpened = () => applyMenuGuard();
+
+    const onClose = () => {
+      window.removeEventListener('resize', applyMenuGuard);
+      window.visualViewport?.removeEventListener('resize', applyMenuGuard);
+    };
+
+    const onPointerDown = () => preparePlacement();
+
+    selectEl.addEventListener('open', onOpen);
+    selectEl.addEventListener('opened', onOpened);
+    selectEl.addEventListener('close', onClose);
+    selectEl.addEventListener('closed', onClose);
+    selectEl.addEventListener('pointerdown', onPointerDown, { passive: true });
+
+    return () => {
+      selectEl.removeEventListener('open', onOpen);
+      selectEl.removeEventListener('opened', onOpened);
+      selectEl.removeEventListener('close', onClose);
+      selectEl.removeEventListener('closed', onClose);
+      selectEl.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('resize', applyMenuGuard);
+      window.visualViewport?.removeEventListener('resize', applyMenuGuard);
+    };
+  }
+
+  useEffect(() => {
+    const cleanupLang = installSelectViewportGuard(languageSelectRef.current);
+    const cleanupTheme = installSelectViewportGuard(themeSelectRef.current);
+    return () => {
+      cleanupLang();
+      cleanupTheme();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const themeIcon =
     theme === 'light'
@@ -394,45 +468,33 @@ export default function InboxPage() {
               </div>
             ) : null}
             <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/40 space-y-3', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
-              <div className="text-xs font-medium opacity-80">{t.language.label}</div>
-              <mdui-dropdown placement="right-start">
-                <mdui-button slot="trigger" variant="outlined" full-width>
-                  <Icon icon="mdi:translate" slot="icon" />
-                  {locale === 'en-US' ? t.language.enUS : locale === 'zh-CN' ? t.language.zhCN : t.language.zhTW}
-                  <Icon icon="mdi:chevron-down" slot="end-icon" />
-                </mdui-button>
-                <mdui-menu>
-                  {locales.map((loc) => (
-                    <mdui-menu-item key={loc} onClick={() => setLocale(loc)}>
-                      {locale === loc ? <Icon icon="mdi:check" slot="icon" /> : <span slot="icon" />}
-                      {loc === 'en-US' ? t.language.enUS : loc === 'zh-CN' ? t.language.zhCN : t.language.zhTW}
-                    </mdui-menu-item>
-                  ))}
-                </mdui-menu>
-              </mdui-dropdown>
+              <mdui-select
+                ref={languageSelectRef}
+                variant="outlined"
+                label={t.language.label}
+                value={locale}
+                onChange={(e) => setLocale((e.target as HTMLElement & { value: string }).value as Locale)}
+              >
+                <Icon icon="mdi:translate" slot="icon" />
+                {locales.map((loc) => (
+                  <mdui-menu-item key={loc} value={loc}>
+                    {loc === 'en-US' ? t.language.enUS : loc === 'zh-CN' ? t.language.zhCN : t.language.zhTW}
+                  </mdui-menu-item>
+                ))}
+              </mdui-select>
 
-              <div className="text-xs font-medium opacity-80">{t.theme.label}</div>
-              <mdui-dropdown placement="right-start">
-                <mdui-button slot="trigger" variant="outlined" full-width>
-                  <Icon icon={themeIcon} slot="icon" />
-                  {theme === 'auto' ? t.theme.system : theme === 'dark' ? t.theme.dark : t.theme.light}
-                  <Icon icon="mdi:chevron-down" slot="end-icon" />
-                </mdui-button>
-                <mdui-menu>
-                  <mdui-menu-item onClick={() => setTheme('auto')}>
-                    {theme === 'auto' ? <Icon icon="mdi:check" slot="icon" /> : <span slot="icon" />}
-                    {t.theme.system}
-                  </mdui-menu-item>
-                  <mdui-menu-item onClick={() => setTheme('dark')}>
-                    {theme === 'dark' ? <Icon icon="mdi:check" slot="icon" /> : <span slot="icon" />}
-                    {t.theme.dark}
-                  </mdui-menu-item>
-                  <mdui-menu-item onClick={() => setTheme('light')}>
-                    {theme === 'light' ? <Icon icon="mdi:check" slot="icon" /> : <span slot="icon" />}
-                    {t.theme.light}
-                  </mdui-menu-item>
-                </mdui-menu>
-              </mdui-dropdown>
+              <mdui-select
+                ref={themeSelectRef}
+                variant="outlined"
+                label={t.theme.label}
+                value={theme}
+                onChange={(e) => setTheme((e.target as HTMLElement & { value: string }).value as ThemeMode)}
+              >
+                <Icon icon={themeIcon} slot="icon" />
+                <mdui-menu-item value="auto">{t.theme.system}</mdui-menu-item>
+                <mdui-menu-item value="dark">{t.theme.dark}</mdui-menu-item>
+                <mdui-menu-item value="light">{t.theme.light}</mdui-menu-item>
+              </mdui-select>
             </div>
 
             {sidebarCollapsed ? (
