@@ -44,3 +44,10 @@ next-env.d.ts
 .open-next/
 .vercel/
 .wrangler/
+
+# Agent
+.agents
+.windsurf
+.codex
+.claude
+.cursor
