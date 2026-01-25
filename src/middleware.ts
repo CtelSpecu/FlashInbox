@@ -1,6 +1,31 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+function getOriginFromUrl(url: string | undefined): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url).origin;
+  } catch {
+    return null;
+  }
+}
+
+function getUmamiOrigins(): string[] {
+  const origins = new Set<string>();
+
+  // Default deployment value (wrangler.toml). Keep in sync with your production vars.
+  origins.add('https://analytics.hxcn.dev');
+
+  const env = typeof process !== 'undefined' ? process.env : undefined;
+  const fromEnv =
+    getOriginFromUrl(env?.UMAMI_SCRIPT_URL) ||
+    getOriginFromUrl(env?.NEXT_PUBLIC_UMAMI_SCRIPT_URL);
+
+  if (fromEnv) origins.add(fromEnv);
+
+  return Array.from(origins);
+}
+
 /**
  * 生成安全响应头
  */
@@ -14,15 +39,16 @@ function getSecurityHeaders(isAdmin: boolean): Record<string, string> {
   };
 
   // CSP 策略
+  const umamiOrigins = getUmamiOrigins().join(' ');
   if (isAdmin) {
     // 管理后台更严格的 CSP
     headers['Content-Security-Policy'] = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com", // shadcn/ui 需要
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com ${umamiOrigins}`, // shadcn/ui 需要
       "style-src 'self' 'unsafe-inline'", // Tailwind 需要
       "img-src 'self' data: https:",
       "font-src 'self'",
-      "connect-src 'self' https://cloudflareinsights.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com",
+      `connect-src 'self' https://cloudflareinsights.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com ${umamiOrigins}`,
       "frame-src 'none'",
       "object-src 'none'",
       "base-uri 'self'",
@@ -33,11 +59,11 @@ function getSecurityHeaders(isAdmin: boolean): Record<string, string> {
     // 用户站点 CSP（允许 Turnstile）
     headers['Content-Security-Policy'] = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://static.cloudflareinsights.com",
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://static.cloudflareinsights.com ${umamiOrigins}`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",
       "font-src 'self'",
-      "connect-src 'self' https://challenges.cloudflare.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com",
+      `connect-src 'self' https://challenges.cloudflare.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com ${umamiOrigins}`,
       "frame-src https://challenges.cloudflare.com",
       "object-src 'none'",
       "base-uri 'self'",
