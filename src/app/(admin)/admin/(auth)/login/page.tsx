@@ -72,33 +72,38 @@ export default function AdminLoginPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="space-y-1">
-            <div className="text-xs font-medium text-slate-700">{t.auth.tokenLabel}</div>
-            <Input
-              type="password"
-              placeholder={t.auth.tokenPlaceholder}
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              disabled={loading}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') submit();
-              }}
-            />
-          </div>
+          <form
+            className="space-y-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              submit();
+            }}
+          >
+            <div className="space-y-1">
+              <div className="text-xs font-medium text-slate-700">{t.auth.tokenLabel}</div>
+              <Input
+                type="password"
+                placeholder={t.auth.tokenPlaceholder}
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                disabled={loading}
+                autoComplete="current-password"
+              />
+            </div>
+
+            {errorText ? <div className="text-sm text-red-700">{errorText}</div> : null}
+
+            <Button type="submit" disabled={loading || !token.trim()} className="w-full">
+              <Icon icon="lucide:log-in" className="h-4 w-4" />
+              {loading ? t.auth.loggingIn : t.auth.login}
+            </Button>
+          </form>
 
           <div className="text-[11px] text-slate-500">
             {t.auth.fingerprint}: {fingerprint}
           </div>
-
-          {errorText ? <div className="text-sm text-red-700">{errorText}</div> : null}
-
-          <Button onClick={submit} disabled={loading || !token.trim()} className="w-full">
-            <Icon icon="lucide:log-in" className="h-4 w-4" />
-            {loading ? t.auth.loggingIn : t.auth.login}
-          </Button>
         </CardContent>
       </Card>
     </div>
   );
 }
-
