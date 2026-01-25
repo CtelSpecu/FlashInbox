@@ -79,6 +79,35 @@ bun run test:integration
 
 本项目运行在 Cloudflare Workers 环境中，通过 `wrangler.toml` / `wrangler.email.toml` / `wrangler.scheduled.toml` 配置 D1 绑定与环境变量。
 
+#### Wrangler 配置文件说明
+
+本仓库包含 3 份 Wrangler 配置文件，分别对应 3 个独立 Worker（主应用、入站邮件、定时任务）：
+
+| 文件 | Worker 名称（`name`） | 入口（`main`） | 触发方式 | 用途 |
+| --- | --- | --- | --- | --- |
+| `wrangler.toml` | `flashinbox` | `.open-next/worker.js` | HTTP 路由（`routes`） | 主应用（Next.js App Router + API） |
+| `wrangler.email.toml` | `flashinbox-email` | `src/workers/email/index.ts` | Email Routing（Dashboard 配置） | 入站邮件解析与入库 |
+| `wrangler.scheduled.toml` | `flashinbox-scheduled` | `src/workers/scheduled/cleanup.ts` | Cron（`[triggers].crons`） | 清理/统计等定时任务 |
+
+常用部署命令：
+- 主应用：`wrangler deploy --env production`（默认读取 `wrangler.toml`）
+- Email Worker：`wrangler deploy --config wrangler.email.toml`
+- Scheduled Worker：`wrangler deploy --config wrangler.scheduled.toml`
+
+关键字段含义（同名字段在 3 个文件中含义一致）：
+- `compatibility_date`：Workers 兼容性日期，固定运行时行为，避免平台升级导致差异
+- `compatibility_flags = ["nodejs_compat"]`：开启 Node.js 兼容层（用于依赖/部分 Node API 适配）
+- `main`：Worker 入口文件路径
+- `assets = { directory, binding }`：仅主应用使用的静态资源发布与绑定（OpenNext 产物）
+- `routes`：仅主应用使用的 HTTP 路由规则（生产环境通常配置自定义域名）
+- `[env.dev]` / `[env.production]`：仅主应用使用的多环境配置覆盖（用 `wrangler deploy --env <name>` 选择）
+- `[[d1_databases]]`：D1 绑定（代码中通过 `env.DB` 访问）
+  - `database_name`：D1 实例名称
+  - `database_id`：D1 实例 ID（远程部署时必填；本地可为空或占位）
+- `[vars]`：非敏感环境变量（可在面板查看），用于业务参数（域名、过期时间、正文上限等）
+- Secrets：敏感变量（通过 `wrangler secret put` 写入，不应出现在配置文件中）
+- `[triggers].crons`：仅 Scheduled Worker 使用的 Cron 触发器列表（每个表达式都会触发一次执行）
+
 **主应用 Secrets（必需）**
 
 | Key | 用途 |
