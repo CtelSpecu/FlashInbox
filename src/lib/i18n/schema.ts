@@ -16,6 +16,7 @@ export interface UserTranslations {
     search: string;
     refresh: string;
     copy: string;
+    copied: string;
     close: string;
     yes: string;
     no: string;
@@ -78,6 +79,7 @@ export interface UserTranslations {
     keyDialogTitle: string;
     keyExpires: string; // uses {time}
     keySavedConfirm: string;
+    keyHint: string;
     continueButton: string;
     recoverButton: string;
   };

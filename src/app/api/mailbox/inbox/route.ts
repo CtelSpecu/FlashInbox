@@ -11,11 +11,11 @@ async function inboxHandler(
 ): Promise<Response> {
   const env = getCloudflareEnv();
 
-  // 限流检查（使用 read action）
+  // 限流检查（使用 read action）- 放宽限制以支持轮询
   const rateLimitService = createRateLimitService(env.DB);
   const rateLimitResult = await rateLimitService.check(request, {
     action: 'read',
-    config: { count: 60, windowMinutes: 1, cooldownMinutes: 1 },
+    config: { count: 300, windowMinutes: 5, cooldownMinutes: 1 },
   });
 
   if (!rateLimitResult.allowed) {

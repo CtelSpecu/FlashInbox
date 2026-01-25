@@ -46,7 +46,15 @@ function htmlToTextPreview(html: string, maxChars = 240): string | undefined {
 
 const emailWorker = {
   async email(message: EmailMessage, env: Env, _ctx: ExecutionContext): Promise<void> {
+    console.log('[Email Worker] Received email:', { from: message.from, to: message.to, size: message.rawSize });
+
     const db = env.DB;
+    if (!db) {
+      console.error('[Email Worker] D1 database not bound!');
+      message.setReject('Internal configuration error');
+      return;
+    }
+
     const domainRepo = new DomainRepository(db);
     const mailboxRepo = new MailboxRepository(db);
     const messageRepo = new MessageRepository(db);
@@ -72,8 +80,10 @@ const emailWorker = {
       }
 
       // 2. 检查域名
+      console.log('[Email Worker] Looking up domain:', recipient.domain);
       const domain = await domainRepo.findByName(recipient.domain);
       if (!domain) {
+        console.error('[Email Worker] Domain not found:', recipient.domain);
         await auditLogRepo.create({
           action: 'email_rejected',
           actorType: 'system',
@@ -84,6 +94,7 @@ const emailWorker = {
         message.setReject('Domain not found');
         return;
       }
+      console.log('[Email Worker] Domain found:', { id: domain.id, name: domain.name, status: domain.status });
 
       if (domain.status === 'disabled') {
         await auditLogRepo.create({

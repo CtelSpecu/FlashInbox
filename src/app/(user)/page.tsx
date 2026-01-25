@@ -52,6 +52,7 @@ export default function HomePage() {
   const [createdKeyExpiresAt, setCreatedKeyExpiresAt] = useState<number | null>(null);
   const [createdToken, setCreatedToken] = useState<string | null>(null);
   const [confirmSaved, setConfirmSaved] = useState(false);
+  const [copiedField, setCopiedField] = useState<'email' | 'key' | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -124,9 +125,11 @@ export default function HomePage() {
     }
   }
 
-  async function copyText(text: string) {
+  async function copyText(text: string, field: 'email' | 'key') {
     try {
       await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2000);
     } catch {
       // ignore
     }
@@ -253,9 +256,9 @@ export default function HomePage() {
                 <div className="flex-1 rounded border border-black/10 p-2 font-mono text-sm break-all dark:border-white/10">
                   {createdEmail}
                 </div>
-                <mdui-button variant="text" onClick={() => copyText(createdEmail)}>
-                  <Icon icon="mdi:content-copy" slot="icon" />
-                  {t.common.copy}
+                <mdui-button variant="text" onClick={() => copyText(createdEmail, 'email')}>
+                  <Icon icon={copiedField === 'email' ? 'mdi:check' : 'mdi:content-copy'} slot="icon" />
+                  {copiedField === 'email' ? t.common.copied : t.common.copy}
                 </mdui-button>
               </div>
             </div>
@@ -267,9 +270,9 @@ export default function HomePage() {
               <div className="flex-1 rounded border border-black/10 p-2 font-mono text-sm break-all dark:border-white/10">
                 {createdKey || ''}
               </div>
-              <mdui-button variant="text" onClick={() => (createdKey ? copyText(createdKey) : undefined)}>
-                <Icon icon="mdi:content-copy" slot="icon" />
-                {t.common.copy}
+              <mdui-button variant="text" onClick={() => (createdKey ? copyText(createdKey, 'key') : undefined)}>
+                <Icon icon={copiedField === 'key' ? 'mdi:check' : 'mdi:content-copy'} slot="icon" />
+                {copiedField === 'key' ? t.common.copied : t.common.copy}
               </mdui-button>
             </div>
           </div>
@@ -278,6 +281,11 @@ export default function HomePage() {
             {format(t.claim.keyExpires, {
               time: createdKeyExpiresAt ? new Date(createdKeyExpiresAt).toLocaleString() : t.common.na,
             })}
+          </div>
+
+          <div className="rounded bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+            <Icon icon="mdi:information-outline" className="inline-block mr-1 h-4 w-4 align-text-bottom" />
+            {t.claim.keyHint}
           </div>
 
           <mdui-checkbox

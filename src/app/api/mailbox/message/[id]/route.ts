@@ -16,11 +16,11 @@ async function getMessageHandler(
 ): Promise<Response> {
   const env = getCloudflareEnv();
 
-  // 限流检查
+  // 限流检查 - 放宽限制以支持正常使用
   const rateLimitService = createRateLimitService(env.DB);
   const rateLimitResult = await rateLimitService.check(request, {
     action: 'read',
-    config: { count: 60, windowMinutes: 1, cooldownMinutes: 1 },
+    config: { count: 300, windowMinutes: 5, cooldownMinutes: 1 },
   });
 
   if (!rateLimitResult.allowed) {
