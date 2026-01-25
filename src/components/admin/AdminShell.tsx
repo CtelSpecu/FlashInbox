@@ -75,6 +75,14 @@ export function AdminShell({
   const session = getAdminSession();
   const sessionHint = session?.sessionId ? `sid:${session.sessionId.slice(0, 8)}` : '';
 
+  const themeIcon = theme === 'dark' ? 'lucide:moon' : theme === 'light' ? 'lucide:sun' : 'lucide:monitor';
+  const themeLabel = theme === 'dark' ? t.theme.dark : theme === 'light' ? t.theme.light : t.theme.system;
+
+  function cycleTheme() {
+    const next: ThemeMode = theme === 'auto' ? 'dark' : theme === 'dark' ? 'light' : 'auto';
+    setTheme(next);
+  }
+
   return (
     <div className="min-h-screen bg-[color:var(--admin-bg)] text-[color:var(--admin-text)]">
       <div className="flex min-h-screen">
@@ -140,16 +148,15 @@ export function AdminShell({
                   <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
                   {t.common.reload}
                 </Button>
-                <Select
-                  value={theme}
-                  onChange={(e) => setTheme(e.target.value as ThemeMode)}
-                  className="hidden md:block w-[140px]"
-                  aria-label={t.theme.label}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={cycleTheme}
+                  aria-label={`${t.theme.label}: ${themeLabel}`}
+                  title={`${t.theme.label}: ${themeLabel}`}
                 >
-                  <option value="light">{t.theme.light}</option>
-                  <option value="dark">{t.theme.dark}</option>
-                  <option value="auto">{t.theme.system}</option>
-                </Select>
+                  <Icon icon={themeIcon} className="h-4 w-4" />
+                </Button>
                 <Select
                   value={locale}
                   onChange={(e) => setLocale(e.target.value as AdminLocale)}
@@ -255,4 +262,3 @@ export function AdminShell({
     </div>
   );
 }
-
