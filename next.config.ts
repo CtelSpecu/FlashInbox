@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+    // 限制构建静态页时的 worker 数量，避免在资源受限环境中被 OOM / Worker 退出
+    cpus: 4,
   },
 
   // 图片优化配置
