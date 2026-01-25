@@ -16,7 +16,7 @@ import { type AdminLocale } from '@/lib/admin-i18n';
 import { useAdminTheme } from '@/lib/theme/admin-theme';
 import type { ThemeMode } from '@/lib/theme/types';
 
-type NavItem = { href: string; key: 'dashboard' | 'domains' | 'rules' | 'quarantine' | 'audit'; icon: string };
+type NavItem = { href: string; key: 'dashboard' | 'domains' | 'rules' | 'quarantine' | 'audit' | 'settings'; icon: string };
 
 const navItems: NavItem[] = [
   { href: '/admin', key: 'dashboard', icon: 'lucide:layout-dashboard' },
@@ -24,6 +24,7 @@ const navItems: NavItem[] = [
   { href: '/admin/rules', key: 'rules', icon: 'lucide:filter' },
   { href: '/admin/quarantine', key: 'quarantine', icon: 'lucide:shield-alert' },
   { href: '/admin/audit', key: 'audit', icon: 'lucide:clipboard-list' },
+  { href: '/admin/settings', key: 'settings', icon: 'lucide:settings' },
 ];
 
 export function AdminShell({
@@ -55,6 +56,7 @@ export function AdminShell({
       rules: t.nav.rules,
       quarantine: t.nav.quarantine,
       audit: t.nav.audit,
+      settings: t.nav.settings,
     } as const;
     return map[item.key] || t.common.admin;
   }, [activeHref, t]);
@@ -109,7 +111,9 @@ export function AdminShell({
                       ? t.nav.rules
                       : item.key === 'quarantine'
                         ? t.nav.quarantine
-                        : t.nav.audit;
+                        : item.key === 'audit'
+                          ? t.nav.audit
+                          : t.nav.settings;
               return (
                 <AdminLink
                   key={item.href}
