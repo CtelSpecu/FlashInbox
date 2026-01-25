@@ -4,6 +4,7 @@ import { createRepositories } from '@/lib/db';
 import { DomainRepository } from '@/lib/db/domain-repo';
 import { createMailboxService } from '@/lib/services/mailbox';
 import { createRateLimitService } from '@/lib/services/rate-limit';
+import { hashKey } from '@/lib/utils/crypto';
 import { success, error, ErrorCodes, parseJsonBody, rateLimited } from '@/lib/utils/response';
 
 interface CreateMailboxRequest {
@@ -75,6 +76,12 @@ export async function POST(request: NextRequest) {
     const domain = await domainRepo.findById(result.mailbox.domainId);
     const domainName = domain?.name || config.defaultDomain;
     const email = `${result.mailbox.username}@${domainName}`;
+    let keyHashPrefix: string | undefined;
+    try {
+      keyHashPrefix = (await hashKey(result.key, env.KEY_PEPPER)).slice(0, 12);
+    } catch {
+      // ignore
+    }
 
     // 返回创建结果
     await repos.auditLogs.create({
@@ -87,7 +94,14 @@ export async function POST(request: NextRequest) {
       ipAddress,
       asn,
       userAgent,
-      details: { creationType: result.mailbox.creationType },
+      details: {
+        creationType: result.mailbox.creationType,
+        username: result.mailbox.username,
+        domain: domainName,
+        email,
+        keyHashPrefix,
+        keyExpiresAt: result.mailbox.keyExpiresAt,
+      },
     });
     return success({
       mailbox: {

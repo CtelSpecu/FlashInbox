@@ -27,6 +27,23 @@ interface EmailMessage {
   forward(rcptTo: string, headers?: Headers): Promise<void>;
 }
 
+function normalizePreview(value: string): string {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+function truncatePreview(value: string | null | undefined, maxChars = 240): string | undefined {
+  if (!value) return undefined;
+  const normalized = normalizePreview(value);
+  if (!normalized) return undefined;
+  if (normalized.length <= maxChars) return normalized;
+  return `${normalized.slice(0, maxChars)}…`;
+}
+
+function htmlToTextPreview(html: string, maxChars = 240): string | undefined {
+  const text = html.replace(/<[^>]*>/g, ' ');
+  return truncatePreview(text, maxChars);
+}
+
 const emailWorker = {
   async email(message: EmailMessage, env: Env, _ctx: ExecutionContext): Promise<void> {
     const db = env.DB;
@@ -229,9 +246,17 @@ const emailWorker = {
         targetId: storedMessage.id,
         details: {
           mailboxId: mailbox.id,
+          mailboxAddress: message.to,
           from: parsedEmail.fromAddr,
+          to: parsedEmail.toAddr || message.to,
           subject: parsedEmail.subject,
           size: parsedEmail.rawSize,
+          content: {
+            textPreview: truncatePreview(parsedEmail.textBody),
+            htmlPreview: parsedEmail.htmlBody ? htmlToTextPreview(parsedEmail.htmlBody) : undefined,
+            textTruncated: parsedEmail.textTruncated,
+            htmlTruncated: parsedEmail.htmlTruncated,
+          },
         },
         success: true,
       });
