@@ -132,6 +132,28 @@ bun run test:integration
 
 说明：配置解析与校验逻辑在 `src/lib/types/env.ts`。
 
+#### Umami（可选）
+
+Umami 统计使用 **环境变量（Vars）** 配置，不使用数据库配置。
+
+需要设置以下变量：
+
+| Key | 说明 |
+| --- | --- |
+| `UMAMI_SCRIPT_URL` | Umami 脚本地址，例如 `https://analytics.example.com/script.js` |
+| `UMAMI_WEBSITE_ID` | 用户端网站 ID（UUID） |
+| `UMAMI_ADMIN_WEBSITE_ID` | 管理端网站 ID（UUID，可选） |
+
+设置方式（二选一）：
+
+1) 写入 `wrangler.toml` 的 `[vars]`（建议按环境分别配置到 `env.dev.vars` / `env.production.vars`）
+
+2) Cloudflare Dashboard → Workers → Settings → Variables（为对应 Worker 配置 Vars）
+
+说明：
+- 用户端会通过 `/api/user/config` 下发 Umami 配置，存在时自动注入脚本（`afterInteractive`）
+- 管理端可在 `/admin/settings` 查看当前 Umami 配置（页面为只读；修改环境变量后需重新部署/刷新生效）
+
 ### 4) 初始化 D1（本地）
 
 ```bash
