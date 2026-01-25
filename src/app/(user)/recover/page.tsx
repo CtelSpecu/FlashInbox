@@ -113,24 +113,22 @@ export default function RecoverPage() {
           <Icon icon="mdi:account" slot="icon" />
         </mdui-text-field>
 
-        <div className="space-y-1">
-          <label className="text-sm opacity-80">{t.recover.domainLabel}</label>
-          <mdui-dropdown>
-            <mdui-button slot="trigger" variant="outlined" full-width disabled={loading}>
-              <Icon icon="mdi:globe" slot="icon" />
-              {domain || defaultDomain}
-              <Icon icon="mdi:chevron-down" slot="end-icon" />
-            </mdui-button>
-            <mdui-menu>
-              {domains.map((d) => (
-                <mdui-menu-item key={d.id} onClick={() => setDomain(d.name)}>
-                  {domain === d.name ? <Icon icon="mdi:check" slot="icon" /> : <span slot="icon" />}
-                  {d.name}
-                </mdui-menu-item>
-              ))}
-            </mdui-menu>
-          </mdui-dropdown>
-        </div>
+        <mdui-select
+          label={t.recover.domainLabel}
+          value={domain || defaultDomain}
+          onChange={(e) => setDomain((e.target as HTMLElement & { value: string }).value)}
+          disabled={loading}
+        >
+          {domains.length === 0 ? (
+            <mdui-menu-item value={defaultDomain}>@{defaultDomain}</mdui-menu-item>
+          ) : (
+            domains.map((d) => (
+              <mdui-menu-item key={d.id} value={d.name}>
+                @{d.name}
+              </mdui-menu-item>
+            ))
+          )}
+        </mdui-select>
 
         <mdui-text-field
           label={t.recover.keyLabel}

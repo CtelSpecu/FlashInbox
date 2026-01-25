@@ -395,7 +395,7 @@ export default function InboxPage() {
             ) : null}
             <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/40 space-y-3', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="text-xs font-medium opacity-80">{t.language.label}</div>
-              <mdui-dropdown>
+              <mdui-dropdown placement="right-start">
                 <mdui-button slot="trigger" variant="outlined" full-width>
                   <Icon icon="mdi:translate" slot="icon" />
                   {locale === 'en-US' ? t.language.enUS : locale === 'zh-CN' ? t.language.zhCN : t.language.zhTW}
@@ -412,7 +412,7 @@ export default function InboxPage() {
               </mdui-dropdown>
 
               <div className="text-xs font-medium opacity-80">{t.theme.label}</div>
-              <mdui-dropdown>
+              <mdui-dropdown placement="right-start">
                 <mdui-button slot="trigger" variant="outlined" full-width>
                   <Icon icon={themeIcon} slot="icon" />
                   {theme === 'auto' ? t.theme.system : theme === 'dark' ? t.theme.dark : t.theme.light}
