@@ -14,7 +14,14 @@ type CreateMode = 'random' | 'manual';
 interface CreateMailboxResponse {
   success: true;
   data: {
-    mailbox: { id: string; username: string; domainId: number };
+    mailbox: {
+      id: string;
+      username: string;
+      domainId: number;
+      email: string;
+      keyExpiresAt: number | null;
+    };
+    key: string;
     session: { token: string; expiresAt: number };
   };
 }
@@ -40,6 +47,11 @@ export default function HomePage() {
   const [domains, setDomains] = useState<Array<{ id: number; name: string }>>([]);
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
+  const [createdKey, setCreatedKey] = useState<string | null>(null);
+  const [createdEmail, setCreatedEmail] = useState<string | null>(null);
+  const [createdKeyExpiresAt, setCreatedKeyExpiresAt] = useState<number | null>(null);
+  const [createdToken, setCreatedToken] = useState<string | null>(null);
+  const [confirmSaved, setConfirmSaved] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -94,9 +106,11 @@ export default function HomePage() {
         }),
       });
 
-      const token = res.data.session.token;
-      setSessionToken(token);
-      router.push('/inbox');
+      setCreatedKey(res.data.key);
+      setCreatedEmail(res.data.mailbox.email);
+      setCreatedKeyExpiresAt(res.data.mailbox.keyExpiresAt);
+      setCreatedToken(res.data.session.token);
+      setConfirmSaved(false);
     } catch (e: unknown) {
       const err = e as { message?: unknown; retryAfter?: unknown };
       const msg = typeof err.message === 'string' ? err.message : t.home.createFailed;
@@ -110,8 +124,22 @@ export default function HomePage() {
     }
   }
 
+  async function copyText(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // ignore
+    }
+  }
+
+  function closeKeyDialog() {
+    if (!createdToken) return;
+    setSessionToken(createdToken);
+    router.push('/inbox');
+  }
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-6">
+    <div className="flex min-h-[calc(100dvh-56px)] flex-col items-center justify-center p-6">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
           <img
@@ -210,6 +238,63 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      <mdui-dialog
+        open={!!createdKey}
+        headline={t.claim.keyDialogTitle}
+        close-on-esc={false}
+        close-on-overlay-click={false}
+      >
+        <div className="space-y-3">
+          {createdEmail ? (
+            <div>
+              <div className="text-xs opacity-70">{t.claim.emailLabel}</div>
+              <div className="mt-1 flex items-start gap-2">
+                <div className="flex-1 rounded border border-black/10 p-2 font-mono text-sm break-all dark:border-white/10">
+                  {createdEmail}
+                </div>
+                <mdui-button variant="text" onClick={() => copyText(createdEmail)}>
+                  <Icon icon="mdi:content-copy" slot="icon" />
+                  {t.common.copy}
+                </mdui-button>
+              </div>
+            </div>
+          ) : null}
+
+          <div>
+            <div className="text-xs opacity-70">{t.recover.keyLabel}</div>
+            <div className="mt-1 flex items-start gap-2">
+              <div className="flex-1 rounded border border-black/10 p-2 font-mono text-sm break-all dark:border-white/10">
+                {createdKey || ''}
+              </div>
+              <mdui-button variant="text" onClick={() => (createdKey ? copyText(createdKey) : undefined)}>
+                <Icon icon="mdi:content-copy" slot="icon" />
+                {t.common.copy}
+              </mdui-button>
+            </div>
+          </div>
+
+          <div className="text-xs opacity-70">
+            {format(t.claim.keyExpires, {
+              time: createdKeyExpiresAt ? new Date(createdKeyExpiresAt).toLocaleString() : t.common.na,
+            })}
+          </div>
+
+          <mdui-checkbox
+            checked={confirmSaved}
+            onChange={(e) => setConfirmSaved((e.target as HTMLInputElement).checked)}
+          >
+            {t.claim.keySavedConfirm}
+          </mdui-checkbox>
+        </div>
+
+        <mdui-button slot="action" variant="text" onClick={() => router.push('/recover')}>
+          {t.claim.recoverButton}
+        </mdui-button>
+        <mdui-button slot="action" variant="filled" disabled={!confirmSaved} onClick={closeKeyDialog}>
+          {t.claim.continueButton}
+        </mdui-button>
+      </mdui-dialog>
     </div>
   );
 }
