@@ -13,6 +13,11 @@ interface UserConfigResponse {
   data: { defaultDomain: string; turnstileSiteKey: string };
 }
 
+interface UserDomainsResponse {
+  success: true;
+  data: { domains: Array<{ id: number; name: string }> };
+}
+
 interface RecoverResponse {
   success: true;
   data: {
@@ -26,18 +31,25 @@ export default function RecoverPage() {
   const { t, format } = useI18n();
 
   const [defaultDomain, setDefaultDomain] = useState('example.com');
+  const [domains, setDomains] = useState<Array<{ id: number; name: string }>>([]);
   const [username, setUsername] = useState('');
   const [domain, setDomain] = useState('');
   const [key, setKey] = useState('');
+  const [showKey, setShowKey] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
-    apiFetch<UserConfigResponse>('/api/user/config')
-      .then((res) => {
-        setDefaultDomain(res.data.defaultDomain || 'example.com');
-        setDomain(res.data.defaultDomain || 'example.com');
+    Promise.all([
+      apiFetch<UserConfigResponse>('/api/user/config'),
+      apiFetch<UserDomainsResponse>('/api/user/domains'),
+    ])
+      .then(([cfg, dom]) => {
+        const dd = cfg.data.defaultDomain || 'example.com';
+        setDefaultDomain(dd);
+        setDomain(dd);
+        setDomains(dom.data.domains || []);
       })
       .catch(() => {
         setDefaultDomain('example.com');
@@ -101,25 +113,38 @@ export default function RecoverPage() {
           <Icon icon="mdi:account" slot="icon" />
         </mdui-text-field>
 
-        <mdui-text-field
-          label={t.recover.domainLabel}
-          placeholder={defaultDomain}
-          value={domain}
-          onInput={(e) => setDomain((e.target as HTMLInputElement).value)}
-          disabled={loading}
-        >
-          <Icon icon="mdi:globe" slot="icon" />
-        </mdui-text-field>
+        <div className="space-y-1">
+          <label className="text-sm opacity-80">{t.recover.domainLabel}</label>
+          <mdui-dropdown>
+            <mdui-button slot="trigger" variant="outlined" full-width disabled={loading}>
+              <Icon icon="mdi:globe" slot="icon" />
+              {domain || defaultDomain}
+              <Icon icon="mdi:chevron-down" slot="end-icon" />
+            </mdui-button>
+            <mdui-menu>
+              {domains.map((d) => (
+                <mdui-menu-item key={d.id} onClick={() => setDomain(d.name)}>
+                  {domain === d.name ? <Icon icon="mdi:check" slot="icon" /> : <span slot="icon" />}
+                  {d.name}
+                </mdui-menu-item>
+              ))}
+            </mdui-menu>
+          </mdui-dropdown>
+        </div>
 
         <mdui-text-field
           label={t.recover.keyLabel}
           placeholder={t.recover.keyPlaceholder}
+          type={showKey ? 'text' : 'password'}
           clearable
           value={key}
           onInput={(e) => setKey((e.target as HTMLInputElement).value)}
           disabled={loading}
         >
           <Icon icon="mdi:key" slot="icon" />
+          <mdui-button-icon slot="end-icon" onClick={() => setShowKey(!showKey)}>
+            <Icon icon={showKey ? 'mdi:eye-off' : 'mdi:eye'} />
+          </mdui-button-icon>
         </mdui-text-field>
 
         {notice && <div className="text-sm opacity-80">{notice}</div>}
