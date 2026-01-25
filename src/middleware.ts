@@ -18,11 +18,12 @@ function getSecurityHeaders(isAdmin: boolean): Record<string, string> {
     // 管理后台更严格的 CSP
     headers['Content-Security-Policy'] = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // shadcn/ui 需要
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com", // shadcn/ui 需要
+      "script-src-elem 'self' https://static.cloudflareinsights.com",
       "style-src 'self' 'unsafe-inline'", // Tailwind 需要
       "img-src 'self' data: https:",
       "font-src 'self'",
-      "connect-src 'self'",
+      "connect-src 'self' https://cloudflareinsights.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com",
       "frame-src 'none'",
       "object-src 'none'",
       "base-uri 'self'",
@@ -34,6 +35,7 @@ function getSecurityHeaders(isAdmin: boolean): Record<string, string> {
     headers['Content-Security-Policy'] = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://static.cloudflareinsights.com",
+      "script-src-elem 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",
       "font-src 'self'",
