@@ -71,6 +71,11 @@ export async function POST(request: NextRequest) {
       { ipAddress, asn, userAgent }
     );
 
+    const domainRepo = new DomainRepository(env.DB);
+    const domain = await domainRepo.findById(result.mailbox.domainId);
+    const domainName = domain?.name || config.defaultDomain;
+    const email = `${result.mailbox.username}@${domainName}`;
+
     // 返回创建结果
     await repos.auditLogs.create({
       action: 'user.create',
@@ -89,10 +94,13 @@ export async function POST(request: NextRequest) {
         id: result.mailbox.id,
         username: result.mailbox.username,
         domainId: result.mailbox.domainId,
+        email,
         status: result.mailbox.status,
         creationType: result.mailbox.creationType,
         createdAt: result.mailbox.createdAt,
+        keyExpiresAt: result.mailbox.keyExpiresAt,
       },
+      key: result.key,
       session: {
         token: result.sessionToken,
         expiresAt: result.session.expiresAt,
@@ -130,4 +138,3 @@ export async function POST(request: NextRequest) {
     return error(ErrorCodes.INTERNAL_ERROR, 'Failed to create mailbox', 500);
   }
 }
-

@@ -33,6 +33,7 @@ export interface CreateMailboxResult {
   mailbox: Mailbox;
   session: Session;
   sessionToken: string;
+  key: string;
 }
 
 export interface ClaimMailboxResult {
@@ -144,10 +145,19 @@ export class MailboxService {
       creationType: input.creationType,
     });
 
-    // 创建会话
-    const { session, sessionToken } = await this.createSession(mailbox.id, requestInfo);
+    // 创建即认领：生成 Key（仅展示一次）并转为 claimed
+    const key = generateKey();
+    const keyHash = await hashKey(key, this.pepper);
+    const keyExpiresAt = calculateKeyExpiry(this.config);
+    const claimedMailbox = await this.mailboxRepo.claim(mailbox.id, { keyHash, keyExpiresAt });
+    if (!claimedMailbox) {
+      throw new Error('Failed to claim mailbox');
+    }
 
-    return { mailbox, session, sessionToken };
+    // 创建会话
+    const { session, sessionToken } = await this.createSession(claimedMailbox.id, requestInfo);
+
+    return { mailbox: claimedMailbox, session, sessionToken, key };
   }
 
   /**
@@ -316,4 +326,3 @@ export function createMailboxService(
 ): MailboxService {
   return new MailboxService(db, config, pepper);
 }
-
