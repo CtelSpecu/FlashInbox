@@ -45,24 +45,50 @@ interface DashboardData {
   };
 }
 
-function SparkBars({ data }: { data: Array<{ timestamp: number; value: number }> }) {
+function SparkBars({ data, locale }: { data: Array<{ timestamp: number; value: number }>; locale: string }) {
+  const [hovered, setHovered] = useState<number | null>(null);
   const max = Math.max(1, ...data.map((d) => d.value));
+  const bucketMs = data.length >= 2 ? data[1].timestamp - data[0].timestamp : 0;
+  const dateFmt = useMemo(() => {
+    const opts: Intl.DateTimeFormatOptions =
+      bucketMs >= 24 * 60 * 60 * 1000
+        ? { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC' }
+        : { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' };
+    return new Intl.DateTimeFormat(locale, opts);
+  }, [bucketMs, locale]);
+
+  const tooltip = hovered !== null && data[hovered] ? data[hovered] : null;
+  const tooltipLeftPct = hovered !== null ? ((hovered + 0.5) / Math.max(1, data.length)) * 100 : 0;
   return (
-    <div className="flex h-10 items-end gap-[2px]">
-      {data.map((d) => (
+    <div className="relative">
+      {tooltip ? (
+        <div
+          className="pointer-events-none absolute -top-9 z-10 whitespace-nowrap rounded-md border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)] px-2 py-1 text-xs text-[color:var(--admin-text)] shadow-sm"
+          style={{ left: `${tooltipLeftPct}%`, transform: 'translateX(-50%)' }}
+        >
+          <span className="text-[color:var(--admin-muted)]">{dateFmt.format(new Date(tooltip.timestamp))}</span>{' '}
+          <span className="font-medium">{tooltip.value}</span>
+        </div>
+      ) : null}
+
+      <div className="flex h-10 items-end gap-[2px]">
+        {data.map((d, i) => (
         <div
           key={d.timestamp}
           className="flex-1 rounded-sm bg-[color:var(--admin-primary)] opacity-80"
           style={{ height: `${Math.max(2, Math.round((d.value / max) * 40))}px` }}
           title={`${d.value}`}
+          onMouseEnter={() => setHovered(i)}
+          onMouseLeave={() => setHovered(null)}
         />
       ))}
+      </div>
     </div>
   );
 }
 
 export default function AdminDashboardPage() {
-  const { t } = useAdminI18n();
+  const { t, locale } = useAdminI18n();
   const [range, setRange] = useState<RangeKey>('24h');
   const [reloadKey, setReloadKey] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -210,7 +236,7 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             {data ? (
-              <SparkBars data={data.charts.mailboxesCreated} />
+              <SparkBars data={data.charts.mailboxesCreated} locale={locale} />
             ) : (
               <div className="text-sm text-[color:var(--admin-muted)]">{t.common.loading}</div>
             )}
@@ -222,7 +248,7 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             {data ? (
-              <SparkBars data={data.charts.messagesReceived} />
+              <SparkBars data={data.charts.messagesReceived} locale={locale} />
             ) : (
               <div className="text-sm text-[color:var(--admin-muted)]">{t.common.loading}</div>
             )}
@@ -234,7 +260,7 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             {data ? (
-              <SparkBars data={data.charts.recoverFailures} />
+              <SparkBars data={data.charts.recoverFailures} locale={locale} />
             ) : (
               <div className="text-sm text-[color:var(--admin-muted)]">{t.common.loading}</div>
             )}
