@@ -49,6 +49,9 @@ function applyUserTheme(mode: ThemeMode) {
   // Ensure admin theme classes don't leak into user pages
   root.classList.remove('admin-theme-dark', 'admin-theme-light');
 
+  // Tailwind dark mode (needed by dark: utilities)
+  root.classList.toggle('dark', resolved === 'dark');
+
   root.classList.toggle('user-theme-dark', resolved === 'dark');
   root.classList.toggle('user-theme-light', resolved === 'light');
 
@@ -60,13 +63,19 @@ function applyUserTheme(mode: ThemeMode) {
 }
 
 export function UserThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>(() => readStoredTheme());
-  const [resolved, setResolved] = useState<'light' | 'dark'>(() =>
-    getResolvedTheme(readStoredTheme())
-  );
+  // Keep server/client initial render deterministic to avoid hydration mismatches.
+  const [theme, setThemeState] = useState<ThemeMode>('auto');
+  const [resolved, setResolved] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
-    applyUserTheme(theme);
+    // Hydrate from persisted preference after mount.
+    const stored = readStoredTheme();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setThemeState(stored);
+    const rr = getResolvedTheme(stored);
+    setResolved(rr);
+    applyUserTheme(stored);
+
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const onChange = () => {
       // Only react to system changes in auto mode
@@ -77,7 +86,7 @@ export function UserThemeProvider({ children }: { children: React.ReactNode }) {
     };
     media.addEventListener('change', onChange);
     return () => media.removeEventListener('change', onChange);
-  }, [theme]);
+  }, []);
 
   const setTheme = useCallback((mode: ThemeMode) => {
     setThemeState(mode);
@@ -97,4 +106,3 @@ export function useUserTheme(): UserThemeContextValue {
   if (!ctx) throw new Error('useUserTheme must be used within UserThemeProvider');
   return ctx;
 }
-

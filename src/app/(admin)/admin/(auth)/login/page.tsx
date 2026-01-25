@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@iconify/react';
 
@@ -29,16 +29,22 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
 
-  const fingerprint = useMemo(() => getAdminFingerprint(), []);
+  // Avoid hydration mismatch: fingerprint differs between server/client.
+  const [fingerprint, setFingerprint] = useState('');
+
+  useEffect(() => {
+    setFingerprint(getAdminFingerprint());
+  }, []);
 
   async function submit() {
+    const fp = fingerprint || getAdminFingerprint();
     setLoading(true);
     setErrorText(null);
     try {
       const res = await adminApiFetch<AdminLoginResponse>('/api/admin/login', {
         method: 'POST',
         auth: false,
-        body: JSON.stringify({ token: token.trim(), fingerprint }),
+        body: JSON.stringify({ token: token.trim(), fingerprint: fp }),
       });
 
       setAdminSession({
@@ -100,7 +106,7 @@ export default function AdminLoginPage() {
           </form>
 
           <div className="text-[11px] text-slate-500">
-            {t.auth.fingerprint}: {fingerprint}
+            {t.auth.fingerprint}: {fingerprint || '…'}
           </div>
         </CardContent>
       </Card>

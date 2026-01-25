@@ -40,19 +40,28 @@ function applyAdminTheme(mode: ThemeMode) {
   // Ensure user theme classes don't leak into admin pages
   root.classList.remove('user-theme-dark', 'user-theme-light', 'mdui-theme-dark', 'mdui-theme-light');
 
+  // Tailwind dark mode (needed by dark: utilities)
+  root.classList.toggle('dark', resolved === 'dark');
+
   root.classList.toggle('admin-theme-dark', resolved === 'dark');
   root.classList.toggle('admin-theme-light', resolved === 'light');
   root.setAttribute('data-admin-theme', mode);
 }
 
 export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>(() => readStoredAdminTheme());
-  const [resolved, setResolved] = useState<'light' | 'dark'>(() =>
-    getResolvedTheme(readStoredAdminTheme())
-  );
+  // Keep server/client initial render deterministic to avoid hydration mismatches.
+  const [theme, setThemeState] = useState<ThemeMode>('auto');
+  const [resolved, setResolved] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
-    applyAdminTheme(theme);
+    // Hydrate from persisted preference after mount.
+    const stored = readStoredAdminTheme();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setThemeState(stored);
+    const rr = getResolvedTheme(stored);
+    setResolved(rr);
+    applyAdminTheme(stored);
+
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const onChange = () => {
       if (readStoredAdminTheme() !== 'auto') return;
@@ -62,7 +71,7 @@ export function AdminThemeProvider({ children }: { children: React.ReactNode }) 
     };
     media.addEventListener('change', onChange);
     return () => media.removeEventListener('change', onChange);
-  }, [theme]);
+  }, []);
 
   const setTheme = useCallback((mode: ThemeMode) => {
     setThemeState(mode);
@@ -81,4 +90,3 @@ export function useAdminTheme(): AdminThemeContextValue {
   if (!ctx) throw new Error('useAdminTheme must be used within AdminThemeProvider');
   return ctx;
 }
-

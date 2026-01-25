@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useState,
+  useEffect,
   useCallback,
   useMemo,
   type ReactNode,
@@ -30,7 +31,15 @@ interface I18nProviderProps {
 }
 
 export function I18nProvider({ children }: I18nProviderProps) {
-  const [locale, setLocaleState] = useState<Locale>(() => detectLocale());
+  // Keep server/client initial render deterministic to avoid hydration mismatches.
+  const [locale, setLocaleState] = useState<Locale>('en-US');
+
+  useEffect(() => {
+    const detected = detectLocale();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLocaleState(detected);
+    document.documentElement.lang = detected;
+  }, []);
 
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);

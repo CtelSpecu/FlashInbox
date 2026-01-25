@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -28,7 +29,15 @@ interface AdminI18nContextValue {
 const AdminI18nContext = createContext<AdminI18nContextValue | null>(null);
 
 export function AdminI18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<AdminLocale>(() => detectAdminLocale());
+  // Keep server/client initial render deterministic to avoid hydration mismatches.
+  const [locale, setLocaleState] = useState<AdminLocale>('en-US');
+
+  useEffect(() => {
+    const detected = detectAdminLocale();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLocaleState(detected);
+    document.documentElement.lang = detected;
+  }, []);
 
   const setLocale = useCallback((newLocale: AdminLocale) => {
     setLocaleState(newLocale);
@@ -55,4 +64,3 @@ export function useAdminI18n(): AdminI18nContextValue {
   if (!ctx) throw new Error('useAdminI18n must be used within AdminI18nProvider');
   return ctx;
 }
-
