@@ -247,19 +247,18 @@ export default function InboxPage() {
               'md:shrink-0 space-y-3 transition-all duration-200',
               sidebarCollapsed ? 'md:w-14' : 'md:w-72',
             ].join(' ')}>
-            <mdui-button
-              variant="text"
-              className="hidden md:flex w-full justify-center"
+            <mdui-button-icon
+              className="hidden md:flex w-full"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               title={sidebarCollapsed ? 'Expand' : 'Collapse'}
             >
               <Icon icon={sidebarCollapsed ? 'mdi:chevron-right' : 'mdi:chevron-left'} className="h-5 w-5" />
-            </mdui-button>
+            </mdui-button-icon>
             {sidebarCollapsed ? (
               <div className="hidden md:flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/40">
-                <mdui-button variant="text" className="min-w-0 px-2" onClick={() => copyText(email)} title={email || t.inbox.title}>
+                <mdui-button-icon onClick={() => copyText(email)} title={email || t.inbox.title}>
                   <Icon icon={copied ? 'mdi:check' : 'mdi:email-outline'} className="h-5 w-5" />
-                </mdui-button>
+                </mdui-button-icon>
                 {unreadCount > 0 && (
                   <span className="rounded-full bg-[color:var(--mdui-color-primary)] px-1.5 py-0.5 text-[10px] text-[color:var(--mdui-color-on-primary)]">
                     {unreadCount}
@@ -291,12 +290,12 @@ export default function InboxPage() {
 
             {sidebarCollapsed ? (
               <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/40">
-                <mdui-button variant={unreadOnly ? 'text' : 'tonal'} className="min-w-0 px-2" onClick={() => setUnreadOnly(false)} title={t.inbox.title}>
+                <mdui-button-icon onClick={() => setUnreadOnly(false)} title={t.inbox.title} className={unreadOnly ? '' : 'text-[color:var(--mdui-color-primary)]'}>
                   <Icon icon="mdi:inbox" className="h-5 w-5" />
-                </mdui-button>
-                <mdui-button variant={unreadOnly ? 'tonal' : 'text'} className="min-w-0 px-2" onClick={() => setUnreadOnly(true)} title={t.inbox.unreadOnly}>
+                </mdui-button-icon>
+                <mdui-button-icon onClick={() => setUnreadOnly(true)} title={t.inbox.unreadOnly} className={unreadOnly ? 'text-[color:var(--mdui-color-primary)]' : ''}>
                   <Icon icon="mdi:email" className="h-5 w-5" />
-                </mdui-button>
+                </mdui-button-icon>
               </div>
             ) : null}
             <div className={['rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/40', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
@@ -322,12 +321,12 @@ export default function InboxPage() {
 
             {sidebarCollapsed ? (
               <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/40">
-                <mdui-button variant="tonal" className="min-w-0 px-2" onClick={() => loadList()} title={t.inbox.refreshButton}>
+                <mdui-button-icon onClick={() => loadList()} title={t.inbox.refreshButton}>
                   <Icon icon="mdi:refresh" className="h-5 w-5" />
-                </mdui-button>
-                <mdui-button variant="filled" className="min-w-0 px-2" loading={renewLoading} disabled={renewLoading} onClick={renewKey} title={t.inbox.renewButton}>
-                  <Icon icon="mdi:calendar-refresh" className="h-5 w-5" />
-                </mdui-button>
+                </mdui-button-icon>
+                <mdui-fab variant="primary" size="small" onClick={renewKey} title={t.inbox.renewButton}>
+                  <Icon icon="mdi:calendar-refresh" slot="icon" className="h-5 w-5" />
+                </mdui-fab>
               </div>
             ) : null}
             <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/40 space-y-2', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
@@ -352,12 +351,12 @@ export default function InboxPage() {
 
             {sidebarCollapsed ? (
               <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/40">
-                <mdui-button variant={detailView === 'html' ? 'tonal' : 'text'} className="min-w-0 px-2" onClick={() => setDetailView('html')} title={t.inbox.htmlView}>
+                <mdui-button-icon onClick={() => setDetailView('html')} title={t.inbox.htmlView} className={detailView === 'html' ? 'text-[color:var(--mdui-color-primary)]' : ''}>
                   <Icon icon="mdi:language-html5" className="h-5 w-5" />
-                </mdui-button>
-                <mdui-button variant={detailView === 'text' ? 'tonal' : 'text'} className="min-w-0 px-2" onClick={() => setDetailView('text')} title={t.inbox.textView}>
+                </mdui-button-icon>
+                <mdui-button-icon onClick={() => setDetailView('text')} title={t.inbox.textView} className={detailView === 'text' ? 'text-[color:var(--mdui-color-primary)]' : ''}>
                   <Icon icon="mdi:text" className="h-5 w-5" />
-                </mdui-button>
+                </mdui-button-icon>
               </div>
             ) : null}
             <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/40 space-y-3', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
@@ -383,54 +382,68 @@ export default function InboxPage() {
 
             {sidebarCollapsed ? (
               <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/40">
-                <mdui-button variant="text" className="min-w-0 px-2" onClick={() => setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'auto' : 'dark')} title={t.theme.label}>
+                <mdui-button-icon onClick={() => setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'auto' : 'dark')} title={t.theme.label}>
                   <Icon icon={themeIcon} className="h-5 w-5" />
-                </mdui-button>
-                <mdui-button variant="text" className="min-w-0 px-2" title={t.language.label}>
+                </mdui-button-icon>
+                <mdui-button-icon onClick={() => {
+                  const idx = locales.indexOf(locale);
+                  setLocale(locales[(idx + 1) % locales.length]);
+                }} title={t.language.label}>
                   <Icon icon="mdi:translate" className="h-5 w-5" />
-                </mdui-button>
+                </mdui-button-icon>
               </div>
             ) : null}
-            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/40 space-y-2', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/40 space-y-3', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="text-xs font-medium opacity-80">{t.language.label}</div>
-              <mdui-select
-                label={t.language.label}
-                value={locale}
-                placement="top"
-                onChange={(e) => setLocale(((e.target as HTMLElement & { value: string }).value as Locale) || 'en-US')}
-              >
-                {locales.map((loc) => (
-                  <mdui-menu-item key={loc} value={loc}>
-                    {loc === 'en-US' ? t.language.enUS : loc === 'zh-CN' ? t.language.zhCN : t.language.zhTW}
-                  </mdui-menu-item>
-                ))}
-              </mdui-select>
+              <mdui-dropdown>
+                <mdui-button slot="trigger" variant="outlined" full-width>
+                  <Icon icon="mdi:translate" slot="icon" />
+                  {locale === 'en-US' ? t.language.enUS : locale === 'zh-CN' ? t.language.zhCN : t.language.zhTW}
+                  <Icon icon="mdi:chevron-down" slot="end-icon" />
+                </mdui-button>
+                <mdui-menu>
+                  {locales.map((loc) => (
+                    <mdui-menu-item key={loc} onClick={() => setLocale(loc)}>
+                      {locale === loc ? <Icon icon="mdi:check" slot="icon" /> : <span slot="icon" />}
+                      {loc === 'en-US' ? t.language.enUS : loc === 'zh-CN' ? t.language.zhCN : t.language.zhTW}
+                    </mdui-menu-item>
+                  ))}
+                </mdui-menu>
+              </mdui-dropdown>
+
               <div className="text-xs font-medium opacity-80">{t.theme.label}</div>
-              <mdui-select
-                label={t.theme.label}
-                value={theme}
-                placement="top"
-                onChange={(e) => setTheme(((e.target as HTMLElement & { value: string }).value as ThemeMode) || 'auto')}
-              >
-                <mdui-menu-item value="auto">{t.theme.system}</mdui-menu-item>
-                <mdui-menu-item value="dark">{t.theme.dark}</mdui-menu-item>
-                <mdui-menu-item value="light">{t.theme.light}</mdui-menu-item>
-              </mdui-select>
-              <div className="flex items-center justify-between">
-                <div className="text-xs opacity-70">{t.theme.label}: {theme === 'auto' ? t.theme.system : theme === 'dark' ? t.theme.dark : t.theme.light}</div>
-                <Icon icon={themeIcon} className="h-4 w-4 opacity-70" />
-              </div>
+              <mdui-dropdown>
+                <mdui-button slot="trigger" variant="outlined" full-width>
+                  <Icon icon={themeIcon} slot="icon" />
+                  {theme === 'auto' ? t.theme.system : theme === 'dark' ? t.theme.dark : t.theme.light}
+                  <Icon icon="mdi:chevron-down" slot="end-icon" />
+                </mdui-button>
+                <mdui-menu>
+                  <mdui-menu-item onClick={() => setTheme('auto')}>
+                    {theme === 'auto' ? <Icon icon="mdi:check" slot="icon" /> : <span slot="icon" />}
+                    {t.theme.system}
+                  </mdui-menu-item>
+                  <mdui-menu-item onClick={() => setTheme('dark')}>
+                    {theme === 'dark' ? <Icon icon="mdi:check" slot="icon" /> : <span slot="icon" />}
+                    {t.theme.dark}
+                  </mdui-menu-item>
+                  <mdui-menu-item onClick={() => setTheme('light')}>
+                    {theme === 'light' ? <Icon icon="mdi:check" slot="icon" /> : <span slot="icon" />}
+                    {t.theme.light}
+                  </mdui-menu-item>
+                </mdui-menu>
+              </mdui-dropdown>
             </div>
 
             {sidebarCollapsed ? (
               <div className="hidden md:flex justify-center">
-                <mdui-button variant="text" className="min-w-0 px-2" onClick={() => { clearSessionToken(); router.push('/'); }} title={t.inbox.exitButton}>
+                <mdui-button-icon onClick={() => { clearSessionToken(); router.push('/'); }} title={t.inbox.exitButton}>
                   <Icon icon="mdi:logout" className="h-5 w-5" />
-                </mdui-button>
+                </mdui-button-icon>
               </div>
             ) : null}
             <mdui-button
-              variant="text"
+              variant="tonal"
               full-width
               className={sidebarCollapsed ? 'hidden md:hidden' : ''}
               onClick={() => {

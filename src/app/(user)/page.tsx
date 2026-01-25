@@ -283,9 +283,9 @@ export default function HomePage() {
             })}
           </div>
 
-          <div className="rounded bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
-            <Icon icon="mdi:information-outline" className="inline-block mr-1 h-4 w-4 align-text-bottom" />
-            {t.claim.keyHint}
+          <div className="flex items-start gap-2 rounded-lg bg-[color:var(--mdui-color-tertiary-container)] px-3 py-2 text-[color:var(--mdui-color-on-tertiary-container)]">
+            <Icon icon="mdi:information-outline" className="mt-0.5 h-4 w-4 shrink-0" />
+            <span className="text-xs">{t.claim.keyHint}</span>
           </div>
 
           <mdui-checkbox
