@@ -13,11 +13,11 @@ assets = { directory = ".open-next/assets", binding = "ASSETS" }
 [[d1_databases]]
 binding = "DB"
 database_name = "flashinbox-db"
-database_id = "local-dev-placeholder" # 部署时填写实际 ID
+database_id = "" # 部署时填写实际 ID
 
 # 环境变量（非敏感配置）
 [vars]
-DEFAULT_DOMAIN = "example.com"
+DEFAULT_DOMAIN = "" # 部署时填写实际 ID
 KEY_EXPIRE_DAYS = "15"
 UNCLAIMED_EXPIRE_DAYS = "7"
 SESSION_EXPIRE_HOURS = "24"
@@ -44,7 +44,22 @@ database_id = "" # 开发数据库 ID
 # 生产环境配置
 [env.production]
 name = "flashinbox"
-routes = [{ pattern = "mail.example.com", custom_domain = true }]
+routes = [
+    { pattern = "mail.flashinbox.de", custom_domain = true },
+    { pattern = "flashinbox.hxcn.top", custom_domain = true}
+    ]
+
+[env.production.vars]
+DEFAULT_DOMAIN = "" # 部署时填写实际 ID
+KEY_EXPIRE_DAYS = "15"
+UNCLAIMED_EXPIRE_DAYS = "7"
+SESSION_EXPIRE_HOURS = "24"
+ADMIN_SESSION_EXPIRE_HOURS = "4"
+MAX_BODY_TEXT = "102400"
+MAX_BODY_HTML = "512000"
+UMAMI_SCRIPT_URL = "" # 部署时填写实际 ID
+UMAMI_WEBSITE_ID = "" # 部署时填写实际 ID
+UMAMI_ADMIN_WEBSITE_ID = "" # 部署时填写实际 ID
 
 [[env.production.d1_databases]]
 binding = "DB"

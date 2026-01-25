@@ -11,7 +11,7 @@ database_name = "flashinbox-db"
 database_id = "" # 部署时填写实际 ID
 
 [vars]
-DEFAULT_DOMAIN = "example.com"
+DEFAULT_DOMAIN = "" # 部署时填写实际 ID
 KEY_EXPIRE_DAYS = "15"
 UNCLAIMED_EXPIRE_DAYS = "7"
 SESSION_EXPIRE_HOURS = "24"
