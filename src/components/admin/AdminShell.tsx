@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Icon } from '@iconify/react';
 
@@ -45,6 +45,7 @@ export function AdminShell({
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [sessionHint, setSessionHint] = useState('');
 
   const activeHref = useMemo(() => {
     if (!pathname) return '/admin';
@@ -75,13 +76,16 @@ export function AdminShell({
       // ignore - we'll clear client session anyway
     } finally {
       clearAdminSession();
+      setSessionHint('');
       setLoggingOut(false);
       router.replace(withAdminTracking('/admin/login'));
     }
   }
 
-  const session = getAdminSession();
-  const sessionHint = session?.sessionId ? `sid:${session.sessionId.slice(0, 8)}` : '';
+  useEffect(() => {
+    const session = getAdminSession();
+    setSessionHint(session?.sessionId ? `sid:${session.sessionId.slice(0, 8)}` : '');
+  }, []);
 
   const themeIcon = theme === 'dark' ? 'lucide:moon' : theme === 'light' ? 'lucide:sun' : 'lucide:monitor';
   const themeLabel = theme === 'dark' ? t.theme.dark : theme === 'light' ? t.theme.light : t.theme.system;
