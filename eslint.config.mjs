@@ -15,6 +15,9 @@ const eslintConfig = defineConfig([
     // OpenNext 和 Wrangler 构建目录
     ".open-next/**",
     ".wrangler/**",
+    // Agent skills and local tooling
+    ".agents/**",
+    ".codex/**",
   ]),
 ]);
 
