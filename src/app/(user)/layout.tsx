@@ -1,13 +1,11 @@
 import { MduiProvider } from '@/components/layout/MduiProvider';
+import { UserShell } from '@/components/layout/UserShell';
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
   return (
     <MduiProvider>
-      <mdui-layout>
-        <mdui-layout-main>{children}</mdui-layout-main>
-      </mdui-layout>
+      <UserShell>{children}</UserShell>
     </MduiProvider>
   );
 }
-
 

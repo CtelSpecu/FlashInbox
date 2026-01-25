@@ -82,7 +82,7 @@ export default function RecoverPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-6">
+    <div className="flex min-h-[calc(100dvh-56px)] items-center justify-center p-6">
       <div className="w-full max-w-md space-y-4">
         <div className="text-center">
           <Icon icon="mdi:history" className="mx-auto h-12 w-12 text-[color:var(--mdui-color-primary)]" />
