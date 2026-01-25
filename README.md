@@ -260,9 +260,9 @@ wrangler deploy --config wrangler.scheduled.toml
 ### 9) 配置 Email Routing（收信必需）
 
 在 Cloudflare Dashboard 中对你的域名开启 Email Routing，并创建路由规则：
-- Catch-all 或按需匹配（例如 `*@yourdomain.com`）
-- Action 选择 `Send to a Worker`
-- Worker 选择 `flashinbox-email`
+- 推荐：启用 **Catch-all address**，Action 选择 `Send to a Worker`，Worker 选择 `flashinbox-email`
+- 若 Catch-all 禁用，Cloudflare 仅会接受已创建的「Custom address」，否则会在 SMTP `RCPT TO` 阶段返回 `550 5.1.1 Address does not exist`
+- Cloudflare Email Routing 的「Custom address」不支持 `*@domain` 形式的通配；要么启用 Catch-all，要么为每个地址逐条创建 Custom address
 
 ### 10) 验证
 
