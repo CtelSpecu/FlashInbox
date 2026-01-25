@@ -19,7 +19,6 @@ function getSecurityHeaders(isAdmin: boolean): Record<string, string> {
     headers['Content-Security-Policy'] = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com", // shadcn/ui 需要
-      "script-src-elem 'self' https://static.cloudflareinsights.com",
       "style-src 'self' 'unsafe-inline'", // Tailwind 需要
       "img-src 'self' data: https:",
       "font-src 'self'",
@@ -35,7 +34,6 @@ function getSecurityHeaders(isAdmin: boolean): Record<string, string> {
     headers['Content-Security-Policy'] = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://static.cloudflareinsights.com",
-      "script-src-elem 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",
       "font-src 'self'",
