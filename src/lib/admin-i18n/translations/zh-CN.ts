@@ -37,6 +37,7 @@ export const adminZhCN = {
   nav: {
     dashboard: '仪表盘',
     domains: '域名',
+    mailboxes: '邮箱',
     rules: '规则',
     quarantine: '隔离队列',
     audit: '审计日志',
@@ -174,7 +175,29 @@ export const adminZhCN = {
     saveSuccess: '设置保存成功',
     note: '注意：这些设置存储为环境变量。更改后需要重新部署才能生效。',
   },
+  mailboxes: {
+    title: '邮箱',
+    domain: '域名',
+    status: '状态',
+    searchPlaceholder: '搜索用户名 / 邮箱',
+    email: '邮箱',
+    creationType: '创建方式',
+    keyHashPrefix: '密钥哈希（前缀）',
+    keyExpiresAt: '过期时间',
+    createdAt: '创建时间',
+    claimedAt: '认领时间',
+    lastLoginAt: '最近登录',
+    lastMailAt: '最近收信',
+    messageCount: '邮件数',
+    unreadCount: '未读',
+    actions: '操作',
+    view: '查看',
+    noMailboxes: '暂无邮箱',
+    statusAll: '全部',
+    statusClaimed: '已认领',
+    statusUnclaimed: '未认领',
+    statusDestroyed: '已销毁',
+  },
 } satisfies AdminTranslations;
 
 export type AdminTranslationKeys = AdminTranslations;
-

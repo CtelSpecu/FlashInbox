@@ -16,11 +16,16 @@ import { type AdminLocale } from '@/lib/admin-i18n';
 import { useAdminTheme } from '@/lib/theme/admin-theme';
 import type { ThemeMode } from '@/lib/theme/types';
 
-type NavItem = { href: string; key: 'dashboard' | 'domains' | 'rules' | 'quarantine' | 'audit' | 'settings'; icon: string };
+type NavItem = {
+  href: string;
+  key: 'dashboard' | 'domains' | 'mailboxes' | 'rules' | 'quarantine' | 'audit' | 'settings';
+  icon: string;
+};
 
 const navItems: NavItem[] = [
   { href: '/admin', key: 'dashboard', icon: 'lucide:layout-dashboard' },
   { href: '/admin/domains', key: 'domains', icon: 'lucide:globe' },
+  { href: '/admin/mailboxes', key: 'mailboxes', icon: 'lucide:inbox' },
   { href: '/admin/rules', key: 'rules', icon: 'lucide:filter' },
   { href: '/admin/quarantine', key: 'quarantine', icon: 'lucide:shield-alert' },
   { href: '/admin/audit', key: 'audit', icon: 'lucide:clipboard-list' },
@@ -53,6 +58,7 @@ export function AdminShell({
     const map = {
       dashboard: t.nav.dashboard,
       domains: t.nav.domains,
+      mailboxes: t.nav.mailboxes,
       rules: t.nav.rules,
       quarantine: t.nav.quarantine,
       audit: t.nav.audit,
@@ -107,6 +113,8 @@ export function AdminShell({
                   ? t.nav.dashboard
                   : item.key === 'domains'
                     ? t.nav.domains
+                    : item.key === 'mailboxes'
+                      ? t.nav.mailboxes
                     : item.key === 'rules'
                       ? t.nav.rules
                       : item.key === 'quarantine'

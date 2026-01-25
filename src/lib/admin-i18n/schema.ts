@@ -32,6 +32,7 @@ export interface AdminTranslations {
   nav: {
     dashboard: string;
     domains: string;
+    mailboxes: string;
     rules: string;
     quarantine: string;
     audit: string;
@@ -169,5 +170,27 @@ export interface AdminTranslations {
     saveSuccess: string;
     note: string;
   };
+  mailboxes: {
+    title: string;
+    domain: string;
+    status: string;
+    searchPlaceholder: string;
+    email: string;
+    creationType: string;
+    keyHashPrefix: string;
+    keyExpiresAt: string;
+    createdAt: string;
+    claimedAt: string;
+    lastLoginAt: string;
+    lastMailAt: string;
+    messageCount: string;
+    unreadCount: string;
+    actions: string;
+    view: string;
+    noMailboxes: string;
+    statusAll: string;
+    statusClaimed: string;
+    statusUnclaimed: string;
+    statusDestroyed: string;
+  };
 }
-
