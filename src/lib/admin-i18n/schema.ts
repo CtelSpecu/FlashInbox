@@ -35,6 +35,7 @@ export interface AdminTranslations {
     rules: string;
     quarantine: string;
     audit: string;
+    settings: string;
     navigation: string;
     menu: string;
   };
@@ -50,9 +51,18 @@ export interface AdminTranslations {
     loggingOut: string;
   };
   dashboard: {
+    rangeToday: string;
     range24h: string;
+    rangeThisWeek: string;
     range7d: string;
+    rangeThisMonth: string;
     range30d: string;
+    range90d: string;
+    rangeThisYear: string;
+    range6m: string;
+    range12m: string;
+    rangeAll: string;
+    rangeCustom: string;
     totalMailboxes: string;
     claimed: string;
     unclaimed: string;
@@ -144,6 +154,19 @@ export interface AdminTranslations {
     detailsTitle: string;
     copy: string;
     empty: string;
+  };
+  settings: {
+    title: string;
+    umami: string;
+    umamiDescription: string;
+    scriptUrl: string;
+    scriptUrlPlaceholder: string;
+    websiteId: string;
+    websiteIdPlaceholder: string;
+    adminWebsiteId: string;
+    adminWebsiteIdPlaceholder: string;
+    saveSuccess: string;
+    note: string;
   };
 }
 

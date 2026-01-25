@@ -11,7 +11,7 @@ import { Select } from '@/components/admin/ui/Select';
 import { Button } from '@/components/admin/ui/Button';
 import { useAdminI18n } from '@/lib/admin-i18n/context';
 
-type RangeKey = '24h' | '7d' | '30d';
+type RangeKey = 'today' | '24h' | 'week' | '7d' | 'month' | '30d' | '90d' | 'year' | '6m' | '12m' | 'all';
 
 interface SuccessResponse<T> {
   success: true;
@@ -69,9 +69,20 @@ export default function AdminDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
 
   const rangeLabel = useMemo(() => {
-    if (range === '24h') return t.dashboard.range24h;
-    if (range === '7d') return t.dashboard.range7d;
-    return t.dashboard.range30d;
+    const labels: Record<RangeKey, string> = {
+      today: t.dashboard.rangeToday,
+      '24h': t.dashboard.range24h,
+      week: t.dashboard.rangeThisWeek,
+      '7d': t.dashboard.range7d,
+      month: t.dashboard.rangeThisMonth,
+      '30d': t.dashboard.range30d,
+      '90d': t.dashboard.range90d,
+      year: t.dashboard.rangeThisYear,
+      '6m': t.dashboard.range6m,
+      '12m': t.dashboard.range12m,
+      all: t.dashboard.rangeAll,
+    };
+    return labels[range] || t.dashboard.range24h;
   }, [range, t]);
 
   useEffect(() => {
@@ -115,20 +126,33 @@ export default function AdminDashboardPage() {
               setRange(e.target.value as RangeKey);
             }}
           >
-            <option value="24h">24h</option>
-            <option value="7d">7d</option>
-            <option value="30d">30d</option>
+            <option value="today">{t.dashboard.rangeToday}</option>
+            <option value="24h">{t.dashboard.range24h}</option>
+            <option disabled>---</option>
+            <option value="week">{t.dashboard.rangeThisWeek}</option>
+            <option value="7d">{t.dashboard.range7d}</option>
+            <option disabled>---</option>
+            <option value="month">{t.dashboard.rangeThisMonth}</option>
+            <option value="30d">{t.dashboard.range30d}</option>
+            <option value="90d">{t.dashboard.range90d}</option>
+            <option value="year">{t.dashboard.rangeThisYear}</option>
+            <option disabled>---</option>
+            <option value="6m">{t.dashboard.range6m}</option>
+            <option value="12m">{t.dashboard.range12m}</option>
+            <option disabled>---</option>
+            <option value="all">{t.dashboard.rangeAll}</option>
           </Select>
           <Button
             variant="outline"
+            className="inline-flex items-center gap-2 whitespace-nowrap"
             onClick={() => {
               setErrorText(null);
               setLoading(true);
               setReloadKey((k) => k + 1);
             }}
           >
-            <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
-            {t.common.reload}
+            <Icon icon="lucide:refresh-cw" className="h-4 w-4 shrink-0" />
+            <span>{t.common.reload}</span>
           </Button>
         </div>
       </div>
