@@ -34,11 +34,12 @@
 
 ```mermaid
 flowchart LR
-  U[User Browser] -->|HTTPS| W[Main Worker: Next.js (OpenNext)]
+  U[User Browser] -->|HTTPS| W[Main Worker: Next.js - OpenNext]
   MTA[Cloudflare Email Routing] -->|Inbound Email| EW[Email Worker]
   SW[Scheduled Worker] -->|Cron| D1[(D1 Database)]
   W --> D1
   EW --> D1
+
 ```
 
 ## 技术栈
