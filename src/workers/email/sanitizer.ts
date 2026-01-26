@@ -23,10 +23,40 @@ function stripInlineEventHandlers(input: string): string {
   return input.replace(/\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
 }
 
-function stripInlineStyles(input: string): string {
-  // Inline styles can load external resources via url(...). For safety and simplicity,
-  // strip all inline styles for inbound email HTML.
-  return input.replace(/\sstyle\s*=\s*(?:"[^"]*"|'[^']*')/gi, '');
+function sanitizeCss(css: string): string {
+  if (!css) return '';
+  let out = css;
+
+  // Remove comments
+  out = out.replace(/\/\*[\s\S]*?\*\//g, '');
+
+  // Block external resource loading and legacy scriptable CSS.
+  out = out.replace(/@import[^;]+;/gi, '');
+  out = out.replace(/@font-face\s*{[\s\S]*?}/gi, '');
+  out = out.replace(/url\s*\(\s*[^)]+\s*\)/gi, '');
+  out = out.replace(/expression\s*\([^)]*\)/gi, '');
+  out = out.replace(/-moz-binding\s*:\s*[^;]+;?/gi, '');
+  out = out.replace(/\bbehavior\s*:\s*[^;]+;?/gi, '');
+
+  return out.trim();
+}
+
+function sanitizeStyleAttributes(input: string): string {
+  return input.replace(/\sstyle\s*=\s*(?:"([^"]*)"|'([^']*)')/gi, (_m, dq, sq) => {
+    const raw = (dq ?? sq ?? '') as string;
+    const cleaned = sanitizeCss(raw);
+    if (!cleaned) return '';
+    // Keep as a quoted attribute; escape double quotes to avoid breaking HTML.
+    const escaped = cleaned.replace(/"/g, '&quot;');
+    return ` style="${escaped}"`;
+  });
+}
+
+function sanitizeStyleTags(input: string): string {
+  return input.replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gi, (_m, css) => {
+    const cleaned = sanitizeCss(String(css || ''));
+    return `<style>${cleaned}</style>`;
+  });
 }
 
 function isSafeImageDataUrl(src: string): boolean {
@@ -49,7 +79,7 @@ export async function sanitizeHtml(html: string, options: SanitizeOptions = {}):
 
   let input = html;
   input = stripInlineEventHandlers(input);
-  input = stripInlineStyles(input);
+  input = sanitizeStyleTags(sanitizeStyleAttributes(input));
 
   // Prefer Workers HTMLRewriter for correctness and safety
   const HTMLRewriterCtor = (globalThis as unknown as { HTMLRewriter?: unknown }).HTMLRewriter as
@@ -67,9 +97,27 @@ export async function sanitizeHtml(html: string, options: SanitizeOptions = {}):
   }
 
   const rewriter = new HTMLRewriterCtor()
-    .on('script,style,iframe,object,embed,form,input,button,textarea,select,link', {
+    .on('*', {
+      element(element) {
+        const style = element.getAttribute('style');
+        if (style) {
+          const cleaned = sanitizeCss(style);
+          if (cleaned) {
+            element.setAttribute('style', cleaned);
+          } else {
+            element.removeAttribute('style');
+          }
+        }
+      },
+    })
+    .on('script,iframe,object,embed,form,input,button,textarea,select,link,meta,base', {
       element(element) {
         element.remove();
+      },
+    })
+    .on('style', {
+      text(text) {
+        text.replace(sanitizeCss(text.text));
       },
     })
     .on('a', {

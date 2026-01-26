@@ -97,12 +97,17 @@ describe('HTML sanitizer', () => {
       expect(clean).toContain('data:image/png');
     });
 
-    test('removes style tags', async () => {
-      const html = '<style>body { display: none; }</style><p>Content</p>';
+    test('sanitizes style tags and inline styles (blocks url() and @import)', async () => {
+      const html =
+        '<style>@import url(https://evil.example/x.css); p{color:red;background:url(https://evil.example/a.png)}</style>' +
+        '<p style="color: blue; background-image: url(http://evil.example/t.png)">Content</p>';
       const clean = await sanitizeHtml(html);
-      expect(clean).not.toContain('<style');
-      expect(clean).not.toContain('display: none');
-      expect(clean).toContain('<p>Content</p>');
+      expect(clean).toContain('<style>');
+      expect(clean.toLowerCase()).not.toContain('@import');
+      expect(clean.toLowerCase()).not.toContain('url(');
+      expect(clean).toContain('color:red');
+      expect(clean).toContain('<p');
+      expect(clean).toContain('Content');
     });
 
     test('removes iframe tags', async () => {
