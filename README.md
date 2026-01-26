@@ -259,6 +259,9 @@ wrangler d1 execute flashinbox-db --remote --file=migrations/0002_mailboxes_bann
 ```
 
 说明：
+- 若你看到类似 “please use ... instead of the SQL BEGIN TRANSACTION or SAVEPOINT” 的报错，请确保迁移文件中没有 `BEGIN TRANSACTION` / `COMMIT` / `SAVEPOINT`（本仓库的 `migrations/0002_mailboxes_banned.sql` 已按该要求编写）
+
+说明：
 - `0002` 仅用于启用邮箱禁用（`banned`）状态；如果不执行该迁移，后台“禁用邮箱”会因 `CHECK` 约束失败而报错
 
 ### 5) 配置主应用路由与默认域名
