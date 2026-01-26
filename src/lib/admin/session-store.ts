@@ -7,6 +7,12 @@ export interface AdminSession {
 }
 
 const STORAGE_KEY = 'admin:session';
+const SESSION_EVENT = 'admin:session';
+
+function notifySessionChanged() {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new Event(SESSION_EVENT));
+}
 
 export function getAdminSession(): AdminSession | null {
   if (typeof window === 'undefined') return null;
@@ -24,11 +30,12 @@ export function getAdminSession(): AdminSession | null {
 export function setAdminSession(session: AdminSession): void {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+  notifySessionChanged();
 }
 
 export function clearAdminSession(): void {
   if (typeof window === 'undefined') return;
   window.localStorage.removeItem(STORAGE_KEY);
+  notifySessionChanged();
 }
-
 
