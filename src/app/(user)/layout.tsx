@@ -1,9 +1,12 @@
 import { MduiProvider } from '@/components/layout/MduiProvider';
 import { UserShell } from '@/components/layout/UserShell';
 
-export default function UserLayout({ children }: { children: React.ReactNode }) {
+import { detectRequestLocale } from '@/lib/seo/request-locale';
+
+export default async function UserLayout({ children }: { children: React.ReactNode }) {
+  const locale = await detectRequestLocale();
   return (
-    <MduiProvider>
+    <MduiProvider initialLocale={locale}>
       <UserShell>{children}</UserShell>
     </MduiProvider>
   );

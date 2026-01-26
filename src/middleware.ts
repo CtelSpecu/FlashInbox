@@ -88,6 +88,12 @@ export function middleware(request: NextRequest) {
 
   // 判断是否为管理后台路由
   const isAdmin = pathname.startsWith('/admin') || pathname.startsWith('/api/admin');
+  const shouldNoIndex =
+    isAdmin ||
+    pathname.startsWith('/inbox') ||
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/claim') ||
+    pathname.startsWith('/recover');
 
   // 创建响应
   const response = NextResponse.next();
@@ -96,6 +102,11 @@ export function middleware(request: NextRequest) {
   const securityHeaders = getSecurityHeaders(isAdmin);
   for (const [key, value] of Object.entries(securityHeaders)) {
     response.headers.set(key, value);
+  }
+
+  // 避免索引敏感区域
+  if (shouldNoIndex) {
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
   }
 
   // API 响应的 CORS 处理

@@ -28,11 +28,12 @@ const I18nContext = createContext<I18nContextValue | null>(null);
 
 interface I18nProviderProps {
   children: ReactNode;
+  initialLocale?: Locale;
 }
 
-export function I18nProvider({ children }: I18nProviderProps) {
+export function I18nProvider({ children, initialLocale }: I18nProviderProps) {
   // Keep server/client initial render deterministic to avoid hydration mismatches.
-  const [locale, setLocaleState] = useState<Locale>('en-US');
+  const [locale, setLocaleState] = useState<Locale>(initialLocale ?? 'en-US');
 
   useEffect(() => {
     const detected = detectLocale();
