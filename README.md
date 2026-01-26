@@ -217,46 +217,66 @@ bun run dev:all
 curl -s http://127.0.0.1:8787/api/user/config
 ```
 
-## 部署
+## 从零开始部署（生产）
+
+目标：一次性部署 3 个 Worker（主应用 / Email / Scheduled），绑定同一个 D1，并在 Cloudflare Email Routing 中将入站邮件转发到 Email Worker。
 
 ### 0) 前置条件
 
-- Cloudflare 账号（已开通 Workers、D1、Email Routing）
-- 已准备一个可托管的邮箱域名（用于收信），并在 Cloudflare 托管 DNS
-- 已创建 Turnstile 小组件，拿到 `TURNSTILE_SITE_KEY` 与 `TURNSTILE_SECRET_KEY`
+- Cloudflare 账号（开通 Workers、D1、Email Routing、Turnstile）
+- 一个用于收信的域名（例如 `flashinbox.de`），已接入 Cloudflare DNS，Email Routing 显示 Domain 为 Enabled
+- 本地已安装 `bun` 与 `wrangler`（本项目可用 `bunx wrangler`）
+- 已 fork 本仓库并克隆到本地
 
-### 1) 登录 Cloudflare
+### 1) 安装依赖
+
+```bash
+bun install
+```
+
+### 2) 登录 Cloudflare
 
 ```bash
 wrangler login
 ```
 
-### 2) 创建 D1（远程）
+### 3) 创建 D1（远程）
 
 ```bash
 wrangler d1 create flashinbox-db
-wrangler d1 create flashinbox-db-dev
 ```
 
-将创建结果里的 `database_id` 填入以下配置：
-- `wrangler.toml`：`env.production.d1_databases[0].database_id` 与 `env.dev.d1_databases[0].database_id`
+将创建结果里的 `database_id` 填入以下配置（3 个 Worker 必须指向同一个 D1）：
+- `wrangler.toml`：`env.production.d1_databases[0].database_id`
 - `wrangler.email.toml`：`d1_databases[0].database_id`
 - `wrangler.scheduled.toml`：`d1_databases[0].database_id`
 
-### 3) 执行迁移（远程）
+### 4) 执行迁移（远程）
 
 ```bash
 wrangler d1 execute flashinbox-db --remote --file=migrations/0001_init.sql
-wrangler d1 execute flashinbox-db-dev --remote --file=migrations/0001_init.sql
+wrangler d1 execute flashinbox-db --remote --file=migrations/0002_mailboxes_banned.sql
 ```
 
-### 4) 配置主应用域名路由与默认域名
+说明：
+- `0002` 仅用于启用邮箱禁用（`banned`）状态；如果不执行该迁移，后台“禁用邮箱”会因 `CHECK` 约束失败而报错
+
+### 5) 配置主应用路由与默认域名
 
 修改 `wrangler.toml` 的生产环境配置：
-- `env.production.routes[0].pattern` 例如 `mail.yourdomain.com`
-- `DEFAULT_DOMAIN` 设置为你的收信域名（例如 `yourdomain.com`）
+- `env.production.routes[0].pattern` 例如 `mail.flashinbox.de`
+- `DEFAULT_DOMAIN` 设置为你的收信域名（例如 `flashinbox.de`）
 
-### 5) 设置主应用 Secrets（生产环境）
+说明：
+- Web 访问域名（例如 `mail.flashinbox.de`）与收信域名（例如 `flashinbox.de`）可以不同；Email Routing 的 Catch-all 只对主域生效，不适用于 `mail.<domain>` 这种子域
+
+### 6) 创建 Turnstile
+
+Cloudflare Dashboard → Turnstile：
+- 绑定主应用域名（例如 `mail.flashinbox.de`）
+- 获取 `TURNSTILE_SITE_KEY` 与 `TURNSTILE_SECRET_KEY`
+
+### 7) 设置主应用 Secrets（生产环境）
 
 ```bash
 wrangler secret put ADMIN_TOKEN --env production
@@ -270,37 +290,60 @@ wrangler secret put TURNSTILE_SITE_KEY --env production
 - `KEY_PEPPER` 为关键安全配置，主应用用于 claim/recover 等需要写入 `mailboxes.key_hash` 的流程
 - Email Worker 与 Scheduled Worker 当前不需要 Secrets（仅需 D1 绑定与必要 Vars）
 
-### 6) 部署主应用（Next.js -> Workers）
+### 8) 部署主应用（Next.js -> Workers）
 
 ```bash
 bun run build:worker
 wrangler deploy --env production
 ```
 
-### 7) 部署 Email Worker（入站收信）
+### 9) 部署 Email Worker（入站收信）
 
 ```bash
 wrangler deploy --config wrangler.email.toml
 ```
 
-### 8) 部署 Scheduled Worker（清理与统计）
+### 10) 部署 Scheduled Worker（清理与统计）
 
 ```bash
 wrangler deploy --config wrangler.scheduled.toml
 ```
 
-### 9) 配置 Email Routing（收信必需）
+### 11) 初始化域名数据（收信必需）
+
+Email Worker 会查询 D1 的 `domains` 表决定是否接收邮件；如果 `domains` 中没有你的域名，或状态为 `disabled/readonly`，入站邮件会被拒绝/丢弃（Cloudflare Email Routing 的 Activity log 通常显示 Result 为 Dropped）。
+
+两种方式二选一：
+
+1) 使用管理后台添加域名：
+- 访问 `https://<your-app-domain>/admin`
+- 输入 `ADMIN_TOKEN` 登录
+- 在 Domains 页面添加 `flashinbox.de`，状态选择 `enabled`
+
+2) 直接写入 D1（远程）：
+
+```bash
+wrangler d1 execute flashinbox-db --remote --command "INSERT INTO domains (name, status, note, created_at, updated_at) VALUES ('flashinbox.de', 'enabled', 'prod', strftime('%s','now')*1000, strftime('%s','now')*1000);"
+```
+
+说明：
+- 如果你有多个收信域名（例如 `flashinbox.de` + `514819.xyz`），每个域名都需要写入 `domains` 表并设置为 `enabled`
+
+### 12) 配置 Email Routing（收信必需）
 
 在 Cloudflare Dashboard 中对你的域名开启 Email Routing，并创建路由规则：
 - 推荐：启用 **Catch-all address**，Action 选择 `Send to a Worker`，Worker 选择 `flashinbox-email`
-- 若 Catch-all 禁用，Cloudflare 仅会接受已创建的「Custom address」，否则会在 SMTP `RCPT TO` 阶段返回 `550 5.1.1 Address does not exist`
-- Cloudflare Email Routing 的「Custom address」不支持 `*@domain` 形式的通配；要么启用 Catch-all，要么为每个地址逐条创建 Custom address
+- 若 Catch-all 为 `Drop` 或未配置为 Worker，发送到未匹配 Custom address 的邮件会被直接丢弃，通常不会产生退信
+- Catch-all 规则只对主域生效，不能对每个子域单独创建（例如 `mail.flashinbox.de` 这种子域不适用）
 
-### 10) 验证
+### 13) 验证与排错
 
 - 访问主应用域名（例如 `https://mail.yourdomain.com`）
 - 创建邮箱后，从外部邮箱向 `username@yourdomain.com` 发送邮件，确认收件箱可见
-  - 若收信正常但列表为空，优先检查 Email Routing 规则是否命中，以及 Email Worker 是否绑定到了同一个 D1
+  - 若 Email Routing 的 Activity log 显示 Result 为 Dropped：
+    - 确认 `domains` 表中存在收信域名且为 `enabled`
+    - `wrangler tail flashinbox-email` 查看 Email Worker 日志，检查是否出现 `Domain not found` / `Domain is disabled` / 解析异常
+    - 检查是否配置了规则将邮件 `drop`（Rules 页面）
 
 ## API 概览
 
@@ -321,6 +364,10 @@ wrangler deploy --config wrangler.scheduled.toml
 - `POST /api/admin/logout`：退出
 - `GET/POST /api/admin/domains`：域名管理
 - `GET/POST /api/admin/rules`：规则管理
+- `GET /api/admin/mailboxes`：邮箱列表（支持过滤）
+- `GET /api/admin/mailboxes/:mailboxId`：邮箱详情
+- `PATCH /api/admin/mailboxes/:mailboxId`：禁用邮箱（`{ "status": "banned" }`）
+- `DELETE /api/admin/mailboxes/:mailboxId`：删除邮箱（destroy，删除关联消息/隔离/会话并标记销毁）
 - `GET /api/admin/quarantine`：隔离队列
 - `GET /api/admin/dashboard`：仪表盘数据（`range=24h|7d|30d`）
 
