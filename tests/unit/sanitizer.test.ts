@@ -3,23 +3,23 @@ import { sanitizeHtml, stripHtml, containsDangerousContent } from '@/workers/ema
 
 describe('HTML sanitizer', () => {
   describe('sanitizeHtml', () => {
-    test('removes script tags', () => {
+    test('removes script tags', async () => {
       const html = '<p>Hello</p><script>alert(1)</script><p>World</p>';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       expect(clean).not.toContain('<script');
       expect(clean).not.toContain('alert');
       expect(clean).toContain('<p>Hello</p>');
       expect(clean).toContain('<p>World</p>');
     });
 
-    test('removes inline event handlers', () => {
+    test('removes inline event handlers', async () => {
       const html = '<div onclick="alert(1)">Click me</div>';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       expect(clean).not.toContain('onclick');
       expect(clean).toContain('Click me');
     });
 
-    test('removes all on* event attributes', () => {
+    test('removes all on* event attributes', async () => {
       const events = [
         'onerror', 'onload', 'onclick', 'onmouseover',
         'onmouseout', 'onfocus', 'onblur', 'onsubmit',
@@ -27,43 +27,43 @@ describe('HTML sanitizer', () => {
       
       for (const event of events) {
         const html = `<div ${event}="alert(1)">Test</div>`;
-        const clean = sanitizeHtml(html);
+        const clean = await sanitizeHtml(html);
         expect(clean).not.toContain(event);
       }
     });
 
-    test('removes javascript: URLs from links', () => {
+    test('removes javascript: URLs from links', async () => {
       const html = '<a href="javascript:alert(1)">Click</a>';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       expect(clean).not.toContain('javascript:');
       expect(clean).toContain('Click');
     });
 
-    test('removes vbscript: URLs', () => {
+    test('removes vbscript: URLs', async () => {
       const html = '<a href="vbscript:MsgBox">Click</a>';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       expect(clean).not.toContain('vbscript:');
     });
 
-    test('preserves safe tags', () => {
+    test('preserves safe tags', async () => {
       const html = '<p>Para</p><strong>Bold</strong><em>Italic</em><ul><li>Item</li></ul>';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       expect(clean).toContain('<p>Para</p>');
       expect(clean).toContain('<strong>Bold</strong>');
       expect(clean).toContain('<em>Italic</em>');
       expect(clean).toContain('<li>Item</li>');
     });
 
-    test('preserves tables', () => {
+    test('preserves tables', async () => {
       const html = '<table><tr><td>Cell</td></tr></table>';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       expect(clean).toContain('<table>');
       expect(clean).toContain('<td>Cell</td>');
     });
 
-    test('replaces external images with placeholder by default', () => {
+    test('replaces external images with placeholder by default', async () => {
       const html = '<img src="https://example.com/image.jpg" alt="Test">';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       // External image src should be replaced with placeholder
       expect(clean).toContain('data:image/svg+xml;base64');
       // Original URL preserved in data attribute for later loading
@@ -72,80 +72,80 @@ describe('HTML sanitizer', () => {
       expect(clean).toMatch(/src="data:image\/svg\+xml;base64,/);
     });
 
-    test('preserves data-original-src for external images', () => {
+    test('preserves data-original-src for external images', async () => {
       const html = '<img src="http://malicious.com/tracking.gif">';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       expect(clean).toContain('data-original-src="http://malicious.com/tracking.gif"');
     });
 
-    test('allows inline images when not replacing externals', () => {
+    test('allows inline images when not replacing externals', async () => {
       const html = '<img src="https://example.com/image.jpg">';
-      const clean = sanitizeHtml(html, { replaceExternalImages: false });
+      const clean = await sanitizeHtml(html, { replaceExternalImages: false });
       expect(clean).toContain('src="https://example.com/image.jpg"');
     });
 
-    test('blocks data:text/html URLs', () => {
+    test('blocks data:text/html URLs', async () => {
       const html = '<img src="data:text/html,<script>alert(1)</script>">';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       expect(clean).not.toContain('text/html');
       expect(clean).not.toContain('alert');
     });
 
-    test('allows safe data URLs for images', () => {
+    test('allows safe data URLs for images', async () => {
       const html = '<img src="data:image/png;base64,iVBORw0KGgo=">';
-      const clean = sanitizeHtml(html, { replaceExternalImages: false });
+      const clean = await sanitizeHtml(html, { replaceExternalImages: false });
       expect(clean).toContain('data:image/png');
     });
 
-    test('removes style tags', () => {
+    test('removes style tags', async () => {
       const html = '<style>body { display: none; }</style><p>Content</p>';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       expect(clean).not.toContain('<style');
       expect(clean).not.toContain('display: none');
       expect(clean).toContain('<p>Content</p>');
     });
 
-    test('removes iframe tags', () => {
+    test('removes iframe tags', async () => {
       const html = '<iframe src="https://evil.com"></iframe><p>Content</p>';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       expect(clean).not.toContain('<iframe');
       expect(clean).not.toContain('evil.com');
     });
 
-    test('removes form elements', () => {
+    test('removes form elements', async () => {
       const html = '<form action="/steal"><input type="text"><button>Submit</button></form>';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       expect(clean).not.toContain('<form');
       expect(clean).not.toContain('<input');
       expect(clean).not.toContain('<button');
     });
 
-    test('adds security attributes to external links', () => {
+    test('adds security attributes to external links', async () => {
       const html = '<a href="https://example.com">Link</a>';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       expect(clean).toContain('target="_blank"');
       expect(clean).toContain('rel="noopener noreferrer nofollow"');
     });
 
-    test('preserves class and id attributes', () => {
+    test('preserves class and id attributes', async () => {
       const html = '<div class="container" id="main">Content</div>';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       expect(clean).toContain('class="container"');
       expect(clean).toContain('id="main"');
     });
 
-    test('handles empty input', () => {
-      expect(sanitizeHtml('')).toBe('');
+    test('handles empty input', async () => {
+      expect(await sanitizeHtml('')).toBe('');
     });
 
-    test('handles plain text input', () => {
+    test('handles plain text input', async () => {
       const text = 'Just plain text without any HTML';
-      expect(sanitizeHtml(text)).toBe(text);
+      expect(await sanitizeHtml(text)).toBe(text);
     });
 
-    test('handles nested dangerous content', () => {
+    test('handles nested dangerous content', async () => {
       const html = '<div><p><a href="javascript:void(0)" onclick="evil()">Nested</a></p></div>';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       expect(clean).not.toContain('javascript:');
       expect(clean).not.toContain('onclick');
     });
@@ -216,4 +216,3 @@ describe('HTML sanitizer', () => {
     });
   });
 });
-

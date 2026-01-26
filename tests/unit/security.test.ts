@@ -145,7 +145,7 @@ describe('Security Tests', () => {
   });
 
   describe('XSS Protection', () => {
-    test('removes script tags completely', () => {
+    test('removes script tags completely', async () => {
       const malicious = [
         '<script>alert(1)</script>',
         '<SCRIPT>alert(1)</SCRIPT>',
@@ -154,14 +154,14 @@ describe('Security Tests', () => {
       ];
 
       for (const html of malicious) {
-        const clean = sanitizeHtml(html);
+        const clean = await sanitizeHtml(html);
         expect(clean).not.toContain('<script');
         expect(clean).not.toContain('alert');
         expect(clean).not.toContain('evil');
       }
     });
 
-    test('removes all event handlers', () => {
+    test('removes all event handlers', async () => {
       const handlers = [
         'onclick', 'onload', 'onerror', 'onmouseover', 'onmouseout',
         'onfocus', 'onblur', 'onsubmit', 'onkeydown', 'onkeyup',
@@ -169,12 +169,12 @@ describe('Security Tests', () => {
 
       for (const handler of handlers) {
         const html = `<div ${handler}="alert(1)">Test</div>`;
-        const clean = sanitizeHtml(html);
+        const clean = await sanitizeHtml(html);
         expect(clean).not.toContain(handler);
       }
     });
 
-    test('removes javascript: URLs', () => {
+    test('removes javascript: URLs', async () => {
       const malicious = [
         '<a href="javascript:alert(1)">Click</a>',
         '<a href="JAVASCRIPT:alert(1)">Click</a>',
@@ -182,14 +182,14 @@ describe('Security Tests', () => {
       ];
 
       for (const html of malicious) {
-        const clean = sanitizeHtml(html);
+        const clean = await sanitizeHtml(html);
         expect(clean.toLowerCase()).not.toContain('javascript:');
       }
     });
 
-    test('removes data:text/html URLs', () => {
+    test('removes data:text/html URLs', async () => {
       const html = '<img src="data:text/html,<script>alert(1)</script>">';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       expect(clean).not.toContain('text/html');
     });
 
@@ -200,16 +200,16 @@ describe('Security Tests', () => {
       expect(containsDangerousContent('<p>Safe content</p>')).toBe(false);
     });
 
-    test('sanitizes nested dangerous content', () => {
+    test('sanitizes nested dangerous content', async () => {
       const html = '<div><p><span onclick="evil()"><a href="javascript:bad()">Nested</a></span></p></div>';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       expect(clean).not.toContain('onclick');
       expect(clean.toLowerCase()).not.toContain('javascript:');
     });
 
-    test('preserves safe content while removing dangerous', () => {
+    test('preserves safe content while removing dangerous', async () => {
       const html = '<p>Hello <strong onclick="evil()">World</strong>!</p><script>bad()</script>';
-      const clean = sanitizeHtml(html);
+      const clean = await sanitizeHtml(html);
       expect(clean).toContain('Hello');
       expect(clean).toContain('World');
       expect(clean).not.toContain('onclick');

@@ -174,6 +174,18 @@ const emailWorker = {
         }
       }
 
+      if (mailbox.status === 'banned') {
+        await auditLogRepo.create({
+          action: 'email_dropped',
+          actorType: 'system',
+          targetType: 'mailbox',
+          targetId: mailbox.id,
+          details: { reason: 'mailbox_banned', from: message.from, to: message.to },
+          success: true,
+        });
+        return;
+      }
+
       // 4. 读取并解析邮件内容
       const rawEmail = await streamToArrayBuffer(message.raw);
       const parsedEmail = await parseEmail(rawEmail, {
@@ -219,7 +231,12 @@ const emailWorker = {
       // 6. 净化 HTML
       let sanitizedHtml: string | null = null;
       if (parsedEmail.htmlBody) {
-        sanitizedHtml = sanitizeHtml(parsedEmail.htmlBody);
+        try {
+          sanitizedHtml = await sanitizeHtml(parsedEmail.htmlBody);
+        } catch (e) {
+          console.warn('[Email Worker] Failed to sanitize HTML, storing without html_body', e);
+          sanitizedHtml = null;
+        }
       }
 
       // 7. 存储邮件
@@ -303,6 +320,15 @@ async function storeQuarantined(
   email: ParsedEmail,
   ruleResult: RuleCheckResult
 ): Promise<void> {
+  let sanitized: string | undefined;
+  if (email.htmlBody) {
+    try {
+      sanitized = await sanitizeHtml(email.htmlBody);
+    } catch (e) {
+      console.warn('[Email Worker] Failed to sanitize quarantined HTML, storing without html_body', e);
+      sanitized = undefined;
+    }
+  }
   const input: CreateQuarantineInput = {
     mailboxId,
     fromAddr: email.fromAddr,
@@ -310,7 +336,7 @@ async function storeQuarantined(
     toAddr: email.toAddr,
     subject: email.subject || undefined,
     textBody: email.textBody || undefined,
-    htmlBody: email.htmlBody ? sanitizeHtml(email.htmlBody) : undefined,
+    htmlBody: sanitized,
     matchedRuleId: ruleResult.matchedRule?.id,
     matchReason: ruleResult.matchReason || undefined,
   };
