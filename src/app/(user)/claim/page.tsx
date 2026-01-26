@@ -32,12 +32,14 @@ export default function ClaimPage() {
 
   const [email, setEmail] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileWidgetKey, setTurnstileWidgetKey] = useState(0);
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
 
   const [key, setKey] = useState<string | null>(null);
   const [keyExpiresAt, setKeyExpiresAt] = useState<number | null>(null);
   const [confirmSaved, setConfirmSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     apiFetch<UserConfigResponse>('/api/user/config')
@@ -103,12 +105,16 @@ export default function ClaimPage() {
     if (!confirmSaved) return;
     setKey(null); // one-time display: discard after close
     setKeyExpiresAt(null);
+    setTurnstileToken(null);
+    setTurnstileWidgetKey((k) => k + 1);
   }
 
   async function copyKey() {
     if (!key) return;
     try {
       await navigator.clipboard.writeText(key);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
     } catch {
       // ignore
     }
@@ -136,6 +142,7 @@ export default function ClaimPage() {
 
         {siteKey ? (
           <Turnstile
+            key={turnstileWidgetKey}
             siteKey={siteKey}
             onSuccess={(tok) => setTurnstileToken(tok)}
             onError={() => setTurnstileToken(null)}
@@ -147,7 +154,7 @@ export default function ClaimPage() {
 
         {errorText && <div className="text-sm text-red-600 dark:text-red-400">{errorText}</div>}
 
-        <mdui-button variant="filled" full-width loading={loading} disabled={!normalizedEmail || !turnstileToken} onClick={submit}>
+        <mdui-button variant="filled" full-width loading={loading} disabled={!!key || !normalizedEmail || !turnstileToken} onClick={submit}>
           <Icon icon="mdi:check-circle" slot="icon" />
           {t.claim.claimButton}
         </mdui-button>
@@ -161,8 +168,6 @@ export default function ClaimPage() {
         <mdui-dialog
           open={!!key}
           headline={t.claim.keyDialogTitle}
-          close-on-esc={false}
-          close-on-overlay-click={false}
         >
           <div className="space-y-3">
             <div className="rounded border border-black/10 dark:border-white/10 p-2 font-mono text-sm break-all">
@@ -176,7 +181,8 @@ export default function ClaimPage() {
             </mdui-checkbox>
           </div>
           <mdui-button slot="action" variant="text" onClick={copyKey}>
-            {t.common.copy}
+            <Icon icon={copied ? 'mdi:check' : 'mdi:content-copy'} slot="icon" />
+            {copied ? t.common.copied : t.common.copy}
           </mdui-button>
           <mdui-button slot="action" variant="text" disabled={!confirmSaved} onClick={dismissKeyDialog}>
             {t.common.close}

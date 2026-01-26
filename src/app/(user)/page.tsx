@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@iconify/react';
 
-import { installMduiSelectViewportGuard } from '@/lib/client/mdui-select-guard';
 import { Turnstile } from '@/components/ui/Turnstile';
 import { apiFetch } from '@/lib/client/api';
 import { setSessionToken } from '@/lib/client/session-store';
@@ -53,6 +52,7 @@ export default function HomePage() {
   const [domains, setDomains] = useState<Array<{ id: number; name: string }>>([]);
   const [turnstileSiteKey, setTurnstileSiteKey] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileWidgetKey, setTurnstileWidgetKey] = useState(0);
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [createdKey, setCreatedKey] = useState<string | null>(null);
@@ -61,8 +61,6 @@ export default function HomePage() {
   const [createdToken, setCreatedToken] = useState<string | null>(null);
   const [confirmSaved, setConfirmSaved] = useState(false);
   const [copiedField, setCopiedField] = useState<'email' | 'key' | null>(null);
-  const languageSelectRef = useRef<HTMLElement | null>(null);
-  const themeSelectRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -101,10 +99,11 @@ export default function HomePage() {
 
   const canSubmit = useMemo(() => {
     if (loading) return false;
+    if (createdKey) return false;
     if (!turnstileSiteKey || !turnstileToken) return false;
     if (mode === 'manual') return usernameValidation.valid;
     return true;
-  }, [loading, mode, turnstileSiteKey, turnstileToken, usernameValidation.valid]);
+  }, [loading, createdKey, mode, turnstileSiteKey, turnstileToken, usernameValidation.valid]);
 
   async function submit(createMode: CreateMode) {
     setMode(createMode);
@@ -130,7 +129,6 @@ export default function HomePage() {
       setCreatedKeyExpiresAt(res.data.mailbox.keyExpiresAt);
       setCreatedToken(res.data.session.token);
       setConfirmSaved(false);
-      setTurnstileToken(null);
     } catch (e: unknown) {
       const err = e as { message?: unknown; retryAfter?: unknown };
       const msg = typeof err.message === 'string' ? err.message : t.home.createFailed;
@@ -161,6 +159,8 @@ export default function HomePage() {
     setCreatedEmail(null);
     setCreatedKeyExpiresAt(null);
     setConfirmSaved(false);
+    setTurnstileToken(null);
+    setTurnstileWidgetKey((k) => k + 1);
   }
 
   function continueToInbox() {
@@ -176,46 +176,64 @@ export default function HomePage() {
         ? 'mdi:weather-night'
         : 'mdi:theme-light-dark';
 
-  useEffect(() => {
-    const cleanupLang = installMduiSelectViewportGuard(languageSelectRef.current, { preferTop: false });
-    const cleanupTheme = installMduiSelectViewportGuard(themeSelectRef.current, { preferTop: false });
-    return () => {
-      cleanupLang();
-      cleanupTheme();
-    };
-  }, []);
-
   return (
-    <div className="relative min-h-[calc(100dvh-56px)] overflow-hidden">
-      <div className="fi-glass absolute right-4 top-4 z-10 flex items-center gap-1 rounded-full border border-black/10 px-1.5 py-1 shadow-sm dark:border-white/10">
-        <mdui-select
-          ref={languageSelectRef}
-          className="w-[132px]"
-          value={locale}
-          aria-label={t.language.label}
-          title={t.language.label}
-          onChange={(e) => setLocale((e.target as HTMLElement & { value: string }).value as Locale)}
-        >
-          <Icon icon="mdi:translate" slot="icon" />
-          {locales.map((loc) => (
-            <mdui-menu-item key={loc} value={loc}>
-              {loc === 'en-US' ? t.language.enUS : loc === 'zh-CN' ? t.language.zhCN : t.language.zhTW}
+    <div className="relative min-h-[calc(100dvh-56px)] overflow-x-hidden">
+      <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
+        <mdui-dropdown placement="bottom-end">
+          <mdui-button-icon
+            slot="trigger"
+            variant="tonal"
+            aria-label={t.language.label}
+            title={t.language.label}
+          >
+            <Icon icon="mdi:translate" className="h-5 w-5" />
+          </mdui-button-icon>
+          <mdui-menu
+            selects="single"
+            value={locale}
+            onChange={(e) => setLocale((e.target as HTMLElement & { value: string }).value as Locale)}
+          >
+            {locales.map((loc) => (
+              <mdui-menu-item key={loc} value={loc}>
+                <Icon icon="mdi:check" slot="selected-icon" />
+                {loc === 'en-US'
+                  ? t.language.enUS
+                  : loc === 'zh-CN'
+                    ? t.language.zhCN
+                    : t.language.zhTW}
+              </mdui-menu-item>
+            ))}
+          </mdui-menu>
+        </mdui-dropdown>
+
+        <mdui-dropdown placement="bottom-end">
+          <mdui-button-icon
+            slot="trigger"
+            variant="tonal"
+            aria-label={t.theme.label}
+            title={t.theme.label}
+          >
+            <Icon icon={themeIcon} className="h-5 w-5" />
+          </mdui-button-icon>
+          <mdui-menu
+            selects="single"
+            value={theme}
+            onChange={(e) => setTheme((e.target as HTMLElement & { value: string }).value as ThemeMode)}
+          >
+            <mdui-menu-item value="auto">
+              <Icon icon="mdi:check" slot="selected-icon" />
+              {t.theme.system}
             </mdui-menu-item>
-          ))}
-        </mdui-select>
-        <mdui-select
-          ref={themeSelectRef}
-          className="w-[132px]"
-          value={theme}
-          aria-label={t.theme.label}
-          title={t.theme.label}
-          onChange={(e) => setTheme((e.target as HTMLElement & { value: string }).value as ThemeMode)}
-        >
-          <Icon icon={themeIcon} slot="icon" />
-          <mdui-menu-item value="auto">{t.theme.system}</mdui-menu-item>
-          <mdui-menu-item value="dark">{t.theme.dark}</mdui-menu-item>
-          <mdui-menu-item value="light">{t.theme.light}</mdui-menu-item>
-        </mdui-select>
+            <mdui-menu-item value="dark">
+              <Icon icon="mdi:check" slot="selected-icon" />
+              {t.theme.dark}
+            </mdui-menu-item>
+            <mdui-menu-item value="light">
+              <Icon icon="mdi:check" slot="selected-icon" />
+              {t.theme.light}
+            </mdui-menu-item>
+          </mdui-menu>
+        </mdui-dropdown>
       </div>
 
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
@@ -324,7 +342,7 @@ export default function HomePage() {
                     mode === 'manual' ? t.home.usernamePlaceholder : t.home.usernameAutoGenerated
                   }
                   clearable
-                  disabled={mode !== 'manual' || loading}
+                  disabled={mode !== 'manual' || loading || !!createdKey}
                   value={username}
                   onInput={(e) => setUsername((e.target as HTMLInputElement).value)}
                 >
@@ -337,6 +355,7 @@ export default function HomePage() {
                 onChange={(e) =>
                   setDomainId(Number((e.target as HTMLElement & { value: string }).value))
                 }
+                disabled={loading || !!createdKey}
               >
                   {domains.length === 0 ? (
                     <mdui-menu-item value={String(domainId ?? '')}>@{defaultDomain}</mdui-menu-item>
@@ -351,6 +370,7 @@ export default function HomePage() {
 
                 {turnstileSiteKey ? (
                   <Turnstile
+                    key={turnstileWidgetKey}
                     siteKey={turnstileSiteKey}
                     onSuccess={(tok) => setTurnstileToken(tok)}
                     onError={() => setTurnstileToken(null)}
@@ -373,7 +393,7 @@ export default function HomePage() {
                     variant="tonal"
                     className="flex-1"
                     loading={loading}
-                    disabled={loading || !turnstileToken}
+                    disabled={loading || !turnstileToken || !!createdKey}
                     onClick={() => submit('random')}
                   >
                     <Icon icon="mdi:dice-multiple" slot="icon" />
@@ -410,8 +430,6 @@ export default function HomePage() {
       <mdui-dialog
         open={!!createdKey}
         headline={t.claim.keyDialogTitle}
-        close-on-esc={false}
-        close-on-overlay-click={false}
       >
         <div className="space-y-3">
           {createdEmail ? (

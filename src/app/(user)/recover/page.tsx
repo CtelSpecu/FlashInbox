@@ -95,7 +95,6 @@ export default function RecoverPage() {
       if (res.data.mailbox.keyExpiresAt) {
         setNotice(format(t.recover.keyExpiresNotice, { time: new Date(res.data.mailbox.keyExpiresAt).toLocaleString() }));
       }
-      setTurnstileToken(null);
       router.push('/inbox');
     } catch (e: unknown) {
       const err = e as { message?: unknown; retryAfter?: unknown };
