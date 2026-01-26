@@ -1593,10 +1593,10 @@ interface SanitizeConfig {
   maxLength: number;
 }
 
-const DEFAULT_SANITIZE_CONFIG: SanitizeConfig = {
-  allowedTags: [
-    // 结构
-    'div', 'span', 'p', 'br', 'hr',
+	const DEFAULT_SANITIZE_CONFIG: SanitizeConfig = {
+	  allowedTags: [
+	    // 结构
+	    'div', 'span', 'p', 'br', 'hr',
     // 文本格式
     'b', 'i', 'u', 's', 'strong', 'em', 'mark', 'small', 'sub', 'sup',
     // 标题
@@ -1607,27 +1607,29 @@ const DEFAULT_SANITIZE_CONFIG: SanitizeConfig = {
     'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
     // 链接 (href 会被检查)
     'a',
-    // 图片 (默认替换为占位符)
-    'img',
-    // 引用
-    'blockquote', 'pre', 'code',
-  ],
+	    // 图片 (默认替换为占位符)
+	    'img',
+	    // 样式（允许，但会过滤外链加载相关语法）
+	    'style',
+	    // 引用
+	    'blockquote', 'pre', 'code',
+	  ],
   
-  allowedAttributes: {
-    '*': ['class', 'id', 'style'],  // style 会被进一步过滤
-    'a': ['href', 'title', 'target'],
-    'img': ['src', 'alt', 'width', 'height'],  // src 默认替换
-    'td': ['colspan', 'rowspan'],
-    'th': ['colspan', 'rowspan'],
-    'table': ['border', 'cellpadding', 'cellspacing'],
-  },
-  
-  // 完全移除 (含内容)
-  stripTags: [
-    'script', 'style', 'iframe', 'frame', 'frameset',
-    'object', 'embed', 'applet', 'form', 'input', 'button',
-    'select', 'textarea', 'meta', 'link', 'base',
-  ],
+	  allowedAttributes: {
+	    '*': ['class', 'id', 'style'],  // style 会被进一步过滤（移除 url()/@import/@font-face 等）
+	    'a': ['href', 'title', 'target'],
+	    'img': ['src', 'alt', 'width', 'height'],  // src 默认替换
+	    'td': ['colspan', 'rowspan'],
+	    'th': ['colspan', 'rowspan'],
+	    'table': ['border', 'cellpadding', 'cellspacing'],
+	  },
+	  
+	  // 完全移除 (含内容)
+	  stripTags: [
+	    'script', 'iframe', 'frame', 'frameset',
+	    'object', 'embed', 'applet', 'form', 'input', 'button',
+	    'select', 'textarea', 'meta', 'link', 'base',
+	  ],
   
   allowedSchemes: ['http', 'https', 'mailto'],
   
@@ -1705,4 +1707,3 @@ Permissions-Policy: camera=(), microphone=(), geolocation=()
 ```
 
 ---
-
