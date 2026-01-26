@@ -104,3 +104,27 @@ body {
   --mdui-color-primary-container: #3730a3;
   --mdui-color-on-primary-container: #e0e7ff;
 }
+
+/* User-side glass surface.
+   Use backdrop-filter on a pseudo-element so fixed-position MDUI dropdown panels
+   keep correct viewport positioning (avoids transformed/filter containing blocks). */
+.fi-glass {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.fi-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .fi-glass::before {
+  background: rgba(2, 6, 23, 0.4);
+}

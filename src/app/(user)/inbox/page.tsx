@@ -467,7 +467,12 @@ export default function InboxPage() {
                 </mdui-button-icon>
               </div>
             ) : null}
-            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/40 space-y-3', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div
+              className={[
+                'fi-glass rounded-xl border border-black/10 p-3 dark:border-white/10 space-y-3',
+                sidebarCollapsed ? 'hidden md:hidden' : '',
+              ].join(' ')}
+            >
               <mdui-select
                 ref={languageSelectRef}
                 variant="outlined"
