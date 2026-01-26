@@ -44,7 +44,7 @@ export class SessionService {
     }
 
     // 检查邮箱状态
-    if (mailbox.status === 'destroyed') {
+    if (mailbox.status === 'destroyed' || mailbox.status === 'banned') {
       return null;
     }
 
@@ -113,4 +113,3 @@ export class SessionService {
 export function createSessionService(db: D1Database): SessionService {
   return new SessionService(db);
 }
-

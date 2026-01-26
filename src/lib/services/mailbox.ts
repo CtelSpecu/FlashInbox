@@ -170,6 +170,10 @@ export class MailboxService {
       throw new Error('Mailbox not found');
     }
 
+    if (mailbox.status === 'banned' || mailbox.status === 'destroyed') {
+      throw new Error('Mailbox cannot be claimed');
+    }
+
     // 验证状态
     if (mailbox.status !== 'unclaimed') {
       throw new Error('Mailbox is already claimed');
@@ -219,7 +223,7 @@ export class MailboxService {
       throw invalidError;
     }
 
-    if (mailbox.status === 'destroyed') {
+    if (mailbox.status === 'destroyed' || mailbox.status === 'banned') {
       await hashKey(key, this.pepper);
       throw invalidError;
     }

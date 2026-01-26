@@ -18,6 +18,7 @@ export const ErrorCodes = {
   MAILBOX_NOT_FOUND: 'MAILBOX_NOT_FOUND',
   MAILBOX_ALREADY_EXISTS: 'MAILBOX_ALREADY_EXISTS',
   MAILBOX_ALREADY_CLAIMED: 'MAILBOX_ALREADY_CLAIMED',
+  MAILBOX_BANNED: 'MAILBOX_BANNED',
   MAILBOX_DESTROYED: 'MAILBOX_DESTROYED',
   INVALID_USERNAME: 'INVALID_USERNAME',
 
@@ -152,4 +153,3 @@ export async function parseJsonBody<T>(request: Request): Promise<T | null> {
     return null;
   }
 }
-

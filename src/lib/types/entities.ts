@@ -5,7 +5,7 @@
 // === 枚举类型 ===
 
 export type DomainStatus = 'enabled' | 'disabled' | 'readonly';
-export type MailboxStatus = 'unclaimed' | 'claimed' | 'destroyed';
+export type MailboxStatus = 'unclaimed' | 'claimed' | 'banned' | 'destroyed';
 export type MailboxCreationType = 'random' | 'manual' | 'inbound';
 export type MessageStatus = 'normal' | 'quarantined' | 'deleted';
 export type RuleType = 'sender_domain' | 'sender_addr' | 'keyword' | 'ip';
@@ -297,4 +297,3 @@ export interface AdminSessionRow {
   expires_at: number;
   last_accessed: number;
 }
-

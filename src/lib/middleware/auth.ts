@@ -63,7 +63,7 @@ async function verifySession(token: string): Promise<{
   }
 
   // 检查邮箱状态
-  if (mailbox.status === 'destroyed') {
+  if (mailbox.status === 'destroyed' || mailbox.status === 'banned') {
     return null;
   }
 
@@ -130,4 +130,3 @@ export function withOptionalAuth(
     return handler(request, authResult);
   };
 }
-
