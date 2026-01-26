@@ -13,15 +13,19 @@ function getOriginFromUrl(url: string | undefined): string | null {
 function getUmamiOrigins(): string[] {
   const origins = new Set<string>();
 
-  // Default deployment value (wrangler.toml). Keep in sync with your production vars.
-  origins.add('https://analytics.hxcn.dev');
-
   const env = typeof process !== 'undefined' ? process.env : undefined;
-  const fromEnv =
-    getOriginFromUrl(env?.UMAMI_SCRIPT_URL) ||
-    getOriginFromUrl(env?.NEXT_PUBLIC_UMAMI_SCRIPT_URL);
+  const fromScriptUrl =
+    getOriginFromUrl(env?.UMAMI_SCRIPT_URL) || getOriginFromUrl(env?.NEXT_PUBLIC_UMAMI_SCRIPT_URL);
 
-  if (fromEnv) origins.add(fromEnv);
+  if (fromScriptUrl) origins.add(fromScriptUrl);
+
+  const allowlistRaw = env?.UMAMI_ALLOWED_ORIGINS || env?.NEXT_PUBLIC_UMAMI_ALLOWED_ORIGINS;
+  if (allowlistRaw) {
+    for (const token of allowlistRaw.split(/[,\s]+/g)) {
+      const origin = getOriginFromUrl(token.trim());
+      if (origin) origins.add(origin);
+    }
+  }
 
   return Array.from(origins);
 }
