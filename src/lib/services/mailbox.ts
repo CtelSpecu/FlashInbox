@@ -270,7 +270,8 @@ export class MailboxService {
     }
 
     // 更新过期时间
-    const newExpiresAt = calculateKeyExpiry(this.config);
+    const base = mailbox.keyExpiresAt && mailbox.keyExpiresAt > Date.now() ? mailbox.keyExpiresAt : Date.now();
+    const newExpiresAt = base + this.config.keyExpireDays * 24 * 60 * 60 * 1000;
     const renewed = await this.mailboxRepo.renewKey(mailboxId, newExpiresAt);
 
     if (!renewed) {
