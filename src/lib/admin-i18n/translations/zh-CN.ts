@@ -163,6 +163,7 @@ export const adminZhCN = {
     view: '查看',
     detailsTitle: '详情内容',
     copy: '复制',
+    copied: '已复制',
     empty: '暂无日志',
   },
   settings: {

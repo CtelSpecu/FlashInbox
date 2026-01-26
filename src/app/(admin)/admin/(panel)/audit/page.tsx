@@ -62,6 +62,7 @@ export default function AdminAuditPage() {
 
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsText, setDetailsText] = useState('');
+  const [detailsCopied, setDetailsCopied] = useState(false);
 
   const query = useMemo(() => {
     const qs = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
@@ -110,6 +111,8 @@ export default function AdminAuditPage() {
   async function copyDetails() {
     try {
       await navigator.clipboard.writeText(detailsText);
+      setDetailsCopied(true);
+      window.setTimeout(() => setDetailsCopied(false), 2000);
     } catch {
       // ignore
     }
@@ -224,8 +227,8 @@ export default function AdminAuditPage() {
               {t.common.close}
             </Button>
             <Button onClick={copyDetails}>
-              <Icon icon="lucide:copy" className="h-4 w-4" />
-              {t.audit.copy}
+              <Icon icon={detailsCopied ? 'lucide:check' : 'lucide:copy'} className="h-4 w-4" />
+              {detailsCopied ? t.audit.copied : t.audit.copy}
             </Button>
           </div>
         }
@@ -238,5 +241,3 @@ export default function AdminAuditPage() {
     </div>
   );
 }
-
-

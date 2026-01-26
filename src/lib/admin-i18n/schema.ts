@@ -158,6 +158,7 @@ export interface AdminTranslations {
     view: string;
     detailsTitle: string;
     copy: string;
+    copied: string;
     empty: string;
   };
   settings: {

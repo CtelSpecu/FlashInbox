@@ -163,6 +163,7 @@ export const adminZhTW = {
     view: '查看',
     detailsTitle: '詳情內容',
     copy: '複製',
+    copied: '已複製',
     empty: '暫無日誌',
   },
   settings: {

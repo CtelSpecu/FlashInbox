@@ -368,9 +368,10 @@ export default function InboxPage() {
             </mdui-button-icon>
             {sidebarCollapsed ? (
               <div className="fi-glass hidden md:flex flex-col items-center gap-2 rounded-xl border border-black/10 p-2 dark:border-white/10">
-                <mdui-button-icon onClick={() => copyText(email)} title={email || t.inbox.title}>
+                <mdui-button-icon onClick={() => copyText(email)} title={copied ? t.common.copied : t.common.copy} aria-label={copied ? t.common.copied : t.common.copy}>
                   <Icon icon={copied ? 'mdi:check' : 'mdi:email-outline'} className="h-5 w-5" />
                 </mdui-button-icon>
+                <div className="h-4 text-[10px] opacity-70">{copied ? t.common.copied : ''}</div>
                 {unreadCount > 0 && (
                   <span className="rounded-full bg-[color:var(--mdui-color-primary)] px-1.5 py-0.5 text-[10px] text-[color:var(--mdui-color-on-primary)]">
                     {unreadCount}
@@ -387,7 +388,7 @@ export default function InboxPage() {
                 {email ? (
                   <mdui-button variant="text" className="min-w-0 px-2" onClick={() => copyText(email)} aria-label={copied ? t.common.copied : t.common.copy} title={copied ? t.common.copied : t.common.copy}>
                     <Icon icon={copied ? 'mdi:check' : 'mdi:content-copy'} slot="icon" />
-                    <span className="sr-only">{copied ? t.common.copied : t.common.copy}</span>
+                    <span className="text-xs">{copied ? t.common.copied : t.common.copy}</span>
                   </mdui-button>
                 ) : null}
               </div>

@@ -163,6 +163,7 @@ export const adminEnUS = {
     view: 'View',
     detailsTitle: 'Details',
     copy: 'Copy',
+    copied: 'Copied',
     empty: 'No logs',
   },
   settings: {
