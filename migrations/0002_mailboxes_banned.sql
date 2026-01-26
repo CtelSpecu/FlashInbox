@@ -1,8 +1,9 @@
 -- Add mailbox status: banned
 -- This migration rebuilds the `mailboxes` table to extend the CHECK constraint.
-
-PRAGMA foreign_keys=OFF;
-BEGIN TRANSACTION;
+--
+-- Note (D1 / Wrangler):
+-- Cloudflare D1 remote execution rejects explicit SQL transaction statements
+-- like `BEGIN TRANSACTION` / `COMMIT`. Keep this migration free of them.
 
 CREATE TABLE IF NOT EXISTS mailboxes_new (
     id              TEXT PRIMARY KEY,                       -- UUID v4
@@ -68,7 +69,3 @@ ALTER TABLE mailboxes_new RENAME TO mailboxes;
 CREATE INDEX IF NOT EXISTS idx_mailboxes_domain_canonical ON mailboxes(domain_id, canonical_name);
 CREATE INDEX IF NOT EXISTS idx_mailboxes_status ON mailboxes(status);
 CREATE INDEX IF NOT EXISTS idx_mailboxes_key_expires ON mailboxes(key_expires_at) WHERE key_expires_at IS NOT NULL;
-
-COMMIT;
-PRAGMA foreign_keys=ON;
-
