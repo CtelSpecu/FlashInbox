@@ -41,14 +41,18 @@ export default function AdminDomainsPage() {
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [domains, setDomains] = useState<DomainDto[]>([]);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
 
   const [newName, setNewName] = useState('');
   const [newStatus, setNewStatus] = useState<DomainStatus>('enabled');
   const [newNote, setNewNote] = useState('');
 
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   const deleteTarget = useMemo(() => domains.find((d) => d.id === deleteId) || null, [domains, deleteId]);
+  const selectedCount = selected.size;
+  const allSelected = domains.length > 0 && domains.every((d) => selected.has(d.id));
 
   async function load() {
     setLoading(true);
@@ -56,6 +60,7 @@ export default function AdminDomainsPage() {
     try {
       const res = await adminApiFetch<SuccessResponse<DomainsList>>('/api/admin/domains');
       setDomains(res.data.domains);
+      setSelected(new Set());
     } catch (e) {
       const err = e as AdminApiError;
       if (err.status === 401) {
@@ -131,6 +136,60 @@ export default function AdminDomainsPage() {
     }
   }
 
+  function toggleSelected(id: number, next?: boolean) {
+    setSelected((prev) => {
+      const copy = new Set(prev);
+      const shouldSelect = next ?? !copy.has(id);
+      if (shouldSelect) copy.add(id);
+      else copy.delete(id);
+      return copy;
+    });
+  }
+
+  function setAll(next: boolean) {
+    setSelected(next ? new Set(domains.map((d) => d.id)) : new Set());
+  }
+
+  async function bulkSetStatus(status: DomainStatus) {
+    if (selected.size === 0) return;
+    setLoading(true);
+    setErrorText(null);
+    try {
+      await adminApiFetch<SuccessResponse<{ ids: number[]; action: string; status: DomainStatus }>>('/api/admin/domains/bulk', {
+        method: 'POST',
+        body: JSON.stringify({ ids: Array.from(selected), action: 'set_status', status }),
+      });
+      await load();
+    } catch (e) {
+      const err = e as AdminApiError;
+      setErrorText(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function bulkDelete() {
+    if (selected.size === 0) return;
+    setLoading(true);
+    setErrorText(null);
+    try {
+      await adminApiFetch<SuccessResponse<{ deleted: number[]; blocked: Array<{ id: number; mailboxCount: number }> }>>(
+        '/api/admin/domains/bulk',
+        {
+          method: 'POST',
+          body: JSON.stringify({ ids: Array.from(selected), action: 'delete' }),
+        }
+      );
+      setBulkDeleteOpen(false);
+      await load();
+    } catch (e) {
+      const err = e as AdminApiError;
+      setErrorText(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       {errorText ? <div className="text-sm text-red-700">{errorText}</div> : null}
@@ -168,16 +227,53 @@ export default function AdminDomainsPage() {
         <CardHeader>
           <div className="flex items-center justify-between gap-2">
             <CardTitle>{t.domains.domains}</CardTitle>
-            <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-              <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
-              {t.common.reload}
-            </Button>
+            <div className="flex items-center gap-2">
+              {selectedCount > 0 ? (
+                <>
+                  <div className="text-xs text-[color:var(--admin-muted)]">
+                    {format(t.common.selectedCount, { count: selectedCount })}
+                  </div>
+                  <Select
+                    value=""
+                    onChange={(e) => {
+                      const v = e.target.value as DomainStatus | 'delete' | '';
+                      (e.target as HTMLSelectElement).value = '';
+                      if (!v) return;
+                      if (v === 'delete') setBulkDeleteOpen(true);
+                      else void bulkSetStatus(v);
+                    }}
+                    disabled={loading}
+                  >
+                    <option value="">{t.common.bulkActions}</option>
+                    <option value="enabled">{t.domains.statusEnabled}</option>
+                    <option value="disabled">{t.domains.statusDisabled}</option>
+                    <option value="readonly">{t.domains.statusReadonly}</option>
+                    <option value="delete">{t.common.delete}</option>
+                  </Select>
+                </>
+              ) : null}
+
+              <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+                <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
+                {t.common.reload}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <Table>
             <THead>
               <TR>
+                <TH className="w-10">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    aria-label={t.common.bulkActions}
+                    onChange={(e) => setAll(e.target.checked)}
+                    disabled={loading || domains.length === 0}
+                    className="h-4 w-4 rounded border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]"
+                  />
+                </TH>
                 <TH>{t.domains.id}</TH>
                 <TH>{t.domains.domain}</TH>
                 <TH>{t.domains.status}</TH>
@@ -189,6 +285,16 @@ export default function AdminDomainsPage() {
             <TBody>
               {domains.map((d) => (
                 <TR key={d.id}>
+                  <TD>
+                    <input
+                      type="checkbox"
+                      checked={selected.has(d.id)}
+                      aria-label={d.name}
+                      onChange={(e) => toggleSelected(d.id, e.target.checked)}
+                      disabled={loading}
+                      className="h-4 w-4 rounded border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]"
+                    />
+                  </TD>
                   <TD className="text-[color:var(--admin-muted)]">{d.id}</TD>
                   <TD className="font-medium">{d.name}</TD>
                   <TD>
@@ -231,7 +337,7 @@ export default function AdminDomainsPage() {
               ))}
               {domains.length === 0 && !loading ? (
                 <TR>
-                  <TD colSpan={6} className="py-6 text-center text-[color:var(--admin-muted)]">
+                  <TD colSpan={7} className="py-6 text-center text-[color:var(--admin-muted)]">
                     {t.domains.noDomains}
                   </TD>
                 </TR>
@@ -271,8 +377,27 @@ export default function AdminDomainsPage() {
           ) : null}
         </div>
       </Modal>
+
+      <Modal
+        open={bulkDeleteOpen}
+        onOpenChange={(o) => setBulkDeleteOpen(o)}
+        title={t.domains.confirmDeleteTitle}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setBulkDeleteOpen(false)} disabled={loading}>
+              {t.common.cancel}
+            </Button>
+            <Button variant="destructive" onClick={bulkDelete} disabled={loading}>
+              {t.common.delete}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-2 text-sm text-[color:var(--admin-text)]">
+          <div>{format(t.common.selectedCount, { count: selectedCount })}</div>
+          <div className="text-xs text-[color:var(--admin-muted)]">{t.domains.deleteBlockedHint}</div>
+        </div>
+      </Modal>
     </div>
   );
 }
-
-

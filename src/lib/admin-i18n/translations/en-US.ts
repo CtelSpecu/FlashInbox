@@ -21,6 +21,9 @@ export const adminEnUS = {
     yes: 'Yes',
     no: 'No',
     empty: 'No data',
+    bulkActions: 'Bulk actions',
+    selectedCount: '{count} selected',
+    apply: 'Apply',
   },
   language: {
     label: 'Language',

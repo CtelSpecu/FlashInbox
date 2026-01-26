@@ -21,6 +21,9 @@ export const adminZhCN = {
     yes: '是',
     no: '否',
     empty: '无数据',
+    bulkActions: '批量操作',
+    selectedCount: '已选 {count} 项',
+    apply: '执行',
   },
   language: {
     label: '语言',

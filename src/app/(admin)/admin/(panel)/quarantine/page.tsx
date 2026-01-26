@@ -50,6 +50,8 @@ export default function AdminQuarantinePage() {
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [data, setData] = useState<QuarantineList | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkConfirm, setBulkConfirm] = useState<{ action: 'release' | 'delete' } | null>(null);
 
   const [confirm, setConfirm] = useState<{ id: string; action: 'release' | 'delete' } | null>(null);
 
@@ -69,6 +71,7 @@ export default function AdminQuarantinePage() {
       });
       const res = await adminApiFetch<SuccessResponse<QuarantineList>>(`/api/admin/quarantine?${qs.toString()}`);
       setData(res.data);
+      setSelected(new Set());
     } catch (e) {
       const err = e as AdminApiError;
       if (err.status === 401) {
@@ -119,6 +122,46 @@ export default function AdminQuarantinePage() {
     }
   }
 
+  const items = data?.items || [];
+  const selectedCount = selected.size;
+  const allSelected = items.length > 0 && items.every((q) => selected.has(q.id));
+
+  function toggleSelected(id: string, next?: boolean) {
+    setSelected((prev) => {
+      const copy = new Set(prev);
+      const shouldSelect = next ?? !copy.has(id);
+      if (shouldSelect) copy.add(id);
+      else copy.delete(id);
+      return copy;
+    });
+  }
+
+  function setAll(next: boolean) {
+    setSelected(next ? new Set(items.map((q) => q.id)) : new Set());
+  }
+
+  async function applyBulk(action: 'release' | 'delete') {
+    if (selected.size === 0) return;
+    setLoading(true);
+    setErrorText(null);
+    try {
+      await adminApiFetch<SuccessResponse<{ summary: { total: number; success: number; failed: number } }>>(
+        '/api/admin/quarantine/bulk',
+        {
+          method: 'POST',
+          body: JSON.stringify({ ids: Array.from(selected), action }),
+        }
+      );
+      setBulkConfirm(null);
+      await load();
+    } catch (e) {
+      const err = e as AdminApiError;
+      setErrorText(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       {errorText ? <div className="text-sm text-red-700">{errorText}</div> : null}
@@ -133,6 +176,27 @@ export default function AdminQuarantinePage() {
                 <option value="released">{t.quarantine.released}</option>
                 <option value="deleted">{t.quarantine.deleted}</option>
               </Select>
+              {selectedCount > 0 ? (
+                <>
+                  <div className="text-xs text-[color:var(--admin-muted)]">
+                    {format(t.common.selectedCount, { count: selectedCount })}
+                  </div>
+                  <Select
+                    value=""
+                    onChange={(e) => {
+                      const v = (e.target.value as 'release' | 'delete' | '') || '';
+                      (e.target as HTMLSelectElement).value = '';
+                      if (!v) return;
+                      setBulkConfirm({ action: v });
+                    }}
+                    disabled={loading}
+                  >
+                    <option value="">{t.common.bulkActions}</option>
+                    {status === 'pending' ? <option value="release">{t.quarantine.release}</option> : null}
+                    <option value="delete">{t.quarantine.delete}</option>
+                  </Select>
+                </>
+              ) : null}
               <Button variant="outline" size="sm" onClick={load} disabled={loading}>
                 <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
                 {t.common.reload}
@@ -144,6 +208,16 @@ export default function AdminQuarantinePage() {
           <Table>
             <THead>
               <TR>
+                <TH className="w-10">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    aria-label={t.common.bulkActions}
+                    onChange={(e) => setAll(e.target.checked)}
+                    disabled={loading || items.length === 0}
+                    className="h-4 w-4 rounded border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]"
+                  />
+                </TH>
                 <TH>{t.quarantine.received}</TH>
                 <TH>{t.quarantine.mailbox}</TH>
                 <TH>{t.quarantine.from}</TH>
@@ -154,8 +228,18 @@ export default function AdminQuarantinePage() {
               </TR>
             </THead>
             <TBody>
-              {(data?.items || []).map((q) => (
+              {items.map((q) => (
                 <TR key={q.id}>
+                  <TD>
+                    <input
+                      type="checkbox"
+                      checked={selected.has(q.id)}
+                      aria-label={q.id}
+                      onChange={(e) => toggleSelected(q.id, e.target.checked)}
+                      disabled={loading}
+                      className="h-4 w-4 rounded border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]"
+                    />
+                  </TD>
                   <TD className="text-[color:var(--admin-muted)]">{formatTime(q.receivedAt)}</TD>
                   <TD className="font-medium">{q.mailboxEmail}</TD>
                   <TD className="max-w-[220px] truncate" title={q.fromAddr}>
@@ -190,7 +274,7 @@ export default function AdminQuarantinePage() {
               ))}
               {(data?.items || []).length === 0 && !loading ? (
                 <TR>
-                  <TD colSpan={7} className="py-6 text-center text-[color:var(--admin-muted)]">
+                  <TD colSpan={8} className="py-6 text-center text-[color:var(--admin-muted)]">
                     {t.quarantine.noItems}
                   </TD>
                 </TR>
@@ -243,8 +327,39 @@ export default function AdminQuarantinePage() {
             : t.quarantine.confirmDeleteText}
         </div>
       </Modal>
+
+      <Modal
+        open={!!bulkConfirm}
+        onOpenChange={(o) => setBulkConfirm(o ? bulkConfirm : null)}
+        title={bulkConfirm?.action === 'release' ? t.quarantine.confirmReleaseTitle : t.quarantine.confirmDeleteTitle}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setBulkConfirm(null)} disabled={loading}>
+              {t.common.cancel}
+            </Button>
+            <Button
+              variant={bulkConfirm?.action === 'delete' ? 'destructive' : 'default'}
+              onClick={() => {
+                if (!bulkConfirm) return;
+                void applyBulk(bulkConfirm.action);
+              }}
+              disabled={loading}
+            >
+              {t.common.apply}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-2 text-sm text-[color:var(--admin-text)]">
+          <div>{format(t.common.selectedCount, { count: selectedCount })}</div>
+          <div className="text-xs text-[color:var(--admin-muted)]">
+            {bulkConfirm?.action === 'release'
+              ? t.quarantine.confirmReleaseText
+              : t.quarantine.confirmDeleteText}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
-
 

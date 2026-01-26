@@ -49,11 +49,13 @@ interface DomainDto {
 type RulePatch = Partial<Pick<RuleDto, 'type' | 'pattern' | 'action' | 'priority' | 'isActive' | 'description' | 'domainId'>>;
 
 export default function AdminRulesPage() {
-  const { t } = useAdminI18n();
+  const { t, format } = useAdminI18n();
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [rules, setRules] = useState<RuleDto[]>([]);
   const [domains, setDomains] = useState<DomainDto[]>([]);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [bulkConfirm, setBulkConfirm] = useState<{ action: 'activate' | 'deactivate' | 'delete' } | null>(null);
 
   const [newType, setNewType] = useState<RuleType>('sender_domain');
   const [newPattern, setNewPattern] = useState('');
@@ -76,6 +78,7 @@ export default function AdminRulesPage() {
       ]);
       setRules(rRes.data.rules);
       setDomains(dRes.data.domains.map((d) => ({ id: d.id, name: d.name })));
+      setSelected(new Set());
     } catch (e) {
       const err = e as AdminApiError;
       if (err.status === 401) {
@@ -180,6 +183,47 @@ export default function AdminRulesPage() {
     });
   }
 
+  const selectedCount = selected.size;
+  const allSelected = rules.length > 0 && rules.every((r) => selected.has(r.id));
+
+  function toggleSelected(id: number, next?: boolean) {
+    setSelected((prev) => {
+      const copy = new Set(prev);
+      const shouldSelect = next ?? !copy.has(id);
+      if (shouldSelect) copy.add(id);
+      else copy.delete(id);
+      return copy;
+    });
+  }
+
+  function setAll(next: boolean) {
+    setSelected(next ? new Set(rules.map((r) => r.id)) : new Set());
+  }
+
+  async function applyBulk(action: 'activate' | 'deactivate' | 'delete') {
+    if (selected.size === 0) return;
+    setLoading(true);
+    setErrorText(null);
+    try {
+      await adminApiFetch<SuccessResponse<{ ids: number[]; action: string }>>('/api/admin/rules/bulk', {
+        method: 'POST',
+        body: JSON.stringify({ ids: Array.from(selected), action }),
+      });
+      setBulkConfirm(null);
+      await load();
+    } catch (e) {
+      const err = e as AdminApiError;
+      if (err.status === 401) {
+        clearAdminSession();
+        window.location.href = withAdminTracking('/admin/login');
+        return;
+      }
+      setErrorText(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       {errorText ? <div className="text-sm text-red-700">{errorText}</div> : null}
@@ -240,16 +284,50 @@ export default function AdminRulesPage() {
         <CardHeader>
           <div className="flex items-center justify-between gap-2">
             <CardTitle>{t.rules.rules}</CardTitle>
-            <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-              <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
-              {t.common.reload}
-            </Button>
+            <div className="flex items-center gap-2">
+              {selectedCount > 0 ? (
+                <>
+                  <div className="text-xs text-[color:var(--admin-muted)]">
+                    {format(t.common.selectedCount, { count: selectedCount })}
+                  </div>
+                  <Select
+                    value=""
+                    onChange={(e) => {
+                      const v = (e.target.value as 'activate' | 'deactivate' | 'delete' | '') || '';
+                      (e.target as HTMLSelectElement).value = '';
+                      if (!v) return;
+                      setBulkConfirm({ action: v as 'activate' | 'deactivate' | 'delete' });
+                    }}
+                    disabled={loading}
+                  >
+                    <option value="">{t.common.bulkActions}</option>
+                    <option value="activate">{t.rules.on}</option>
+                    <option value="deactivate">{t.rules.off}</option>
+                    <option value="delete">{t.common.delete}</option>
+                  </Select>
+                </>
+              ) : null}
+              <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+                <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
+                {t.common.reload}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <Table>
             <THead>
               <TR>
+                <TH className="w-10">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    aria-label={t.common.bulkActions}
+                    onChange={(e) => setAll(e.target.checked)}
+                    disabled={loading || rules.length === 0}
+                    className="h-4 w-4 rounded border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]"
+                  />
+                </TH>
                 <TH>{t.domains.id}</TH>
                 <TH>{t.rules.type}</TH>
                 <TH>{t.rules.pattern}</TH>
@@ -264,6 +342,16 @@ export default function AdminRulesPage() {
             <TBody>
               {rules.map((r) => (
                 <TR key={r.id}>
+                  <TD>
+                    <input
+                      type="checkbox"
+                      checked={selected.has(r.id)}
+                      aria-label={String(r.id)}
+                      onChange={(e) => toggleSelected(r.id, e.target.checked)}
+                      disabled={loading}
+                      className="h-4 w-4 rounded border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]"
+                    />
+                  </TD>
                   <TD className="text-[color:var(--admin-muted)]">{r.id}</TD>
                   <TD>{r.type}</TD>
                   <TD className="max-w-[320px] truncate" title={r.pattern}>
@@ -297,7 +385,7 @@ export default function AdminRulesPage() {
               ))}
               {rules.length === 0 && !loading ? (
                 <TR>
-                  <TD colSpan={9} className="py-6 text-center text-[color:var(--admin-muted)]">
+                  <TD colSpan={10} className="py-6 text-center text-[color:var(--admin-muted)]">
                     {t.rules.noRules}
                   </TD>
                 </TR>
@@ -392,7 +480,33 @@ export default function AdminRulesPage() {
           </div>
         ) : null}
       </Modal>
+
+      <Modal
+        open={!!bulkConfirm}
+        onOpenChange={(o) => setBulkConfirm(o ? bulkConfirm : null)}
+        title={t.common.confirm}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setBulkConfirm(null)} disabled={loading}>
+              {t.common.cancel}
+            </Button>
+            <Button
+              variant={bulkConfirm?.action === 'delete' ? 'destructive' : 'default'}
+              onClick={() => {
+                if (!bulkConfirm) return;
+                void applyBulk(bulkConfirm.action);
+              }}
+              disabled={loading}
+            >
+              {t.common.apply}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-2 text-sm text-[color:var(--admin-text)]">
+          <div>{format(t.common.selectedCount, { count: selectedCount })}</div>
+        </div>
+      </Modal>
     </div>
   );
 }
-

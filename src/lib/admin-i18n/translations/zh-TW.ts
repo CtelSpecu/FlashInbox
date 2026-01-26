@@ -21,6 +21,9 @@ export const adminZhTW = {
     yes: '是',
     no: '否',
     empty: '無資料',
+    bulkActions: '批量操作',
+    selectedCount: '已選 {count} 項',
+    apply: '執行',
   },
   language: {
     label: '語言',

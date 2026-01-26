@@ -13,6 +13,7 @@ import { Button } from '@/components/admin/ui/Button';
 import { Input } from '@/components/admin/ui/Input';
 import { Select } from '@/components/admin/ui/Select';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/admin/ui/Table';
+import { Modal } from '@/components/admin/ui/Modal';
 import { AdminLink } from '@/components/admin/AdminLink';
 import { useAdminI18n } from '@/lib/admin-i18n/context';
 
@@ -59,10 +60,12 @@ interface MailboxesList {
 }
 
 export default function AdminMailboxesPage() {
-  const { t, locale } = useAdminI18n();
+  const { t, locale, format } = useAdminI18n();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkConfirm, setBulkConfirm] = useState<{ action: 'ban' | 'destroy' } | null>(null);
 
   const [domains, setDomains] = useState<DomainDto[]>([]);
   const [domain, setDomain] = useState('');
@@ -108,6 +111,7 @@ export default function AdminMailboxesPage() {
       const res = await adminApiFetch<SuccessResponse<MailboxesList>>(`/api/admin/mailboxes?${qs.toString()}`);
       setData(res.data);
       setPage(res.data.pagination.page);
+      setSelected(new Set());
     } catch (e) {
       const err = e as AdminApiError;
       if (err.status === 401) {
@@ -151,6 +155,46 @@ export default function AdminMailboxesPage() {
 
   const items = data?.mailboxes || [];
   const pagination = data?.pagination;
+  const selectedCount = selected.size;
+  const allSelected = items.length > 0 && items.every((m) => selected.has(m.id));
+
+  function toggleSelected(id: string, next?: boolean) {
+    setSelected((prev) => {
+      const copy = new Set(prev);
+      const shouldSelect = next ?? !copy.has(id);
+      if (shouldSelect) copy.add(id);
+      else copy.delete(id);
+      return copy;
+    });
+  }
+
+  function setAll(next: boolean) {
+    setSelected(next ? new Set(items.map((m) => m.id)) : new Set());
+  }
+
+  async function applyBulk(action: 'ban' | 'destroy') {
+    if (selected.size === 0) return;
+    setLoading(true);
+    setErrorText(null);
+    try {
+      await adminApiFetch<SuccessResponse<{ ids: string[]; action: string }>>('/api/admin/mailboxes/bulk', {
+        method: 'POST',
+        body: JSON.stringify({ ids: Array.from(selected), action }),
+      });
+      setBulkConfirm(null);
+      await loadMailboxes(page);
+    } catch (e) {
+      const err = e as AdminApiError;
+      if (err.status === 401) {
+        clearAdminSession();
+        window.location.href = withAdminTracking('/admin/login');
+        return;
+      }
+      setErrorText(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -213,6 +257,27 @@ export default function AdminMailboxesPage() {
               {pagination ? `${pagination.total}` : loading ? '…' : '0'}
             </div>
             <div className="flex items-center gap-2">
+              {selectedCount > 0 ? (
+                <>
+                  <div className="text-xs text-[color:var(--admin-muted)]">
+                    {format(t.common.selectedCount, { count: selectedCount })}
+                  </div>
+                  <Select
+                    value=""
+                    onChange={(e) => {
+                      const v = (e.target.value as 'ban' | 'destroy' | '') || '';
+                      (e.target as HTMLSelectElement).value = '';
+                      if (!v) return;
+                      setBulkConfirm({ action: v });
+                    }}
+                    disabled={loading}
+                  >
+                    <option value="">{t.common.bulkActions}</option>
+                    <option value="ban">{t.mailboxes.ban}</option>
+                    <option value="destroy">{t.common.delete}</option>
+                  </Select>
+                </>
+              ) : null}
               <Button
                 variant="outline"
                 size="sm"
@@ -236,6 +301,16 @@ export default function AdminMailboxesPage() {
           <Table>
             <THead>
               <TR>
+                <TH className="w-10">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    aria-label={t.common.bulkActions}
+                    onChange={(e) => setAll(e.target.checked)}
+                    disabled={loading || items.length === 0}
+                    className="h-4 w-4 rounded border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]"
+                  />
+                </TH>
                 <TH>{t.mailboxes.email}</TH>
                 <TH>{t.mailboxes.status}</TH>
                 <TH>{t.mailboxes.creationType}</TH>
@@ -253,6 +328,16 @@ export default function AdminMailboxesPage() {
             <TBody>
               {items.map((m) => (
                 <TR key={m.id}>
+                  <TD>
+                    <input
+                      type="checkbox"
+                      checked={selected.has(m.id)}
+                      aria-label={m.email}
+                      onChange={(e) => toggleSelected(m.id, e.target.checked)}
+                      disabled={loading}
+                      className="h-4 w-4 rounded border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]"
+                    />
+                  </TD>
                   <TD className="font-medium">
                     <AdminLink href={`/admin/mailboxes/${m.id}`} className="hover:underline">
                       {m.email}
@@ -283,7 +368,7 @@ export default function AdminMailboxesPage() {
               ))}
               {items.length === 0 && !loading ? (
                 <TR>
-                  <TD colSpan={12} className="py-6 text-center text-[color:var(--admin-muted)]">
+                  <TD colSpan={13} className="py-6 text-center text-[color:var(--admin-muted)]">
                     {t.mailboxes.noMailboxes}
                   </TD>
                 </TR>
@@ -292,6 +377,38 @@ export default function AdminMailboxesPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <Modal
+        open={!!bulkConfirm}
+        onOpenChange={(o) => setBulkConfirm(o ? bulkConfirm : null)}
+        title={
+          bulkConfirm?.action === 'ban' ? t.mailboxes.confirmBanTitle : t.mailboxes.confirmDestroyTitle
+        }
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setBulkConfirm(null)} disabled={loading}>
+              {t.common.cancel}
+            </Button>
+            <Button
+              variant={bulkConfirm?.action === 'destroy' ? 'destructive' : 'default'}
+              onClick={() => {
+                if (!bulkConfirm) return;
+                void applyBulk(bulkConfirm.action);
+              }}
+              disabled={loading}
+            >
+              {bulkConfirm?.action === 'ban' ? t.mailboxes.ban : t.common.delete}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-2 text-sm text-[color:var(--admin-text)]">
+          <div>{format(t.common.selectedCount, { count: selectedCount })}</div>
+          <div className="text-xs text-[color:var(--admin-muted)]">
+            {bulkConfirm?.action === 'ban' ? t.mailboxes.confirmBanText : t.mailboxes.confirmDestroyText}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
