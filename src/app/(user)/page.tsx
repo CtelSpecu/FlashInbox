@@ -8,6 +8,8 @@ import { apiFetch } from '@/lib/client/api';
 import { setSessionToken } from '@/lib/client/session-store';
 import { validateUsername } from '@/lib/utils/username';
 import { useI18n } from '@/lib/i18n/context';
+import { locales } from '@/lib/i18n';
+import { useUserTheme } from '@/lib/theme/user-theme';
 
 type CreateMode = 'random' | 'manual';
 
@@ -38,7 +40,8 @@ interface UserDomainsResponse {
 
 export default function HomePage() {
   const router = useRouter();
-  const { t, format } = useI18n();
+  const { t, format, locale, setLocale } = useI18n();
+  const { theme, setTheme } = useUserTheme();
 
   const [mode, setMode] = useState<CreateMode>('random');
   const [username, setUsername] = useState('');
@@ -141,8 +144,37 @@ export default function HomePage() {
     router.push('/inbox');
   }
 
+  const themeIcon =
+    theme === 'light'
+      ? 'mdi:white-balance-sunny'
+      : theme === 'dark'
+        ? 'mdi:weather-night'
+        : 'mdi:theme-light-dark';
+
   return (
     <div className="relative min-h-[calc(100dvh-56px)] overflow-hidden">
+      <div className="absolute right-4 top-4 z-10 flex items-center gap-1 rounded-full border border-black/10 bg-white/70 px-1.5 py-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
+        <mdui-button-icon
+          onClick={() =>
+            setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'auto' : 'dark')
+          }
+          aria-label={t.theme.label}
+          title={t.theme.label}
+        >
+          <Icon icon={themeIcon} className="h-5 w-5" />
+        </mdui-button-icon>
+        <mdui-button-icon
+          onClick={() => {
+            const idx = locales.indexOf(locale);
+            setLocale(locales[(idx + 1) % locales.length]);
+          }}
+          aria-label={t.language.label}
+          title={t.language.label}
+        >
+          <Icon icon="mdi:translate" className="h-5 w-5" />
+        </mdui-button-icon>
+      </div>
+
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -top-24 left-1/2 h-[440px] w-[440px] -translate-x-1/2 rounded-full bg-indigo-500/10 blur-3xl dark:bg-indigo-400/10" />
         <div className="absolute -bottom-28 left-6 h-[380px] w-[380px] rounded-full bg-sky-500/10 blur-3xl dark:bg-sky-400/10" />
