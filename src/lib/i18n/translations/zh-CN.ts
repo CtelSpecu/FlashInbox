@@ -58,6 +58,8 @@ export const zhCN = {
     usernameInvalid: '用户名格式无效',
     createFailed: '创建邮箱失败',
     retryAfter: '请在 {seconds} 秒后重试',
+    turnstileNotConfigured: 'Turnstile 未配置',
+    turnstileRequired: '请完成人机验证',
   },
 
   // 收件箱
@@ -119,6 +121,8 @@ export const zhCN = {
     recoverButton: '恢复',
     recoverFailed: '恢复失败',
     keyExpiresNotice: '密钥过期时间: {time}',
+    turnstileNotConfigured: 'Turnstile 未配置',
+    turnstileRequired: '请完成人机验证',
   },
 
   // 错误消息

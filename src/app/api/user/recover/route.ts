@@ -3,12 +3,14 @@ import { getCloudflareEnv, getAppConfig } from '@/lib/env';
 import { createRepositories } from '@/lib/db';
 import { createMailboxService } from '@/lib/services/mailbox';
 import { createRateLimitService } from '@/lib/services/rate-limit';
+import { createTurnstileService } from '@/lib/services/turnstile';
 import { success, error, ErrorCodes, parseJsonBody, rateLimited } from '@/lib/utils/response';
 
 interface RecoverRequest {
   username: string;
   domain: string;
   key: string;
+  turnstileToken: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -38,7 +40,7 @@ export async function POST(request: NextRequest) {
 
   // 解析请求
   const body = await parseJsonBody<RecoverRequest>(request);
-  if (!body?.username || !body?.domain || !body?.key) {
+  if (!body?.username || !body?.domain || !body?.key || !body?.turnstileToken) {
     return error(ErrorCodes.INVALID_REQUEST, 'Username, domain and key are required', 400);
   }
 
@@ -46,6 +48,23 @@ export async function POST(request: NextRequest) {
   const ipAddress = request.headers.get('cf-connecting-ip') || undefined;
   const asn = request.headers.get('cf-ipcountry') || undefined;
   const userAgent = request.headers.get('user-agent') || undefined;
+
+  // Turnstile 验证
+  const turnstileService = createTurnstileService(env.TURNSTILE_SECRET_KEY);
+  const turnstileResult = await turnstileService.verify(body.turnstileToken, ipAddress);
+
+  if (!turnstileResult.success) {
+    await repos.auditLogs.create({
+      action: 'user.recover',
+      actorType: 'user',
+      success: false,
+      errorCode: ErrorCodes.TURNSTILE_FAILED,
+      ipAddress,
+      asn,
+      userAgent,
+    });
+    return error(ErrorCodes.TURNSTILE_FAILED, 'Turnstile verification failed', 400);
+  }
 
   try {
     const mailboxService = createMailboxService(env.DB, config, env.KEY_PEPPER);
@@ -122,4 +141,3 @@ export async function POST(request: NextRequest) {
     return error(ErrorCodes.INTERNAL_ERROR, 'Failed to recover access', 500);
   }
 }
-

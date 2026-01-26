@@ -4,6 +4,7 @@ import { createRepositories } from '@/lib/db';
 import { DomainRepository } from '@/lib/db/domain-repo';
 import { createMailboxService } from '@/lib/services/mailbox';
 import { createRateLimitService } from '@/lib/services/rate-limit';
+import { createTurnstileService } from '@/lib/services/turnstile';
 import { hashKey } from '@/lib/utils/crypto';
 import { success, error, ErrorCodes, parseJsonBody, rateLimited } from '@/lib/utils/response';
 
@@ -11,6 +12,7 @@ interface CreateMailboxRequest {
   username?: string;
   domainId?: number;
   mode?: 'random' | 'manual';
+  turnstileToken?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -42,10 +44,31 @@ export async function POST(request: NextRequest) {
   const body = await parseJsonBody<CreateMailboxRequest>(request);
   const mode = body?.mode || 'random';
 
+  if (!body?.turnstileToken) {
+    return error(ErrorCodes.INVALID_REQUEST, 'Turnstile token is required', 400);
+  }
+
   // 获取请求信息
   const ipAddress = request.headers.get('cf-connecting-ip') || undefined;
   const asn = request.headers.get('cf-ipcountry') || undefined;
   const userAgent = request.headers.get('user-agent') || undefined;
+
+  // Turnstile 验证
+  const turnstileService = createTurnstileService(env.TURNSTILE_SECRET_KEY);
+  const turnstileResult = await turnstileService.verify(body.turnstileToken, ipAddress);
+
+  if (!turnstileResult.success) {
+    await repos.auditLogs.create({
+      action: 'user.create',
+      actorType: 'user',
+      success: false,
+      errorCode: ErrorCodes.TURNSTILE_FAILED,
+      ipAddress,
+      asn,
+      userAgent,
+    });
+    return error(ErrorCodes.TURNSTILE_FAILED, 'Turnstile verification failed', 400);
+  }
 
   try {
     // DX: ensure default domain exists when client doesn't specify domainId

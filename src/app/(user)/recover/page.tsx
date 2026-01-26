@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@iconify/react';
 
+import { Turnstile } from '@/components/ui/Turnstile';
 import { apiFetch } from '@/lib/client/api';
 import { setSessionToken } from '@/lib/client/session-store';
 import { useI18n } from '@/lib/i18n/context';
@@ -32,10 +33,12 @@ export default function RecoverPage() {
 
   const [defaultDomain, setDefaultDomain] = useState('example.com');
   const [domains, setDomains] = useState<Array<{ id: number; name: string }>>([]);
+  const [siteKey, setSiteKey] = useState('');
   const [username, setUsername] = useState('');
   const [domain, setDomain] = useState('');
   const [key, setKey] = useState('');
   const [showKey, setShowKey] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -48,30 +51,43 @@ export default function RecoverPage() {
       .then(([cfg, dom]) => {
         const dd = cfg.data.defaultDomain || 'example.com';
         setDefaultDomain(dd);
+        setSiteKey(cfg.data.turnstileSiteKey || '');
         setDomain(dd);
         setDomains(dom.data.domains || []);
       })
       .catch(() => {
         setDefaultDomain('example.com');
         setDomain('example.com');
+        setSiteKey('');
       });
   }, []);
 
   const canSubmit = useMemo(() => {
-    return !loading && username.trim().length > 0 && key.trim().length > 0 && domain.trim().length > 0;
-  }, [loading, username, key, domain]);
+    return (
+      !loading &&
+      username.trim().length > 0 &&
+      key.trim().length > 0 &&
+      domain.trim().length > 0 &&
+      !!turnstileToken
+    );
+  }, [loading, username, key, domain, turnstileToken]);
 
   async function submit() {
     setLoading(true);
     setErrorText(null);
     setNotice(null);
     try {
+      if (!turnstileToken) {
+        setErrorText(t.recover.turnstileRequired);
+        return;
+      }
       const res = await apiFetch<RecoverResponse>('/api/user/recover', {
         method: 'POST',
         body: JSON.stringify({
           username: username.trim(),
           domain: domain.trim() || defaultDomain,
           key: key.trim(),
+          turnstileToken,
         }),
       });
 
@@ -79,6 +95,7 @@ export default function RecoverPage() {
       if (res.data.mailbox.keyExpiresAt) {
         setNotice(format(t.recover.keyExpiresNotice, { time: new Date(res.data.mailbox.keyExpiresAt).toLocaleString() }));
       }
+      setTurnstileToken(null);
       router.push('/inbox');
     } catch (e: unknown) {
       const err = e as { message?: unknown; retryAfter?: unknown };
@@ -129,6 +146,17 @@ export default function RecoverPage() {
             ))
           )}
         </mdui-select>
+
+        {siteKey ? (
+          <Turnstile
+            siteKey={siteKey}
+            onSuccess={(tok) => setTurnstileToken(tok)}
+            onError={() => setTurnstileToken(null)}
+            onExpired={() => setTurnstileToken(null)}
+          />
+        ) : (
+          <div className="text-xs opacity-70">{t.recover.turnstileNotConfigured}</div>
+        )}
 
         <mdui-text-field
           label={t.recover.keyLabel}

@@ -58,6 +58,8 @@ export const zhTW = {
     usernameInvalid: '使用者名稱格式無效',
     createFailed: '建立郵箱失敗',
     retryAfter: '請在 {seconds} 秒後重試',
+    turnstileNotConfigured: 'Turnstile 未配置',
+    turnstileRequired: '請完成人機驗證',
   },
 
   // 收件匣
@@ -119,6 +121,8 @@ export const zhTW = {
     recoverButton: '恢復',
     recoverFailed: '恢復失敗',
     keyExpiresNotice: '金鑰過期時間: {time}',
+    turnstileNotConfigured: 'Turnstile 未配置',
+    turnstileRequired: '請完成人機驗證',
   },
 
   // 錯誤訊息

@@ -51,6 +51,8 @@ export interface UserTranslations {
     usernameInvalid: string;
     createFailed: string;
     retryAfter: string; // uses {seconds}
+    turnstileNotConfigured: string;
+    turnstileRequired: string;
   };
 
   inbox: {
@@ -109,6 +111,8 @@ export interface UserTranslations {
     recoverButton: string;
     recoverFailed: string;
     keyExpiresNotice: string; // uses {time}
+    turnstileNotConfigured: string;
+    turnstileRequired: string;
   };
 
   errors: {

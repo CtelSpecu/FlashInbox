@@ -56,6 +56,8 @@ export const enUS = {
     usernameInvalid: 'Invalid username.',
     createFailed: 'Failed to create mailbox',
     retryAfter: 'Retry after {seconds}s.',
+    turnstileNotConfigured: 'Turnstile is not configured.',
+    turnstileRequired: 'Turnstile verification is required.',
   },
 
   inbox: {
@@ -114,6 +116,8 @@ export const enUS = {
     recoverButton: 'Recover',
     recoverFailed: 'Failed to recover access',
     keyExpiresNotice: 'Key expires at {time}.',
+    turnstileNotConfigured: 'Turnstile is not configured.',
+    turnstileRequired: 'Turnstile verification is required.',
   },
 
   errors: {

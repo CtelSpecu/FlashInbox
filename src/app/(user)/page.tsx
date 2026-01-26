@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Icon } from '@iconify/react';
 
 import { installMduiSelectViewportGuard } from '@/lib/client/mdui-select-guard';
+import { Turnstile } from '@/components/ui/Turnstile';
 import { apiFetch } from '@/lib/client/api';
 import { setSessionToken } from '@/lib/client/session-store';
 import { validateUsername } from '@/lib/utils/username';
@@ -50,6 +51,8 @@ export default function HomePage() {
   const [domainId, setDomainId] = useState<number | undefined>(undefined);
   const [defaultDomain, setDefaultDomain] = useState('example.com');
   const [domains, setDomains] = useState<Array<{ id: number; name: string }>>([]);
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [createdKey, setCreatedKey] = useState<string | null>(null);
@@ -71,6 +74,7 @@ export default function HomePage() {
         if (!active) return;
         const dd = cfg.data.defaultDomain || 'example.com';
         setDefaultDomain(dd);
+        setTurnstileSiteKey(cfg.data.turnstileSiteKey || '');
         setDomains(dom.data.domains || []);
         const found = dom.data.domains?.find((d) => d.name === dd);
         if (found) setDomainId(found.id);
@@ -81,6 +85,7 @@ export default function HomePage() {
         setDefaultDomain('example.com');
         setDomains([]);
         setDomainId(undefined);
+        setTurnstileSiteKey('');
       });
     return () => {
       active = false;
@@ -96,21 +101,27 @@ export default function HomePage() {
 
   const canSubmit = useMemo(() => {
     if (loading) return false;
+    if (!turnstileSiteKey || !turnstileToken) return false;
     if (mode === 'manual') return usernameValidation.valid;
     return true;
-  }, [loading, mode, usernameValidation.valid]);
+  }, [loading, mode, turnstileSiteKey, turnstileToken, usernameValidation.valid]);
 
   async function submit(createMode: CreateMode) {
     setMode(createMode);
     setErrorText(null);
     setLoading(true);
     try {
+      if (!turnstileToken) {
+        setErrorText(t.home.turnstileRequired);
+        return;
+      }
       const res = await apiFetch<CreateMailboxResponse>('/api/user/create', {
         method: 'POST',
         body: JSON.stringify({
           mode: createMode,
           username: createMode === 'manual' ? username.trim() : undefined,
           domainId,
+          turnstileToken,
         }),
       });
 
@@ -119,6 +130,7 @@ export default function HomePage() {
       setCreatedKeyExpiresAt(res.data.mailbox.keyExpiresAt);
       setCreatedToken(res.data.session.token);
       setConfirmSaved(false);
+      setTurnstileToken(null);
     } catch (e: unknown) {
       const err = e as { message?: unknown; retryAfter?: unknown };
       const msg = typeof err.message === 'string' ? err.message : t.home.createFailed;
@@ -319,13 +331,13 @@ export default function HomePage() {
                   <Icon icon="mdi:account" slot="icon" />
                 </mdui-text-field>
 
-                <mdui-select
-                  label={t.home.domain}
-                  value={String(domainId ?? '')}
-                  onChange={(e) =>
-                    setDomainId(Number((e.target as HTMLElement & { value: string }).value))
-                  }
-                >
+              <mdui-select
+                label={t.home.domain}
+                value={String(domainId ?? '')}
+                onChange={(e) =>
+                  setDomainId(Number((e.target as HTMLElement & { value: string }).value))
+                }
+              >
                   {domains.length === 0 ? (
                     <mdui-menu-item value={String(domainId ?? '')}>@{defaultDomain}</mdui-menu-item>
                   ) : (
@@ -336,6 +348,17 @@ export default function HomePage() {
                     ))
                   )}
                 </mdui-select>
+
+                {turnstileSiteKey ? (
+                  <Turnstile
+                    siteKey={turnstileSiteKey}
+                    onSuccess={(tok) => setTurnstileToken(tok)}
+                    onError={() => setTurnstileToken(null)}
+                    onExpired={() => setTurnstileToken(null)}
+                  />
+                ) : (
+                  <div className="text-xs opacity-70">{t.home.turnstileNotConfigured}</div>
+                )}
 
                 {!usernameValidation.valid ? (
                   <div className="text-sm text-red-600 dark:text-red-400">
@@ -350,7 +373,7 @@ export default function HomePage() {
                     variant="tonal"
                     className="flex-1"
                     loading={loading}
-                    disabled={loading}
+                    disabled={loading || !turnstileToken}
                     onClick={() => submit('random')}
                   >
                     <Icon icon="mdi:dice-multiple" slot="icon" />
@@ -441,7 +464,7 @@ export default function HomePage() {
         <mdui-button slot="action" variant="text" disabled={!confirmSaved} onClick={closeKeyDialog}>
           {t.common.close}
         </mdui-button>
-        <mdui-button slot="action" variant="tonal" className="fi-key-continue" disabled={!confirmSaved} onClick={continueToInbox}>
+        <mdui-button slot="action" variant="filled" className="fi-key-continue" disabled={!confirmSaved} onClick={continueToInbox}>
           {t.claim.continueButton}
         </mdui-button>
       </mdui-dialog>

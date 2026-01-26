@@ -181,7 +181,7 @@ export default function ClaimPage() {
           <mdui-button slot="action" variant="text" disabled={!confirmSaved} onClick={dismissKeyDialog}>
             {t.common.close}
           </mdui-button>
-          <mdui-button slot="action" variant="tonal" className="fi-key-continue" disabled={!confirmSaved} onClick={closeKeyDialog}>
+          <mdui-button slot="action" variant="filled" className="fi-key-continue" disabled={!confirmSaved} onClick={closeKeyDialog}>
             {t.claim.continueButton}
           </mdui-button>
         </mdui-dialog>
