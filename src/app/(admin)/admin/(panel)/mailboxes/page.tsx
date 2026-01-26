@@ -65,7 +65,7 @@ export default function AdminMailboxesPage() {
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [bulkConfirm, setBulkConfirm] = useState<{ action: 'ban' | 'destroy' } | null>(null);
+  const [bulkConfirm, setBulkConfirm] = useState<{ action: 'ban' | 'unban' | 'destroy' } | null>(null);
 
   const [domains, setDomains] = useState<DomainDto[]>([]);
   const [domain, setDomain] = useState('');
@@ -172,7 +172,7 @@ export default function AdminMailboxesPage() {
     setSelected(next ? new Set(items.map((m) => m.id)) : new Set());
   }
 
-  async function applyBulk(action: 'ban' | 'destroy') {
+  async function applyBulk(action: 'ban' | 'unban' | 'destroy') {
     if (selected.size === 0) return;
     setLoading(true);
     setErrorText(null);
@@ -265,7 +265,7 @@ export default function AdminMailboxesPage() {
                   <Select
                     value=""
                     onChange={(e) => {
-                      const v = (e.target.value as 'ban' | 'destroy' | '') || '';
+                      const v = (e.target.value as 'ban' | 'unban' | 'destroy' | '') || '';
                       (e.target as HTMLSelectElement).value = '';
                       if (!v) return;
                       setBulkConfirm({ action: v });
@@ -274,6 +274,7 @@ export default function AdminMailboxesPage() {
                   >
                     <option value="">{t.common.bulkActions}</option>
                     <option value="ban">{t.mailboxes.ban}</option>
+                    <option value="unban">{t.mailboxes.unban}</option>
                     <option value="destroy">{t.common.delete}</option>
                   </Select>
                 </>
@@ -382,7 +383,11 @@ export default function AdminMailboxesPage() {
         open={!!bulkConfirm}
         onOpenChange={(o) => setBulkConfirm(o ? bulkConfirm : null)}
         title={
-          bulkConfirm?.action === 'ban' ? t.mailboxes.confirmBanTitle : t.mailboxes.confirmDestroyTitle
+          bulkConfirm?.action === 'ban'
+            ? t.mailboxes.confirmBanTitle
+            : bulkConfirm?.action === 'unban'
+              ? t.mailboxes.confirmUnbanTitle
+              : t.mailboxes.confirmDestroyTitle
         }
         footer={
           <div className="flex justify-end gap-2">
@@ -397,7 +402,11 @@ export default function AdminMailboxesPage() {
               }}
               disabled={loading}
             >
-              {bulkConfirm?.action === 'ban' ? t.mailboxes.ban : t.common.delete}
+              {bulkConfirm?.action === 'ban'
+                ? t.mailboxes.ban
+                : bulkConfirm?.action === 'unban'
+                  ? t.mailboxes.unban
+                  : t.common.delete}
             </Button>
           </div>
         }
@@ -405,7 +414,11 @@ export default function AdminMailboxesPage() {
         <div className="space-y-2 text-sm text-[color:var(--admin-text)]">
           <div>{format(t.common.selectedCount, { count: selectedCount })}</div>
           <div className="text-xs text-[color:var(--admin-muted)]">
-            {bulkConfirm?.action === 'ban' ? t.mailboxes.confirmBanText : t.mailboxes.confirmDestroyText}
+            {bulkConfirm?.action === 'ban'
+              ? t.mailboxes.confirmBanText
+              : bulkConfirm?.action === 'unban'
+                ? t.mailboxes.confirmUnbanText
+                : t.mailboxes.confirmDestroyText}
           </div>
         </div>
       </Modal>

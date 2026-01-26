@@ -7,7 +7,7 @@ import { now } from '@/lib/db/repository';
 
 interface BulkRequest {
   ids: string[];
-  action: 'ban' | 'destroy';
+  action: 'ban' | 'unban' | 'destroy';
 }
 
 function uniqStrings(input: unknown): string[] {
@@ -36,7 +36,7 @@ export const POST = withAdminAuth(async (
     return error(ErrorCodes.INVALID_REQUEST, 'ids is required', 400);
   }
 
-  if (!body?.action || !['ban', 'destroy'].includes(body.action)) {
+  if (!body?.action || !['ban', 'unban', 'destroy'].includes(body.action)) {
     return error(ErrorCodes.INVALID_REQUEST, 'Invalid action', 400);
   }
 
@@ -45,11 +45,7 @@ export const POST = withAdminAuth(async (
   if (body.action === 'ban') {
     await env.DB.prepare(
       `UPDATE mailboxes
-       SET status = 'banned',
-           key_hash = NULL,
-           key_created_at = NULL,
-           key_expires_at = NULL,
-           claimed_at = NULL
+       SET status = 'banned'
        WHERE id IN (${placeholders}) AND status != 'destroyed'`
     )
       .bind(...ids)
@@ -61,6 +57,31 @@ export const POST = withAdminAuth(async (
 
     await repos.auditLogs.create({
       action: 'admin.mailboxes.bulk_ban',
+      actorType: 'admin',
+      actorId: context.session.id,
+      targetType: 'mailbox',
+      targetId: 'bulk',
+      success: true,
+      details: { ids },
+      ipAddress: request.headers.get('cf-connecting-ip') || undefined,
+      asn: request.headers.get('cf-ipcountry') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+    });
+
+    return success({ ids, action: body.action });
+  }
+
+  if (body.action === 'unban') {
+    await env.DB.prepare(
+      `UPDATE mailboxes
+       SET status = CASE WHEN key_hash IS NULL THEN 'unclaimed' ELSE 'claimed' END
+       WHERE id IN (${placeholders}) AND status = 'banned'`
+    )
+      .bind(...ids)
+      .run();
+
+    await repos.auditLogs.create({
+      action: 'admin.mailboxes.bulk_unban',
       actorType: 'admin',
       actorId: context.session.id,
       targetType: 'mailbox',
@@ -110,4 +131,3 @@ export const POST = withAdminAuth(async (
 
   return success({ ids, action: body.action });
 });
-

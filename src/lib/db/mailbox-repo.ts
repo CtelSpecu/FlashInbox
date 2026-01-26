@@ -125,19 +125,34 @@ export class MailboxRepository extends BaseRepository<Mailbox, MailboxRow> {
 
   /**
    * 禁用邮箱（banned）
-   * - 立即撤销 Key（清空 key_* 字段）
-   * - 保留 mailbox identity，不允许 claim/recover/renew
+   * - 保留 key_* 字段用于审计/可恢复（unban）
+   * - 不允许 claim/recover/renew
    */
   async ban(id: string): Promise<Mailbox | null> {
     const result = await this.db
       .prepare(
         `UPDATE mailboxes
          SET status = 'banned',
-             key_hash = NULL,
-             key_created_at = NULL,
-             key_expires_at = NULL,
-             claimed_at = NULL
          WHERE id = ? AND status != 'destroyed'
+         RETURNING *`
+      )
+      .bind(id)
+      .first<MailboxRow>();
+
+    return result ? this.mapRow(result) : null;
+  }
+
+  /**
+   * 解除禁用（unban）
+   * - 若存在 key_hash，则恢复为 claimed
+   * - 否则恢复为 unclaimed
+   */
+  async unban(id: string): Promise<Mailbox | null> {
+    const result = await this.db
+      .prepare(
+        `UPDATE mailboxes
+         SET status = CASE WHEN key_hash IS NULL THEN 'unclaimed' ELSE 'claimed' END
+         WHERE id = ? AND status = 'banned'
          RETURNING *`
       )
       .bind(id)

@@ -97,6 +97,7 @@ export default function AdminMailboxDetailPage() {
   const [errorText, setErrorText] = useState<string | null>(null);
   const [mailbox, setMailbox] = useState<MailboxDto | null>(null);
   const [banOpen, setBanOpen] = useState(false);
+  const [unbanOpen, setUnbanOpen] = useState(false);
   const [destroyOpen, setDestroyOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -220,6 +221,30 @@ export default function AdminMailboxDetailPage() {
     }
   }
 
+  async function unbanMailbox() {
+    if (!mailboxId) return;
+    setActionLoading(true);
+    setErrorText(null);
+    try {
+      await adminApiFetch<SuccessResponse<{ mailbox: { id: string; status: MailboxStatus } }>>(
+        `/api/admin/mailboxes/${mailboxId}`,
+        { method: 'PATCH', body: JSON.stringify({ status: 'unbanned' }) }
+      );
+      setUnbanOpen(false);
+      await loadMailbox();
+    } catch (e) {
+      const err = e as AdminApiError;
+      if (err.status === 401) {
+        clearAdminSession();
+        window.location.href = withAdminTracking('/admin/login');
+        return;
+      }
+      setErrorText(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   async function destroyMailbox() {
     if (!mailboxId) return;
     setActionLoading(true);
@@ -252,6 +277,7 @@ export default function AdminMailboxDetailPage() {
 
   const title = mailbox?.email || t.mailboxes.title;
   const canBan = mailbox?.status !== 'banned' && mailbox?.status !== 'destroyed';
+  const canUnban = mailbox?.status === 'banned';
   const canDestroy = mailbox?.status !== 'destroyed';
 
   return (
@@ -272,6 +298,12 @@ export default function AdminMailboxDetailPage() {
                 <Button variant="outline" size="sm" onClick={() => setBanOpen(true)} disabled={actionLoading}>
                   <Icon icon="lucide:ban" className="h-4 w-4" />
                   {t.mailboxes.ban}
+                </Button>
+              ) : null}
+              {canUnban ? (
+                <Button variant="outline" size="sm" onClick={() => setUnbanOpen(true)} disabled={actionLoading}>
+                  <Icon icon="lucide:shield-check" className="h-4 w-4" />
+                  {t.mailboxes.unban}
                 </Button>
               ) : null}
               {canDestroy ? (
@@ -489,6 +521,24 @@ export default function AdminMailboxDetailPage() {
         }
       >
         <div className="text-sm text-[color:var(--admin-muted)]">{t.mailboxes.confirmBanText}</div>
+      </Modal>
+
+      <Modal
+        open={unbanOpen}
+        onOpenChange={(o) => setUnbanOpen(o)}
+        title={t.mailboxes.confirmUnbanTitle}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setUnbanOpen(false)} disabled={actionLoading}>
+              {t.common.cancel}
+            </Button>
+            <Button onClick={unbanMailbox} disabled={actionLoading}>
+              {t.common.confirm}
+            </Button>
+          </div>
+        }
+      >
+        <div className="text-sm text-[color:var(--admin-muted)]">{t.mailboxes.confirmUnbanText}</div>
       </Modal>
 
       <Modal

@@ -93,7 +93,8 @@ export const GET = withAdminAuth(async (
       status: row.status,
       creationType: row.creation_type,
       keyExpiresAt: row.key_expires_at,
-      keyHashPrefix: row.status === 'claimed' && row.key_hash ? row.key_hash.slice(0, 12) : null,
+      keyHashPrefix:
+        (row.status === 'claimed' || row.status === 'banned') && row.key_hash ? row.key_hash.slice(0, 12) : null,
       createdAt: row.created_at,
       claimedAt: row.claimed_at,
       destroyedAt: row.destroyed_at,
@@ -120,25 +121,46 @@ export const PATCH = withAdminAuth(async (
 
   const body = await parseJsonBody<{ status?: string }>(request);
   const nextStatus = body?.status;
-  if (nextStatus !== 'banned') {
+  if (nextStatus !== 'banned' && nextStatus !== 'unbanned') {
     return error(ErrorCodes.INVALID_REQUEST, 'Invalid status', 400);
   }
 
-  const mailbox = await repos.mailboxes.ban(mailboxId);
+  if (nextStatus === 'banned') {
+    const mailbox = await repos.mailboxes.ban(mailboxId);
+    if (!mailbox) {
+      return error(ErrorCodes.MAILBOX_NOT_FOUND, 'Mailbox not found', 404);
+    }
+
+    const sessionsCleared = await repos.sessions.deleteByMailboxId(mailboxId);
+
+    await repos.auditLogs.create({
+      action: 'admin.mailbox_banned',
+      actorType: 'admin',
+      actorId: context.session.id,
+      targetType: 'mailbox',
+      targetId: mailboxId,
+      success: true,
+      details: { sessionsCleared },
+      ipAddress: request.headers.get('cf-connecting-ip') || undefined,
+      asn: request.headers.get('cf-ipcountry') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+    });
+
+    return success({ mailbox: { id: mailbox.id, status: mailbox.status } });
+  }
+
+  const mailbox = await repos.mailboxes.unban(mailboxId);
   if (!mailbox) {
     return error(ErrorCodes.MAILBOX_NOT_FOUND, 'Mailbox not found', 404);
   }
 
-  const sessionsCleared = await repos.sessions.deleteByMailboxId(mailboxId);
-
   await repos.auditLogs.create({
-    action: 'admin.mailbox_banned',
+    action: 'admin.mailbox_unbanned',
     actorType: 'admin',
     actorId: context.session.id,
     targetType: 'mailbox',
     targetId: mailboxId,
     success: true,
-    details: { sessionsCleared },
     ipAddress: request.headers.get('cf-connecting-ip') || undefined,
     asn: request.headers.get('cf-ipcountry') || undefined,
     userAgent: request.headers.get('user-agent') || undefined,
