@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Icon } from '@iconify/react';
 
 import { Turnstile } from '@/components/ui/Turnstile';
-import { apiFetch } from '@/lib/client/api';
+import { apiFetch, type ApiError } from '@/lib/client/api';
+import { getUserErrorMessage } from '@/lib/client/error-i18n';
 import { setSessionToken } from '@/lib/client/session-store';
 import { useI18n } from '@/lib/i18n/context';
 
@@ -82,8 +83,8 @@ export default function ClaimPage() {
       setConfirmSaved(false);
       setSessionToken(res.data.session.token);
     } catch (e: unknown) {
-      const err = e as { message?: unknown; retryAfter?: unknown };
-      const msg = typeof err.message === 'string' ? err.message : t.claim.claimFailed;
+      const err = e as ApiError;
+      const msg = getUserErrorMessage(err, t) ?? t.claim.claimFailed;
       const retryAfterMs =
         typeof err.retryAfter === 'number'
           ? ` ${format(t.home.retryAfter, { seconds: Math.ceil(err.retryAfter / 1000) })}`
@@ -102,7 +103,6 @@ export default function ClaimPage() {
   }
 
   function dismissKeyDialog() {
-    if (!confirmSaved) return;
     setKey(null); // one-time display: discard after close
     setKeyExpiresAt(null);
     setTurnstileToken(null);
@@ -154,13 +154,13 @@ export default function ClaimPage() {
 
         {errorText && <div className="text-sm text-red-600 dark:text-red-400">{errorText}</div>}
 
-        <mdui-button variant="filled" full-width loading={loading} disabled={!!key || !normalizedEmail || !turnstileToken} onClick={submit}>
+        <mdui-button variant="filled" className="fi-btn-filled" full-width loading={loading} disabled={!!key || !normalizedEmail || !turnstileToken} onClick={submit}>
           <Icon icon="mdi:check-circle" slot="icon" />
           {t.claim.claimButton}
         </mdui-button>
 
         <div className="flex justify-center">
-          <mdui-button variant="text" onClick={() => router.push('/')}>
+          <mdui-button variant="tonal" className="fi-btn-tonal" onClick={() => router.push('/')}>
             {t.common.back}
           </mdui-button>
         </div>
@@ -184,10 +184,10 @@ export default function ClaimPage() {
             <Icon icon={copied ? 'mdi:check' : 'mdi:content-copy'} slot="icon" />
             {copied ? t.common.copied : t.common.copy}
           </mdui-button>
-          <mdui-button slot="action" variant="text" disabled={!confirmSaved} onClick={dismissKeyDialog}>
+          <mdui-button slot="action" variant="tonal" className="fi-btn-tonal" onClick={dismissKeyDialog}>
             {t.common.close}
           </mdui-button>
-          <mdui-button slot="action" variant="filled" className="fi-key-continue" disabled={!confirmSaved} onClick={closeKeyDialog}>
+          <mdui-button slot="action" variant="filled" className="fi-btn-filled" disabled={!confirmSaved} onClick={closeKeyDialog}>
             {t.claim.continueButton}
           </mdui-button>
         </mdui-dialog>

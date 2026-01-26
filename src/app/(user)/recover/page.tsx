@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Icon } from '@iconify/react';
 
 import { Turnstile } from '@/components/ui/Turnstile';
-import { apiFetch } from '@/lib/client/api';
+import { apiFetch, type ApiError } from '@/lib/client/api';
+import { getUserErrorMessage } from '@/lib/client/error-i18n';
 import { setSessionToken } from '@/lib/client/session-store';
 import { useI18n } from '@/lib/i18n/context';
 
@@ -97,8 +98,8 @@ export default function RecoverPage() {
       }
       router.push('/inbox');
     } catch (e: unknown) {
-      const err = e as { message?: unknown; retryAfter?: unknown };
-      const msg = typeof err.message === 'string' ? err.message : t.recover.recoverFailed;
+      const err = e as ApiError;
+      const msg = getUserErrorMessage(err, t) ?? t.recover.recoverFailed;
       const retryAfterMs =
         typeof err.retryAfter === 'number'
           ? ` ${format(t.home.retryAfter, { seconds: Math.ceil(err.retryAfter / 1000) })}`
@@ -175,13 +176,13 @@ export default function RecoverPage() {
         {notice && <div className="text-sm opacity-80">{notice}</div>}
         {errorText && <div className="text-sm text-red-600 dark:text-red-400">{errorText}</div>}
 
-        <mdui-button variant="filled" full-width loading={loading} disabled={!canSubmit} onClick={submit}>
+        <mdui-button variant="filled" className="fi-btn-filled" full-width loading={loading} disabled={!canSubmit} onClick={submit}>
           <Icon icon="mdi:login" slot="icon" />
           {t.recover.recoverButton}
         </mdui-button>
 
         <div className="flex justify-center">
-          <mdui-button variant="text" onClick={() => router.push('/')}>
+          <mdui-button variant="tonal" className="fi-btn-tonal" onClick={() => router.push('/')}>
             {t.common.back}
           </mdui-button>
         </div>

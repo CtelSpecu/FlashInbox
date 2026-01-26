@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@iconify/react';
 
-import { apiFetch } from '@/lib/client/api';
+import { apiFetch, type ApiError } from '@/lib/client/api';
+import { getUserErrorMessage } from '@/lib/client/error-i18n';
 import { installMduiSelectViewportGuard } from '@/lib/client/mdui-select-guard';
 import { clearSessionToken } from '@/lib/client/session-store';
 import { useI18n } from '@/lib/i18n/context';
@@ -179,13 +180,13 @@ export default function InboxPage() {
         setSelectedId(res.data.messages[0].id);
       }
     } catch (e: unknown) {
-      const err = e as { status?: unknown; message?: unknown };
+      const err = e as ApiError;
       if (err.status === 401) {
         clearSessionToken();
         router.push('/');
         return;
       }
-      setListError(typeof err.message === 'string' ? err.message : t.inbox.loadFailed);
+      setListError(getUserErrorMessage(err, t) ?? t.inbox.loadFailed);
     } finally {
       setLoadingList(false);
     }
@@ -360,7 +361,8 @@ export default function InboxPage() {
               sidebarCollapsed ? 'md:w-14' : 'md:w-72',
             ].join(' ')}>
             <mdui-button-icon
-              className="hidden md:flex w-full"
+              variant="tonal"
+              className="hidden md:flex w-full fi-btn-tonal"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               title={sidebarCollapsed ? 'Expand' : 'Collapse'}
             >
@@ -403,10 +405,20 @@ export default function InboxPage() {
 
             {sidebarCollapsed ? (
               <div className="fi-glass hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 p-2 dark:border-white/10">
-                <mdui-button-icon onClick={() => setUnreadOnly(false)} title={t.inbox.title} className={unreadOnly ? '' : 'text-[color:var(--mdui-color-primary)]'}>
+                <mdui-button-icon
+                  variant={unreadOnly ? 'standard' : 'filled'}
+                  className={unreadOnly ? 'fi-btn-elevated' : 'fi-btn-filled'}
+                  onClick={() => setUnreadOnly(false)}
+                  title={t.inbox.title}
+                >
                   <Icon icon="mdi:inbox" className="h-5 w-5" />
                 </mdui-button-icon>
-                <mdui-button-icon onClick={() => setUnreadOnly(true)} title={t.inbox.unreadOnly} className={unreadOnly ? 'text-[color:var(--mdui-color-primary)]' : ''}>
+                <mdui-button-icon
+                  variant={unreadOnly ? 'filled' : 'standard'}
+                  className={unreadOnly ? 'fi-btn-filled' : 'fi-btn-elevated'}
+                  onClick={() => setUnreadOnly(true)}
+                  title={t.inbox.unreadOnly}
+                >
                   <Icon icon="mdi:email" className="h-5 w-5" />
                 </mdui-button-icon>
               </div>
@@ -414,7 +426,8 @@ export default function InboxPage() {
             <div className={['fi-glass rounded-xl border border-black/10 p-2 dark:border-white/10', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="grid gap-1">
                 <mdui-button
-                  variant={unreadOnly ? 'text' : 'tonal'}
+                  variant={unreadOnly ? 'elevated' : 'filled'}
+                  className={unreadOnly ? 'fi-btn-elevated' : 'fi-btn-filled'}
                   full-width
                   onClick={() => setUnreadOnly(false)}
                 >
@@ -422,7 +435,8 @@ export default function InboxPage() {
                   {t.inbox.title}
                 </mdui-button>
                 <mdui-button
-                  variant={unreadOnly ? 'tonal' : 'text'}
+                  variant={unreadOnly ? 'filled' : 'elevated'}
+                  className={unreadOnly ? 'fi-btn-filled' : 'fi-btn-elevated'}
                   full-width
                   onClick={() => setUnreadOnly(true)}
                 >
@@ -434,24 +448,24 @@ export default function InboxPage() {
 
             {sidebarCollapsed ? (
               <div className="fi-glass hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 p-2 dark:border-white/10">
-                <mdui-button-icon onClick={() => loadList()} title={t.inbox.refreshButton}>
+                <mdui-button-icon variant="tonal" className="fi-btn-tonal" onClick={() => loadList()} title={t.inbox.refreshButton}>
                   <Icon icon="mdi:refresh" className="h-5 w-5" />
                 </mdui-button-icon>
-                <mdui-fab variant="primary" size="small" onClick={renewKey} title={t.inbox.renewButton}>
-                  <Icon icon="mdi:calendar-refresh" slot="icon" className="h-5 w-5" />
-                </mdui-fab>
+                <mdui-button-icon variant="tonal" className="fi-btn-tonal" onClick={renewKey} title={t.inbox.renewButton}>
+                  <Icon icon="mdi:calendar-refresh" className="h-5 w-5" />
+                </mdui-button-icon>
               </div>
             ) : null}
             <div className={['fi-glass rounded-xl border border-black/10 p-3 dark:border-white/10 space-y-2', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="text-xs font-medium opacity-80">{t.inbox.renewButton}</div>
               <div className="flex items-center gap-2">
-                <mdui-button variant="tonal" className="flex-1" onClick={() => loadList()}>
+                <mdui-button variant="tonal" className="flex-1 fi-btn-tonal" onClick={() => loadList()}>
                   <Icon icon="mdi:refresh" slot="icon" />
                   {t.inbox.refreshButton}
                 </mdui-button>
                 <mdui-button
-                  variant="filled"
-                  className="flex-1"
+                  variant="tonal"
+                  className="flex-1 fi-btn-tonal"
                   loading={renewLoading}
                   disabled={renewLoading}
                   onClick={renewKey}
@@ -464,32 +478,53 @@ export default function InboxPage() {
 
             {sidebarCollapsed ? (
               <div className="fi-glass hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 p-2 dark:border-white/10">
-                <mdui-button-icon onClick={() => setDetailView('html')} title={t.inbox.htmlView} className={detailView === 'html' ? 'text-[color:var(--mdui-color-primary)]' : ''}>
+                <mdui-button-icon
+                  variant={detailView === 'html' ? 'filled' : 'standard'}
+                  className={detailView === 'html' ? 'fi-btn-filled' : 'fi-btn-elevated'}
+                  onClick={() => setDetailView('html')}
+                  title={t.inbox.htmlView}
+                >
                   <Icon icon="mdi:language-html5" className="h-5 w-5" />
                 </mdui-button-icon>
-                <mdui-button-icon onClick={() => setDetailView('text')} title={t.inbox.textView} className={detailView === 'text' ? 'text-[color:var(--mdui-color-primary)]' : ''}>
+                <mdui-button-icon
+                  variant={detailView === 'text' ? 'filled' : 'standard'}
+                  className={detailView === 'text' ? 'fi-btn-filled' : 'fi-btn-elevated'}
+                  onClick={() => setDetailView('text')}
+                  title={t.inbox.textView}
+                >
                   <Icon icon="mdi:text" className="h-5 w-5" />
                 </mdui-button-icon>
               </div>
             ) : null}
             <div className={['fi-glass rounded-xl border border-black/10 p-3 dark:border-white/10 space-y-3', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="text-xs font-medium opacity-80">{t.inbox.htmlView} / {t.inbox.textView}</div>
-              <mdui-segmented-button-group
-                selects="single"
-                value={detailView}
-                onChange={(e) =>
-                  setDetailView(((e.target as HTMLElement & { value: string }).value as 'html' | 'text') || 'html')
-                }
-              >
-                <mdui-segmented-button value="html">{t.inbox.htmlView}</mdui-segmented-button>
-                <mdui-segmented-button value="text">{t.inbox.textView}</mdui-segmented-button>
-              </mdui-segmented-button-group>
+              <div className="grid gap-1">
+                <mdui-button
+                  full-width
+                  variant={detailView === 'html' ? 'filled' : 'elevated'}
+                  className={detailView === 'html' ? 'fi-btn-filled' : 'fi-btn-elevated'}
+                  onClick={() => setDetailView('html')}
+                >
+                  <Icon icon="mdi:language-html5" slot="icon" />
+                  {t.inbox.htmlView}
+                </mdui-button>
+                <mdui-button
+                  full-width
+                  variant={detailView === 'text' ? 'filled' : 'elevated'}
+                  className={detailView === 'text' ? 'fi-btn-filled' : 'fi-btn-elevated'}
+                  onClick={() => setDetailView('text')}
+                >
+                  <Icon icon="mdi:text" slot="icon" />
+                  {t.inbox.textView}
+                </mdui-button>
+              </div>
 
               <div className="space-y-1">
                 <div className="text-xs opacity-70">{t.inbox.loadExternal}</div>
                 <mdui-button
                   full-width
-                  variant={loadExternal ? 'tonal' : 'outlined'}
+                  variant={loadExternal ? 'filled' : 'tonal'}
+                  className={loadExternal ? 'fi-btn-filled' : 'fi-btn-tonal'}
                   onClick={() => setLoadExternal((v) => !v)}
                 >
                   <Icon icon={loadExternal ? 'mdi:image-outline' : 'mdi:image-off-outline'} slot="icon" />
@@ -548,7 +583,7 @@ export default function InboxPage() {
 
             {sidebarCollapsed ? (
               <div className="hidden md:flex justify-center">
-                <mdui-button-icon onClick={() => { clearSessionToken(); router.push('/'); }} title={t.inbox.exitButton}>
+                <mdui-button-icon variant="tonal" className="fi-btn-tonal" onClick={() => { clearSessionToken(); router.push('/'); }} title={t.inbox.exitButton}>
                   <Icon icon="mdi:logout" className="h-5 w-5" />
                 </mdui-button-icon>
               </div>
@@ -556,7 +591,7 @@ export default function InboxPage() {
             <mdui-button
               variant="tonal"
               full-width
-              className={sidebarCollapsed ? 'hidden md:hidden' : ''}
+              className={['fi-btn-tonal', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}
               onClick={() => {
                 clearSessionToken();
                 router.push('/');
@@ -583,7 +618,7 @@ export default function InboxPage() {
                 >
                   <Icon icon="mdi:magnify" slot="icon" />
                 </mdui-text-field>
-                <mdui-button variant="text" className="min-w-0 px-2" onClick={() => loadList()} aria-label={t.inbox.refreshButton} title={t.inbox.refreshButton}>
+                <mdui-button variant="tonal" className="min-w-0 px-2 fi-btn-tonal" onClick={() => loadList()} aria-label={t.inbox.refreshButton} title={t.inbox.refreshButton}>
                   <Icon icon="mdi:refresh" slot="icon" />
                   <span className="sr-only">{t.inbox.refreshButton}</span>
                 </mdui-button>
@@ -641,11 +676,11 @@ export default function InboxPage() {
               </div>
 
               <div className="flex items-center justify-between">
-                <mdui-button variant="text" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                <mdui-button variant="tonal" className="fi-btn-tonal" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
                   {t.common.prev}
                 </mdui-button>
                 <div className="text-xs opacity-70">{format(t.common.page, { page })}</div>
-                <mdui-button variant="text" disabled={!hasMore} onClick={() => setPage((p) => p + 1)}>
+                <mdui-button variant="tonal" className="fi-btn-tonal" disabled={!hasMore} onClick={() => setPage((p) => p + 1)}>
                   {t.common.next}
                 </mdui-button>
               </div>
