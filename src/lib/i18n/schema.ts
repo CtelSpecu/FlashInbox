@@ -144,4 +144,14 @@ export interface UserTranslations {
     dark: string;
     system: string;
   };
+
+  footer: {
+    copyright: string; // uses {year}
+    brandName: string;
+    officialSiteLabel: string;
+    officialSiteAria: string;
+    poweredByPrefix: string;
+    poweredBySuffix: string;
+    cloudflareAria: string;
+  };
 }
