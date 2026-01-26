@@ -133,23 +133,72 @@ body {
   background: rgba(2, 6, 23, 0.72);
 }
 
-/* MDUI button: "key shown once" continue CTA (MD3 light container + disabled gray). */
+/* FlashInbox: user-side MD3 button palette (manual). */
+.fi-btn-filled::part(button),
 .fi-key-continue::part(button) {
-  background-color: rgb(216, 207, 232);
+  background-color: #6750a4;
 }
+.fi-btn-filled:hover::part(button),
 .fi-key-continue:hover::part(button) {
-  background-color: rgb(206, 196, 224);
+  background-color: #5e4797;
 }
+.fi-btn-filled::part(label),
+.fi-btn-filled::part(icon),
+.fi-btn-filled::part(end-icon),
 .fi-key-continue::part(label),
 .fi-key-continue::part(icon),
 .fi-key-continue::part(end-icon) {
-  color: rgb(24, 24, 27);
+  color: #ffffff;
 }
+.fi-btn-filled[disabled]::part(button),
 .fi-key-continue[disabled]::part(button) {
-  background-color: rgb(229, 231, 235);
+  background-color: #e5e7eb;
 }
+.fi-btn-filled[disabled]::part(label),
+.fi-btn-filled[disabled]::part(icon),
+.fi-btn-filled[disabled]::part(end-icon),
 .fi-key-continue[disabled]::part(label),
 .fi-key-continue[disabled]::part(icon),
 .fi-key-continue[disabled]::part(end-icon) {
-  color: rgb(107, 114, 128);
+  color: #6b7280;
+}
+
+.fi-btn-tonal::part(button) {
+  background-color: #e8def8;
+}
+.fi-btn-tonal:hover::part(button) {
+  background-color: #ded3f2;
+}
+.fi-btn-tonal::part(label),
+.fi-btn-tonal::part(icon),
+.fi-btn-tonal::part(end-icon) {
+  color: #1e192b;
+}
+.fi-btn-tonal[disabled]::part(button) {
+  background-color: #e5e7eb;
+}
+.fi-btn-tonal[disabled]::part(label),
+.fi-btn-tonal[disabled]::part(icon),
+.fi-btn-tonal[disabled]::part(end-icon) {
+  color: #6b7280;
+}
+
+.fi-btn-elevated::part(button) {
+  background-color: #f7f2fa;
+}
+.fi-btn-elevated:hover::part(button) {
+  background-color: #efe9f3;
+}
+.fi-btn-elevated::part(label),
+.fi-btn-elevated::part(icon),
+.fi-btn-elevated::part(end-icon) {
+  color: #6750a4;
+}
+.fi-btn-elevated[disabled]::part(button) {
+  background-color: #e5e7eb;
+}
+.fi-btn-elevated[disabled]::part(label),
+.fi-btn-elevated[disabled]::part(icon),
+.fi-btn-elevated[disabled]::part(end-icon) {
+  color: #6b7280;
 }
