@@ -73,6 +73,8 @@ export interface UserTranslations {
     htmlView: string;
     textView: string;
     loadExternal: string;
+    externalBlocked: string;
+    externalAllowed: string;
     renewed: string;
     renewedExpires: string; // uses {time}
     renewFailed: string;

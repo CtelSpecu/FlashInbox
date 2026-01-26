@@ -99,6 +99,12 @@ export default function ClaimPage() {
     router.push('/inbox');
   }
 
+  function dismissKeyDialog() {
+    if (!confirmSaved) return;
+    setKey(null); // one-time display: discard after close
+    setKeyExpiresAt(null);
+  }
+
   async function copyKey() {
     if (!key) return;
     try {
@@ -169,19 +175,13 @@ export default function ClaimPage() {
               {t.claim.keySavedConfirm}
             </mdui-checkbox>
           </div>
-          <mdui-button slot="action" variant="text" onClick={() => router.push('/recover')}>
-            {t.claim.recoverButton}
-          </mdui-button>
           <mdui-button slot="action" variant="text" onClick={copyKey}>
             {t.common.copy}
           </mdui-button>
-          <mdui-button
-            slot="action"
-            variant="filled"
-            className="fi-mdui-blue"
-            disabled={!confirmSaved}
-            onClick={closeKeyDialog}
-          >
+          <mdui-button slot="action" variant="text" disabled={!confirmSaved} onClick={dismissKeyDialog}>
+            {t.common.close}
+          </mdui-button>
+          <mdui-button slot="action" variant="tonal" className="fi-key-continue" disabled={!confirmSaved} onClick={closeKeyDialog}>
             {t.claim.continueButton}
           </mdui-button>
         </mdui-dialog>

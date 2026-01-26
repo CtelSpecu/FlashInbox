@@ -78,6 +78,8 @@ export const enUS = {
     htmlView: 'HTML',
     textView: 'Text',
     loadExternal: 'Load external',
+    externalBlocked: 'External blocked',
+    externalAllowed: 'External enabled',
     renewed: 'Renewed.',
     renewedExpires: 'Renewed. Expires at {time}.',
     renewFailed: 'Failed to renew.',

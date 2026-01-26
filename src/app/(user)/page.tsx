@@ -1,15 +1,17 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@iconify/react';
 
+import { installMduiSelectViewportGuard } from '@/lib/client/mdui-select-guard';
 import { apiFetch } from '@/lib/client/api';
 import { setSessionToken } from '@/lib/client/session-store';
 import { validateUsername } from '@/lib/utils/username';
 import { useI18n } from '@/lib/i18n/context';
-import { locales } from '@/lib/i18n';
+import { type Locale, locales } from '@/lib/i18n';
 import { useUserTheme } from '@/lib/theme/user-theme';
+import type { ThemeMode } from '@/lib/theme/types';
 
 type CreateMode = 'random' | 'manual';
 
@@ -56,6 +58,8 @@ export default function HomePage() {
   const [createdToken, setCreatedToken] = useState<string | null>(null);
   const [confirmSaved, setConfirmSaved] = useState(false);
   const [copiedField, setCopiedField] = useState<'email' | 'key' | null>(null);
+  const languageSelectRef = useRef<HTMLElement | null>(null);
+  const themeSelectRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -139,7 +143,16 @@ export default function HomePage() {
   }
 
   function closeKeyDialog() {
-    if (!createdToken) return;
+    if (!confirmSaved || !createdToken) return;
+    setSessionToken(createdToken);
+    setCreatedKey(null);
+    setCreatedEmail(null);
+    setCreatedKeyExpiresAt(null);
+    setConfirmSaved(false);
+  }
+
+  function continueToInbox() {
+    if (!confirmSaved || !createdToken) return;
     setSessionToken(createdToken);
     router.push('/inbox');
   }
@@ -151,28 +164,46 @@ export default function HomePage() {
         ? 'mdi:weather-night'
         : 'mdi:theme-light-dark';
 
+  useEffect(() => {
+    const cleanupLang = installMduiSelectViewportGuard(languageSelectRef.current, { preferTop: false });
+    const cleanupTheme = installMduiSelectViewportGuard(themeSelectRef.current, { preferTop: false });
+    return () => {
+      cleanupLang();
+      cleanupTheme();
+    };
+  }, []);
+
   return (
     <div className="relative min-h-[calc(100dvh-56px)] overflow-hidden">
-      <div className="absolute right-4 top-4 z-10 flex items-center gap-1 rounded-full border border-black/10 bg-white/70 px-1.5 py-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/80">
-        <mdui-button-icon
-          onClick={() =>
-            setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'auto' : 'dark')
-          }
-          aria-label={t.theme.label}
-          title={t.theme.label}
-        >
-          <Icon icon={themeIcon} className="h-5 w-5" />
-        </mdui-button-icon>
-        <mdui-button-icon
-          onClick={() => {
-            const idx = locales.indexOf(locale);
-            setLocale(locales[(idx + 1) % locales.length]);
-          }}
+      <div className="fi-glass absolute right-4 top-4 z-10 flex items-center gap-1 rounded-full border border-black/10 px-1.5 py-1 shadow-sm dark:border-white/10">
+        <mdui-select
+          ref={languageSelectRef}
+          className="w-[132px]"
+          value={locale}
           aria-label={t.language.label}
           title={t.language.label}
+          onChange={(e) => setLocale((e.target as HTMLElement & { value: string }).value as Locale)}
         >
-          <Icon icon="mdi:translate" className="h-5 w-5" />
-        </mdui-button-icon>
+          <Icon icon="mdi:translate" slot="icon" />
+          {locales.map((loc) => (
+            <mdui-menu-item key={loc} value={loc}>
+              {loc === 'en-US' ? t.language.enUS : loc === 'zh-CN' ? t.language.zhCN : t.language.zhTW}
+            </mdui-menu-item>
+          ))}
+        </mdui-select>
+        <mdui-select
+          ref={themeSelectRef}
+          className="w-[132px]"
+          value={theme}
+          aria-label={t.theme.label}
+          title={t.theme.label}
+          onChange={(e) => setTheme((e.target as HTMLElement & { value: string }).value as ThemeMode)}
+        >
+          <Icon icon={themeIcon} slot="icon" />
+          <mdui-menu-item value="auto">{t.theme.system}</mdui-menu-item>
+          <mdui-menu-item value="dark">{t.theme.dark}</mdui-menu-item>
+          <mdui-menu-item value="light">{t.theme.light}</mdui-menu-item>
+        </mdui-select>
       </div>
 
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
@@ -185,7 +216,7 @@ export default function HomePage() {
         <div className="grid gap-10 md:grid-cols-[1.15fr_0.85fr] md:items-start">
           <section className="space-y-8">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-3 rounded-2xl border border-black/5 bg-white/70 px-3 py-2 shadow-sm dark:border-white/10 dark:bg-slate-950/80">
+              <div className="fi-glass inline-flex items-center gap-3 rounded-2xl border border-black/5 px-3 py-2 shadow-sm dark:border-white/10">
                 <img
                   src="/FlashInbox_Animated.svg"
                   alt="FlashInbox"
@@ -225,7 +256,7 @@ export default function HomePage() {
               </li>
             </ul>
 
-            <div className="rounded-2xl border border-black/5 bg-white/70 p-4 shadow-sm dark:border-white/10 dark:bg-slate-950/80">
+            <div className="fi-glass rounded-2xl border border-black/5 p-4 shadow-sm dark:border-white/10">
               <div className="text-sm font-semibold">{t.home.howItWorks}</div>
               <ol className="mt-3 space-y-2 text-sm">
                 <li className="flex items-start gap-3">
@@ -251,7 +282,7 @@ export default function HomePage() {
           </section>
 
           <section className="md:sticky md:top-20">
-            <div className="rounded-2xl border border-black/10 bg-white/80 p-5 shadow-sm dark:border-white/10 dark:bg-slate-950/70">
+            <div className="fi-glass rounded-2xl border border-black/10 p-5 shadow-sm dark:border-white/10">
               <div className="mb-4">
                 <div className="text-sm font-semibold">{t.home.formTitle}</div>
                 <div className="mt-1 text-xs opacity-70">{t.home.formSubtitle}</div>
@@ -407,16 +438,10 @@ export default function HomePage() {
           </mdui-checkbox>
         </div>
 
-        <mdui-button slot="action" variant="text" onClick={() => router.push('/recover')}>
-          {t.claim.recoverButton}
+        <mdui-button slot="action" variant="text" disabled={!confirmSaved} onClick={closeKeyDialog}>
+          {t.common.close}
         </mdui-button>
-        <mdui-button
-          slot="action"
-          variant="filled"
-          className="fi-mdui-blue"
-          disabled={!confirmSaved}
-          onClick={closeKeyDialog}
-        >
+        <mdui-button slot="action" variant="tonal" className="fi-key-continue" disabled={!confirmSaved} onClick={continueToInbox}>
           {t.claim.continueButton}
         </mdui-button>
       </mdui-dialog>

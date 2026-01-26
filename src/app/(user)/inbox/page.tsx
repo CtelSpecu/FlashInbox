@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Icon } from '@iconify/react';
 
 import { apiFetch } from '@/lib/client/api';
+import { installMduiSelectViewportGuard } from '@/lib/client/mdui-select-guard';
 import { clearSessionToken } from '@/lib/client/session-store';
 import { useI18n } from '@/lib/i18n/context';
 import { type Locale, locales } from '@/lib/i18n';
@@ -333,73 +334,9 @@ export default function InboxPage() {
     }
   }
 
-  function installSelectViewportGuard(selectEl: HTMLElement | null) {
-    if (!selectEl) return () => {};
-
-    const margin = 12;
-    const applyMenuGuard = () => {
-      const root = (selectEl as HTMLElement & { shadowRoot?: ShadowRoot | null }).shadowRoot;
-      const menu = root?.querySelector('mdui-menu') as HTMLElement | null;
-      if (!menu) return;
-
-      menu.style.zIndex = '4000';
-      menu.style.overflowY = 'auto';
-      menu.style.overscrollBehavior = 'contain';
-
-      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-      const menuRect = menu.getBoundingClientRect();
-      const available = Math.floor(viewportHeight - margin - menuRect.top);
-      if (available > 0) {
-        menu.style.maxHeight = `${available}px`;
-      }
-    };
-
-    const preparePlacement = () => {
-      const rect = selectEl.getBoundingClientRect();
-      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-      const spaceBelow = viewportHeight - rect.bottom;
-      const spaceAbove = rect.top;
-      const preferTop = selectEl.closest('aside') !== null;
-      const nextPlacement = preferTop ? 'top' : spaceBelow < 240 && spaceAbove > spaceBelow ? 'top' : 'bottom';
-      selectEl.setAttribute('placement', nextPlacement);
-    };
-
-    const onOpen = () => {
-      preparePlacement();
-      requestAnimationFrame(() => applyMenuGuard());
-      window.addEventListener('resize', applyMenuGuard, { passive: true });
-      window.visualViewport?.addEventListener('resize', applyMenuGuard, { passive: true });
-    };
-
-    const onOpened = () => applyMenuGuard();
-
-    const onClose = () => {
-      window.removeEventListener('resize', applyMenuGuard);
-      window.visualViewport?.removeEventListener('resize', applyMenuGuard);
-    };
-
-    const onPointerDown = () => preparePlacement();
-
-    selectEl.addEventListener('open', onOpen);
-    selectEl.addEventListener('opened', onOpened);
-    selectEl.addEventListener('close', onClose);
-    selectEl.addEventListener('closed', onClose);
-    selectEl.addEventListener('pointerdown', onPointerDown, { passive: true });
-
-    return () => {
-      selectEl.removeEventListener('open', onOpen);
-      selectEl.removeEventListener('opened', onOpened);
-      selectEl.removeEventListener('close', onClose);
-      selectEl.removeEventListener('closed', onClose);
-      selectEl.removeEventListener('pointerdown', onPointerDown);
-      window.removeEventListener('resize', applyMenuGuard);
-      window.visualViewport?.removeEventListener('resize', applyMenuGuard);
-    };
-  }
-
   useEffect(() => {
-    const cleanupLang = installSelectViewportGuard(languageSelectRef.current);
-    const cleanupTheme = installSelectViewportGuard(themeSelectRef.current);
+    const cleanupLang = installMduiSelectViewportGuard(languageSelectRef.current, { margin: 12 });
+    const cleanupTheme = installMduiSelectViewportGuard(themeSelectRef.current, { margin: 12 });
     return () => {
       cleanupLang();
       cleanupTheme();
@@ -430,7 +367,7 @@ export default function InboxPage() {
               <Icon icon={sidebarCollapsed ? 'mdi:chevron-right' : 'mdi:chevron-left'} className="h-5 w-5" />
             </mdui-button-icon>
             {sidebarCollapsed ? (
-              <div className="hidden md:flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/80">
+              <div className="fi-glass hidden md:flex flex-col items-center gap-2 rounded-xl border border-black/10 p-2 dark:border-white/10">
                 <mdui-button-icon onClick={() => copyText(email)} title={email || t.inbox.title}>
                   <Icon icon={copied ? 'mdi:check' : 'mdi:email-outline'} className="h-5 w-5" />
                 </mdui-button-icon>
@@ -441,7 +378,7 @@ export default function InboxPage() {
                 )}
               </div>
             ) : null}
-            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/80', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div className={['fi-glass rounded-xl border border-black/10 p-3 dark:border-white/10', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="text-xs opacity-70">{t.inbox.title}</div>
@@ -464,7 +401,7 @@ export default function InboxPage() {
             </div>
 
             {sidebarCollapsed ? (
-              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/80">
+              <div className="fi-glass hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 p-2 dark:border-white/10">
                 <mdui-button-icon onClick={() => setUnreadOnly(false)} title={t.inbox.title} className={unreadOnly ? '' : 'text-[color:var(--mdui-color-primary)]'}>
                   <Icon icon="mdi:inbox" className="h-5 w-5" />
                 </mdui-button-icon>
@@ -473,7 +410,7 @@ export default function InboxPage() {
                 </mdui-button-icon>
               </div>
             ) : null}
-            <div className={['rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/80', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div className={['fi-glass rounded-xl border border-black/10 p-2 dark:border-white/10', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="grid gap-1">
                 <mdui-button
                   variant={unreadOnly ? 'text' : 'tonal'}
@@ -495,7 +432,7 @@ export default function InboxPage() {
             </div>
 
             {sidebarCollapsed ? (
-              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/80">
+              <div className="fi-glass hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 p-2 dark:border-white/10">
                 <mdui-button-icon onClick={() => loadList()} title={t.inbox.refreshButton}>
                   <Icon icon="mdi:refresh" className="h-5 w-5" />
                 </mdui-button-icon>
@@ -504,7 +441,7 @@ export default function InboxPage() {
                 </mdui-fab>
               </div>
             ) : null}
-            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/80 space-y-2', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div className={['fi-glass rounded-xl border border-black/10 p-3 dark:border-white/10 space-y-2', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="text-xs font-medium opacity-80">{t.inbox.renewButton}</div>
               <div className="flex items-center gap-2">
                 <mdui-button variant="tonal" className="flex-1" onClick={() => loadList()}>
@@ -525,7 +462,7 @@ export default function InboxPage() {
             </div>
 
             {sidebarCollapsed ? (
-              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/80">
+              <div className="fi-glass hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 p-2 dark:border-white/10">
                 <mdui-button-icon onClick={() => setDetailView('html')} title={t.inbox.htmlView} className={detailView === 'html' ? 'text-[color:var(--mdui-color-primary)]' : ''}>
                   <Icon icon="mdi:language-html5" className="h-5 w-5" />
                 </mdui-button-icon>
@@ -534,7 +471,7 @@ export default function InboxPage() {
                 </mdui-button-icon>
               </div>
             ) : null}
-            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/80 space-y-3', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div className={['fi-glass rounded-xl border border-black/10 p-3 dark:border-white/10 space-y-3', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="text-xs font-medium opacity-80">{t.inbox.htmlView} / {t.inbox.textView}</div>
               <mdui-segmented-button-group
                 selects="single"
@@ -547,16 +484,21 @@ export default function InboxPage() {
                 <mdui-segmented-button value="text">{t.inbox.textView}</mdui-segmented-button>
               </mdui-segmented-button-group>
 
-              <mdui-switch
-                checked={loadExternal}
-                onChange={(e) => setLoadExternal((e.target as HTMLInputElement).checked)}
-              >
-                {t.inbox.loadExternal}
-              </mdui-switch>
+              <div className="space-y-1">
+                <div className="text-xs opacity-70">{t.inbox.loadExternal}</div>
+                <mdui-button
+                  full-width
+                  variant={loadExternal ? 'tonal' : 'outlined'}
+                  onClick={() => setLoadExternal((v) => !v)}
+                >
+                  <Icon icon={loadExternal ? 'mdi:image-outline' : 'mdi:image-off-outline'} slot="icon" />
+                  {loadExternal ? t.inbox.externalAllowed : t.inbox.externalBlocked}
+                </mdui-button>
+              </div>
             </div>
 
             {sidebarCollapsed ? (
-              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/80">
+              <div className="fi-glass hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 p-2 dark:border-white/10">
                 <mdui-button-icon onClick={() => setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'auto' : 'dark')} title={t.theme.label}>
                   <Icon icon={themeIcon} className="h-5 w-5" />
                 </mdui-button-icon>
@@ -648,7 +590,7 @@ export default function InboxPage() {
 
               {listError && <div className="text-sm text-red-600 dark:text-red-400">{listError}</div>}
 
-              <div className="overflow-hidden rounded-xl border border-black/10 bg-white/60 backdrop-blur dark:border-white/10 dark:bg-slate-950/80">
+              <div className="fi-glass overflow-hidden rounded-xl border border-black/10 dark:border-white/10">
                 <div className="divide-y divide-black/10 dark:divide-white/10">
                   {loadingList ? (
                     <div className="p-4 text-sm opacity-70">{t.inbox.loadingList}</div>
@@ -747,7 +689,7 @@ export default function InboxPage() {
               {!loadingDetail && !detail && <div className="text-sm opacity-70">{t.inbox.selectMessage}</div>}
 
               {detail ? (
-                <div className="overflow-hidden rounded-xl border border-black/10 bg-white/60 backdrop-blur dark:border-white/10 dark:bg-slate-950/80">
+                <div className="fi-glass overflow-hidden rounded-xl border border-black/10 dark:border-white/10">
                   <div className="border-b border-black/10 px-4 py-3 dark:border-white/10">
                     <div className="text-base font-semibold">{detail.subject || t.inbox.noSubject}</div>
                     <div className="mt-1 text-xs opacity-70">

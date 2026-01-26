@@ -113,14 +113,14 @@ body {
    keep correct viewport positioning (avoids transformed/filter containing blocks). */
 .fi-glass {
   position: relative;
-  overflow: hidden;
-  isolation: isolate;
+  overflow: visible;
 }
 
 .fi-glass::before {
   content: '';
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   z-index: -1;
   pointer-events: none;
   background: rgba(255, 255, 255, 0.6);
@@ -128,19 +128,28 @@ body {
   -webkit-backdrop-filter: blur(12px);
 }
 
-.dark .fi-glass::before {
-  background: rgba(15, 23, 42, 0.65);
+.dark .fi-glass::before,
+.mdui-theme-dark .fi-glass::before {
+  background: rgba(2, 6, 23, 0.72);
 }
 
-/* MDUI button: force a single-instance blue filled CTA (used in "key shown once" dialog). */
-.fi-mdui-blue::part(button) {
-  background-color: #2563eb;
+/* MDUI button: "key shown once" continue CTA (MD3 light container + disabled gray). */
+.fi-key-continue::part(button) {
+  background-color: rgb(216, 207, 232);
 }
-.fi-mdui-blue:hover::part(button) {
-  background-color: #1d4ed8;
+.fi-key-continue:hover::part(button) {
+  background-color: rgb(206, 196, 224);
 }
-.fi-mdui-blue::part(label),
-.fi-mdui-blue::part(icon),
-.fi-mdui-blue::part(end-icon) {
-  color: #ffffff;
+.fi-key-continue::part(label),
+.fi-key-continue::part(icon),
+.fi-key-continue::part(end-icon) {
+  color: rgb(24, 24, 27);
+}
+.fi-key-continue[disabled]::part(button) {
+  background-color: rgb(229, 231, 235);
+}
+.fi-key-continue[disabled]::part(label),
+.fi-key-continue[disabled]::part(icon),
+.fi-key-continue[disabled]::part(end-icon) {
+  color: rgb(107, 114, 128);
 }

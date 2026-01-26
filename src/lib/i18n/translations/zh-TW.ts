@@ -81,6 +81,8 @@ export const zhTW = {
     htmlView: 'HTML',
     textView: '純文字',
     loadExternal: '載入外部資源',
+    externalBlocked: '外鏈已阻斷',
+    externalAllowed: '外鏈已開啟',
     renewed: '已續期',
     renewedExpires: '已續期，過期時間: {time}',
     renewFailed: '續期失敗',

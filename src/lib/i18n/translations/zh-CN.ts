@@ -81,6 +81,8 @@ export const zhCN = {
     htmlView: 'HTML',
     textView: '纯文本',
     loadExternal: '加载外部资源',
+    externalBlocked: '外链已阻断',
+    externalAllowed: '外链已开启',
     renewed: '已续期',
     renewedExpires: '已续期，过期时间: {time}',
     renewFailed: '续期失败',
