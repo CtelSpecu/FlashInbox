@@ -202,3 +202,113 @@ body {
 .fi-btn-elevated[disabled]::part(end-icon) {
   color: #6b7280;
 }
+
+/* User-side MD3 button palette (dark). */
+.dark .fi-btn-filled::part(button),
+.mdui-theme-dark .fi-btn-filled::part(button),
+.dark .fi-key-continue::part(button),
+.mdui-theme-dark .fi-key-continue::part(button) {
+  background-color: #4f378b;
+}
+.dark .fi-btn-filled:hover::part(button),
+.mdui-theme-dark .fi-btn-filled:hover::part(button),
+.dark .fi-key-continue:hover::part(button),
+.mdui-theme-dark .fi-key-continue:hover::part(button) {
+  background-color: #5a43a1;
+}
+.dark .fi-btn-filled::part(label),
+.dark .fi-btn-filled::part(icon),
+.dark .fi-btn-filled::part(end-icon),
+.mdui-theme-dark .fi-btn-filled::part(label),
+.mdui-theme-dark .fi-btn-filled::part(icon),
+.mdui-theme-dark .fi-btn-filled::part(end-icon),
+.dark .fi-key-continue::part(label),
+.dark .fi-key-continue::part(icon),
+.dark .fi-key-continue::part(end-icon),
+.mdui-theme-dark .fi-key-continue::part(label),
+.mdui-theme-dark .fi-key-continue::part(icon),
+.mdui-theme-dark .fi-key-continue::part(end-icon) {
+  color: #eaddff;
+}
+.dark .fi-btn-filled[disabled]::part(button),
+.mdui-theme-dark .fi-btn-filled[disabled]::part(button),
+.dark .fi-key-continue[disabled]::part(button),
+.mdui-theme-dark .fi-key-continue[disabled]::part(button) {
+  background-color: #2b2930;
+}
+.dark .fi-btn-filled[disabled]::part(label),
+.dark .fi-btn-filled[disabled]::part(icon),
+.dark .fi-btn-filled[disabled]::part(end-icon),
+.mdui-theme-dark .fi-btn-filled[disabled]::part(label),
+.mdui-theme-dark .fi-btn-filled[disabled]::part(icon),
+.mdui-theme-dark .fi-btn-filled[disabled]::part(end-icon),
+.dark .fi-key-continue[disabled]::part(label),
+.dark .fi-key-continue[disabled]::part(icon),
+.dark .fi-key-continue[disabled]::part(end-icon),
+.mdui-theme-dark .fi-key-continue[disabled]::part(label),
+.mdui-theme-dark .fi-key-continue[disabled]::part(icon),
+.mdui-theme-dark .fi-key-continue[disabled]::part(end-icon) {
+  color: #7c7c85;
+}
+
+.dark .fi-btn-tonal::part(button),
+.mdui-theme-dark .fi-btn-tonal::part(button) {
+  background-color: #4a4458;
+}
+.dark .fi-btn-tonal:hover::part(button),
+.mdui-theme-dark .fi-btn-tonal:hover::part(button) {
+  background-color: #554f64;
+}
+.dark .fi-btn-tonal::part(label),
+.dark .fi-btn-tonal::part(icon),
+.dark .fi-btn-tonal::part(end-icon),
+.mdui-theme-dark .fi-btn-tonal::part(label),
+.mdui-theme-dark .fi-btn-tonal::part(icon),
+.mdui-theme-dark .fi-btn-tonal::part(end-icon) {
+  color: #e8def8;
+}
+.dark .fi-btn-tonal[disabled]::part(button),
+.mdui-theme-dark .fi-btn-tonal[disabled]::part(button) {
+  background-color: #2b2930;
+}
+.dark .fi-btn-tonal[disabled]::part(label),
+.dark .fi-btn-tonal[disabled]::part(icon),
+.dark .fi-btn-tonal[disabled]::part(end-icon),
+.mdui-theme-dark .fi-btn-tonal[disabled]::part(label),
+.mdui-theme-dark .fi-btn-tonal[disabled]::part(icon),
+.mdui-theme-dark .fi-btn-tonal[disabled]::part(end-icon) {
+  color: #7c7c85;
+}
+
+.dark .fi-btn-elevated::part(button),
+.mdui-theme-dark .fi-btn-elevated::part(button) {
+  background-color: #2b2930;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.55),
+    0 10px 24px rgba(0, 0, 0, 0.4);
+}
+.dark .fi-btn-elevated:hover::part(button),
+.mdui-theme-dark .fi-btn-elevated:hover::part(button) {
+  background-color: #35333b;
+}
+.dark .fi-btn-elevated::part(label),
+.dark .fi-btn-elevated::part(icon),
+.dark .fi-btn-elevated::part(end-icon),
+.mdui-theme-dark .fi-btn-elevated::part(label),
+.mdui-theme-dark .fi-btn-elevated::part(icon),
+.mdui-theme-dark .fi-btn-elevated::part(end-icon) {
+  color: #d0bcff;
+}
+.dark .fi-btn-elevated[disabled]::part(button),
+.mdui-theme-dark .fi-btn-elevated[disabled]::part(button) {
+  background-color: #2b2930;
+  box-shadow: none;
+}
+.dark .fi-btn-elevated[disabled]::part(label),
+.dark .fi-btn-elevated[disabled]::part(icon),
+.dark .fi-btn-elevated[disabled]::part(end-icon),
+.mdui-theme-dark .fi-btn-elevated[disabled]::part(label),
+.mdui-theme-dark .fi-btn-elevated[disabled]::part(icon),
+.mdui-theme-dark .fi-btn-elevated[disabled]::part(end-icon) {
+  color: #7c7c85;
+}

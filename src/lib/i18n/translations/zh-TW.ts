@@ -160,7 +160,7 @@ export const zhTW = {
 
   footer: {
     copyright: '© {year}',
-    brandName: 'CtelSpecu（星空之鏡）',
+    brandName: '星空之鏡',
     officialSiteAria: '開啟 CtelSpecu 官網',
     githubLabel: 'GitHub 開源',
     githubAria: '開啟 FlashInbox GitHub 倉庫',

@@ -558,6 +558,11 @@ feat(mailbox): implement create service
    bun add <package>  # 正确
    npm install <package>  # 错误
    ```
+7. **Footer 品牌文案约束**:
+   - `zh-CN` 页脚品牌仅显示 `星空之镜`
+   - `zh-TW` 页脚品牌仅显示 `星空之鏡`
+   - 其他语言页脚品牌仅显示 `CtelSpecu`
+   - 禁止组合展示（例如 `CtelSpecu（星空之镜）`）
 6. **错误处理使用统一格式**:
    ```typescript
    import { error, ErrorCodes } from '@/lib/utils/response';
@@ -640,4 +645,3 @@ if (!allowed) {
 const turnstile = new TurnstileService(secretKey);
 const verified = await turnstile.verify(token, ip);
 ```
-
