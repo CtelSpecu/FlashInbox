@@ -132,7 +132,7 @@ export class MailboxRepository extends BaseRepository<Mailbox, MailboxRow> {
     const result = await this.db
       .prepare(
         `UPDATE mailboxes
-         SET status = 'banned',
+         SET status = 'banned'
          WHERE id = ? AND status != 'destroyed'
          RETURNING *`
       )
