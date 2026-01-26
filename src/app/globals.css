@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "mdui/mdui.css";
 
+/* Tailwind v4: make `dark:` respond to `.dark` class (manual theme toggle). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -126,5 +129,18 @@ body {
 }
 
 .dark .fi-glass::before {
-  background: rgba(2, 6, 23, 0.4);
+  background: rgba(15, 23, 42, 0.65);
+}
+
+/* MDUI button: force a single-instance blue filled CTA (used in "key shown once" dialog). */
+.fi-mdui-blue::part(button) {
+  background-color: #2563eb;
+}
+.fi-mdui-blue:hover::part(button) {
+  background-color: #1d4ed8;
+}
+.fi-mdui-blue::part(label),
+.fi-mdui-blue::part(icon),
+.fi-mdui-blue::part(end-icon) {
+  color: #ffffff;
 }

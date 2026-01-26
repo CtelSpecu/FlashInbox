@@ -430,7 +430,7 @@ export default function InboxPage() {
               <Icon icon={sidebarCollapsed ? 'mdi:chevron-right' : 'mdi:chevron-left'} className="h-5 w-5" />
             </mdui-button-icon>
             {sidebarCollapsed ? (
-              <div className="hidden md:flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
+              <div className="hidden md:flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/80">
                 <mdui-button-icon onClick={() => copyText(email)} title={email || t.inbox.title}>
                   <Icon icon={copied ? 'mdi:check' : 'mdi:email-outline'} className="h-5 w-5" />
                 </mdui-button-icon>
@@ -441,7 +441,7 @@ export default function InboxPage() {
                 )}
               </div>
             ) : null}
-            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/60', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/80', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="text-xs opacity-70">{t.inbox.title}</div>
@@ -464,7 +464,7 @@ export default function InboxPage() {
             </div>
 
             {sidebarCollapsed ? (
-              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
+              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/80">
                 <mdui-button-icon onClick={() => setUnreadOnly(false)} title={t.inbox.title} className={unreadOnly ? '' : 'text-[color:var(--mdui-color-primary)]'}>
                   <Icon icon="mdi:inbox" className="h-5 w-5" />
                 </mdui-button-icon>
@@ -473,7 +473,7 @@ export default function InboxPage() {
                 </mdui-button-icon>
               </div>
             ) : null}
-            <div className={['rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/60', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div className={['rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/80', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="grid gap-1">
                 <mdui-button
                   variant={unreadOnly ? 'text' : 'tonal'}
@@ -495,7 +495,7 @@ export default function InboxPage() {
             </div>
 
             {sidebarCollapsed ? (
-              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
+              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/80">
                 <mdui-button-icon onClick={() => loadList()} title={t.inbox.refreshButton}>
                   <Icon icon="mdi:refresh" className="h-5 w-5" />
                 </mdui-button-icon>
@@ -504,7 +504,7 @@ export default function InboxPage() {
                 </mdui-fab>
               </div>
             ) : null}
-            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/60 space-y-2', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/80 space-y-2', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="text-xs font-medium opacity-80">{t.inbox.renewButton}</div>
               <div className="flex items-center gap-2">
                 <mdui-button variant="tonal" className="flex-1" onClick={() => loadList()}>
@@ -525,7 +525,7 @@ export default function InboxPage() {
             </div>
 
             {sidebarCollapsed ? (
-              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
+              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/80">
                 <mdui-button-icon onClick={() => setDetailView('html')} title={t.inbox.htmlView} className={detailView === 'html' ? 'text-[color:var(--mdui-color-primary)]' : ''}>
                   <Icon icon="mdi:language-html5" className="h-5 w-5" />
                 </mdui-button-icon>
@@ -534,7 +534,7 @@ export default function InboxPage() {
                 </mdui-button-icon>
               </div>
             ) : null}
-            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/60 space-y-3', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/80 space-y-3', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="text-xs font-medium opacity-80">{t.inbox.htmlView} / {t.inbox.textView}</div>
               <mdui-segmented-button-group
                 selects="single"
@@ -556,7 +556,7 @@ export default function InboxPage() {
             </div>
 
             {sidebarCollapsed ? (
-              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
+              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/80">
                 <mdui-button-icon onClick={() => setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'auto' : 'dark')} title={t.theme.label}>
                   <Icon icon={themeIcon} className="h-5 w-5" />
                 </mdui-button-icon>
@@ -648,7 +648,7 @@ export default function InboxPage() {
 
               {listError && <div className="text-sm text-red-600 dark:text-red-400">{listError}</div>}
 
-              <div className="overflow-hidden rounded-xl border border-black/10 bg-white/60 backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
+              <div className="overflow-hidden rounded-xl border border-black/10 bg-white/60 backdrop-blur dark:border-white/10 dark:bg-slate-950/80">
                 <div className="divide-y divide-black/10 dark:divide-white/10">
                   {loadingList ? (
                     <div className="p-4 text-sm opacity-70">{t.inbox.loadingList}</div>
@@ -747,7 +747,7 @@ export default function InboxPage() {
               {!loadingDetail && !detail && <div className="text-sm opacity-70">{t.inbox.selectMessage}</div>}
 
               {detail ? (
-                <div className="overflow-hidden rounded-xl border border-black/10 bg-white/60 backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
+                <div className="overflow-hidden rounded-xl border border-black/10 bg-white/60 backdrop-blur dark:border-white/10 dark:bg-slate-950/80">
                   <div className="border-b border-black/10 px-4 py-3 dark:border-white/10">
                     <div className="text-base font-semibold">{detail.subject || t.inbox.noSubject}</div>
                     <div className="mt-1 text-xs opacity-70">

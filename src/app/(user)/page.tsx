@@ -153,7 +153,7 @@ export default function HomePage() {
 
   return (
     <div className="relative min-h-[calc(100dvh-56px)] overflow-hidden">
-      <div className="absolute right-4 top-4 z-10 flex items-center gap-1 rounded-full border border-black/10 bg-white/70 px-1.5 py-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
+      <div className="absolute right-4 top-4 z-10 flex items-center gap-1 rounded-full border border-black/10 bg-white/70 px-1.5 py-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/80">
         <mdui-button-icon
           onClick={() =>
             setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'auto' : 'dark')
@@ -185,7 +185,7 @@ export default function HomePage() {
         <div className="grid gap-10 md:grid-cols-[1.15fr_0.85fr] md:items-start">
           <section className="space-y-8">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-3 rounded-2xl border border-black/5 bg-white/70 px-3 py-2 shadow-sm dark:border-white/10 dark:bg-slate-950/50">
+              <div className="inline-flex items-center gap-3 rounded-2xl border border-black/5 bg-white/70 px-3 py-2 shadow-sm dark:border-white/10 dark:bg-slate-950/80">
                 <img
                   src="/FlashInbox_Animated.svg"
                   alt="FlashInbox"
@@ -225,7 +225,7 @@ export default function HomePage() {
               </li>
             </ul>
 
-            <div className="rounded-2xl border border-black/5 bg-white/70 p-4 shadow-sm dark:border-white/10 dark:bg-slate-950/50">
+            <div className="rounded-2xl border border-black/5 bg-white/70 p-4 shadow-sm dark:border-white/10 dark:bg-slate-950/80">
               <div className="text-sm font-semibold">{t.home.howItWorks}</div>
               <ol className="mt-3 space-y-2 text-sm">
                 <li className="flex items-start gap-3">
@@ -251,7 +251,7 @@ export default function HomePage() {
           </section>
 
           <section className="md:sticky md:top-20">
-            <div className="rounded-2xl border border-black/10 bg-white/80 p-5 shadow-sm dark:border-white/10 dark:bg-slate-950/40">
+            <div className="rounded-2xl border border-black/10 bg-white/80 p-5 shadow-sm dark:border-white/10 dark:bg-slate-950/70">
               <div className="mb-4">
                 <div className="text-sm font-semibold">{t.home.formTitle}</div>
                 <div className="mt-1 text-xs opacity-70">{t.home.formSubtitle}</div>
@@ -410,7 +410,13 @@ export default function HomePage() {
         <mdui-button slot="action" variant="text" onClick={() => router.push('/recover')}>
           {t.claim.recoverButton}
         </mdui-button>
-        <mdui-button slot="action" variant="filled" disabled={!confirmSaved} onClick={closeKeyDialog}>
+        <mdui-button
+          slot="action"
+          variant="filled"
+          className="fi-mdui-blue"
+          disabled={!confirmSaved}
+          onClick={closeKeyDialog}
+        >
           {t.claim.continueButton}
         </mdui-button>
       </mdui-dialog>

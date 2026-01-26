@@ -175,7 +175,13 @@ export default function ClaimPage() {
           <mdui-button slot="action" variant="text" onClick={copyKey}>
             {t.common.copy}
           </mdui-button>
-          <mdui-button slot="action" variant="filled" disabled={!confirmSaved} onClick={closeKeyDialog}>
+          <mdui-button
+            slot="action"
+            variant="filled"
+            className="fi-mdui-blue"
+            disabled={!confirmSaved}
+            onClick={closeKeyDialog}
+          >
             {t.claim.continueButton}
           </mdui-button>
         </mdui-dialog>
