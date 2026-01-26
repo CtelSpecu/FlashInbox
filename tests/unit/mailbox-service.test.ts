@@ -31,6 +31,7 @@ describe('MailboxService', () => {
   let sqlite: Database;
   let d1: D1Database;
   let service: MailboxService;
+  let domainId: number;
 
   beforeEach(async () => {
     const result = await createTestDbFromMigrations();
@@ -41,9 +42,39 @@ describe('MailboxService', () => {
     sqlite.exec(
       `INSERT INTO domains (name, status, created_at, updated_at) VALUES ('example.com', 'enabled', 0, 0);`
     );
+    domainId = (sqlite.prepare(`SELECT id FROM domains WHERE name = 'example.com'`).get() as { id: number }).id;
 
     service = new MailboxService(d1, createConfig(), 'test-pepper');
   });
+
+  function insertMailbox(input: {
+    username: string;
+    status: 'unclaimed' | 'claimed' | 'banned' | 'destroyed';
+    creationType: 'random' | 'manual' | 'inbound';
+    keyHash?: string | null;
+    keyExpiresAt?: number | null;
+  }) {
+    const id = crypto.randomUUID();
+    const canonical = input.username.toLowerCase();
+    sqlite
+      .prepare(
+        `INSERT INTO mailboxes (id, domain_id, username, canonical_name, status, key_hash, key_created_at, key_expires_at, creation_type, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+      .run(
+        id,
+        domainId,
+        input.username,
+        canonical,
+        input.status,
+        input.keyHash ?? null,
+        input.keyHash ? Date.now() : null,
+        input.keyExpiresAt ?? null,
+        input.creationType,
+        Date.now()
+      );
+    return { id, username: input.username, domainId };
+  }
 
   describe('create', () => {
     test('creates random mailbox with session', async () => {
@@ -53,11 +84,13 @@ describe('MailboxService', () => {
 
       expect(result.mailbox.id).toBeTruthy();
       expect(result.mailbox.username).toMatch(/^[A-Z][a-z]+[A-Z][a-z]+\d{2}$/);
-      expect(result.mailbox.status).toBe('unclaimed');
+      expect(result.mailbox.status).toBe('claimed');
       expect(result.mailbox.creationType).toBe('random');
       expect(result.session).toBeTruthy();
       expect(result.sessionToken).toBeTruthy();
       expect(result.sessionToken.length).toBe(64);
+      expect(result.key).toBeTruthy();
+      expect(result.key.length).toBe(32);
     });
 
     test('creates manual mailbox with specified username', async () => {
@@ -68,6 +101,7 @@ describe('MailboxService', () => {
 
       expect(result.mailbox.username).toBe('testuser123');
       expect(result.mailbox.canonicalName).toBe('testuser123');
+      expect(result.mailbox.status).toBe('claimed');
       expect(result.mailbox.creationType).toBe('manual');
     });
 
@@ -147,11 +181,8 @@ describe('MailboxService', () => {
   });
 
   describe('claim', () => {
-    test('claims unclaimed random mailbox', async () => {
-      const { mailbox } = await service.create({
-        creationType: 'random',
-      });
-
+    test('claims unclaimed inbound mailbox', async () => {
+      const mailbox = insertMailbox({ username: 'inbound01', status: 'unclaimed', creationType: 'inbound' });
       const result = await service.claim(mailbox.id);
 
       expect(result.mailbox.status).toBe('claimed');
@@ -160,10 +191,7 @@ describe('MailboxService', () => {
     });
 
     test('stores hashed key, not plaintext', async () => {
-      const { mailbox } = await service.create({
-        creationType: 'random',
-      });
-
+      const mailbox = insertMailbox({ username: 'inbound02', status: 'unclaimed', creationType: 'inbound' });
       const result = await service.claim(mailbox.id);
 
       const dbMailbox = sqlite
@@ -178,16 +206,11 @@ describe('MailboxService', () => {
       const { mailbox } = await service.create({
         creationType: 'random',
       });
-      await service.claim(mailbox.id);
-
       await expect(service.claim(mailbox.id)).rejects.toThrow('Mailbox is already claimed');
     });
 
     test('rejects claiming manual mailbox', async () => {
-      const { mailbox } = await service.create({
-        username: 'manualuser',
-        creationType: 'manual',
-      });
+      const mailbox = insertMailbox({ username: 'manualuser', status: 'unclaimed', creationType: 'manual' });
 
       await expect(service.claim(mailbox.id)).rejects.toThrow('Manual mailbox cannot be claimed');
     });
@@ -199,15 +222,10 @@ describe('MailboxService', () => {
 
   describe('recover', () => {
     test('recovers access with valid key', async () => {
-      const { mailbox } = await service.create({
+      const { mailbox, key } = await service.create({
         creationType: 'random',
       });
-      const { key } = await service.claim(mailbox.id);
-
-      // Get domain name
-      const domain = sqlite.prepare('SELECT name FROM domains WHERE id = ?').get(mailbox.domainId) as { name: string };
-
-      const result = await service.recover(mailbox.username, domain.name, key);
+      const result = await service.recover(mailbox.username, 'example.com', key);
 
       expect(result.mailbox.id).toBe(mailbox.id);
       expect(result.session).toBeTruthy();
@@ -218,12 +236,9 @@ describe('MailboxService', () => {
       const { mailbox } = await service.create({
         creationType: 'random',
       });
-      await service.claim(mailbox.id);
-
-      const domain = sqlite.prepare('SELECT name FROM domains WHERE id = ?').get(mailbox.domainId) as { name: string };
 
       await expect(
-        service.recover(mailbox.username, domain.name, 'wrong-key')
+        service.recover(mailbox.username, 'example.com', 'wrong-key')
       ).rejects.toThrow('Invalid credentials');
     });
 
@@ -234,46 +249,36 @@ describe('MailboxService', () => {
     });
 
     test('returns unified error for unclaimed mailbox', async () => {
-      const { mailbox } = await service.create({
-        creationType: 'random',
-      });
-
-      const domain = sqlite.prepare('SELECT name FROM domains WHERE id = ?').get(mailbox.domainId) as { name: string };
+      const mailbox = insertMailbox({ username: 'unclaimed01', status: 'unclaimed', creationType: 'inbound' });
 
       await expect(
-        service.recover(mailbox.username, domain.name, 'any-key')
+        service.recover(mailbox.username, 'example.com', 'any-key')
       ).rejects.toThrow('Invalid credentials');
     });
 
     test('returns unified error for destroyed mailbox', async () => {
-      const { mailbox } = await service.create({
+      const { mailbox, key } = await service.create({
         creationType: 'random',
       });
-      const { key } = await service.claim(mailbox.id);
 
       // Manually set status to destroyed
       sqlite.prepare('UPDATE mailboxes SET status = ? WHERE id = ?').run('destroyed', mailbox.id);
 
-      const domain = sqlite.prepare('SELECT name FROM domains WHERE id = ?').get(mailbox.domainId) as { name: string };
-
       await expect(
-        service.recover(mailbox.username, domain.name, key)
+        service.recover(mailbox.username, 'example.com', key)
       ).rejects.toThrow('Invalid credentials');
     });
 
     test('returns unified error for expired key', async () => {
-      const { mailbox } = await service.create({
+      const { mailbox, key } = await service.create({
         creationType: 'random',
       });
-      const { key } = await service.claim(mailbox.id);
 
       // Set key as expired
       sqlite.prepare('UPDATE mailboxes SET key_expires_at = ? WHERE id = ?').run(Date.now() - 1000, mailbox.id);
 
-      const domain = sqlite.prepare('SELECT name FROM domains WHERE id = ?').get(mailbox.domainId) as { name: string };
-
       await expect(
-        service.recover(mailbox.username, domain.name, key)
+        service.recover(mailbox.username, 'example.com', key)
       ).rejects.toThrow('Invalid credentials');
     });
   });
@@ -283,7 +288,6 @@ describe('MailboxService', () => {
       const { mailbox } = await service.create({
         creationType: 'random',
       });
-      await service.claim(mailbox.id);
 
       const beforeRenew = sqlite
         .prepare('SELECT key_expires_at as keyExpiresAt FROM mailboxes WHERE id = ?')
@@ -298,9 +302,7 @@ describe('MailboxService', () => {
     });
 
     test('rejects renewing unclaimed mailbox', async () => {
-      const { mailbox } = await service.create({
-        creationType: 'random',
-      });
+      const mailbox = insertMailbox({ username: 'unclaimed-renew', status: 'unclaimed', creationType: 'inbound' });
 
       await expect(service.renew(mailbox.id)).rejects.toThrow('Only claimed mailbox can renew');
     });
@@ -309,7 +311,6 @@ describe('MailboxService', () => {
       const { mailbox } = await service.create({
         creationType: 'random',
       });
-      await service.claim(mailbox.id);
 
       // Set key as expired
       sqlite.prepare('UPDATE mailboxes SET key_expires_at = ? WHERE id = ?').run(Date.now() - 1000, mailbox.id);
@@ -359,4 +360,3 @@ describe('MailboxService', () => {
     });
   });
 });
-
