@@ -33,6 +33,17 @@ export const zhCN = {
   home: {
     title: '闪收箱',
     subtitle: '临时邮箱服务 - 无需注册',
+    heroTitle: '几秒生成临时收件箱',
+    heroSubtitle: '创建邮箱地址，接收邮件，并通过密钥在需要时恢复访问。',
+    featureNoSignup: '无需注册，打开即用',
+    featureRecoverKey: '密钥恢复（15 天有效）',
+    featureNoAttachments: '不接收附件，更安全',
+    howItWorks: '使用流程',
+    howStepCreate: '创建邮箱地址（随机或手动）',
+    howStepReceive: '在任意网站填写地址接收邮件',
+    howStepClaimRecover: '认领获取密钥，或用用户名 + 密钥恢复',
+    formTitle: '创建收件箱',
+    formSubtitle: '密钥仅显示一次，请妥善保存。',
     modeRandom: '随机',
     modeManual: '手动',
     username: '用户名',
@@ -140,4 +151,3 @@ export const zhCN = {
     system: '跟随系统',
   },
 } satisfies UserTranslations;
-

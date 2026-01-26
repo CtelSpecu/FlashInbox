@@ -26,6 +26,17 @@ export interface UserTranslations {
   home: {
     title: string;
     subtitle: string;
+    heroTitle: string;
+    heroSubtitle: string;
+    featureNoSignup: string;
+    featureRecoverKey: string;
+    featureNoAttachments: string;
+    howItWorks: string;
+    howStepCreate: string;
+    howStepReceive: string;
+    howStepClaimRecover: string;
+    formTitle: string;
+    formSubtitle: string;
     modeRandom: string;
     modeManual: string;
     username: string;
@@ -127,5 +138,4 @@ export interface UserTranslations {
     system: string;
   };
 }
-
 

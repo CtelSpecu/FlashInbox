@@ -33,6 +33,17 @@ export const zhTW = {
   home: {
     title: '閃收箱',
     subtitle: '臨時郵箱服務 - 無需註冊',
+    heroTitle: '幾秒建立臨時收件匣',
+    heroSubtitle: '建立郵箱地址、接收郵件，並可透過金鑰在需要時恢復存取。',
+    featureNoSignup: '無需註冊，開啟即用',
+    featureRecoverKey: '金鑰恢復（15 天有效）',
+    featureNoAttachments: '不接收附件，更安全',
+    howItWorks: '使用流程',
+    howStepCreate: '建立郵箱地址（隨機或手動）',
+    howStepReceive: '在任意網站填寫地址接收郵件',
+    howStepClaimRecover: '認領取得金鑰，或用使用者名稱 + 金鑰恢復',
+    formTitle: '建立收件匣',
+    formSubtitle: '金鑰僅顯示一次，請妥善保存。',
     modeRandom: '隨機',
     modeManual: '手動',
     username: '使用者名稱',
@@ -140,4 +151,3 @@ export const zhTW = {
     system: '跟隨系統',
   },
 } satisfies UserTranslations;
-

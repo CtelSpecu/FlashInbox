@@ -31,6 +31,17 @@ export const enUS = {
   home: {
     title: 'FlashInbox',
     subtitle: 'Temporary email service - no registration required',
+    heroTitle: 'Temporary inboxes, ready in seconds',
+    heroSubtitle: 'Create an address, receive emails, and recover access with a key when you need it.',
+    featureNoSignup: 'No registration. No friction.',
+    featureRecoverKey: 'Key-based recovery (15 days).',
+    featureNoAttachments: 'No attachments for safer inboxes.',
+    howItWorks: 'How it works',
+    howStepCreate: 'Create an address (random or manual).',
+    howStepReceive: 'Use it anywhere to receive emails.',
+    howStepClaimRecover: 'Claim for a key, or recover later with username + key.',
+    formTitle: 'Create your inbox',
+    formSubtitle: 'Keep the key safe — it is shown once.',
     modeRandom: 'Random',
     modeManual: 'Manual',
     username: 'Username',
@@ -132,5 +143,4 @@ export const enUS = {
     system: 'System',
   },
 } satisfies UserTranslations;
-
 
