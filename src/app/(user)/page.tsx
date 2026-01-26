@@ -8,7 +8,7 @@ import { Turnstile } from '@/components/ui/Turnstile';
 import { apiFetch, type ApiError } from '@/lib/client/api';
 import { getUserErrorMessage } from '@/lib/client/error-i18n';
 import { setSessionToken } from '@/lib/client/session-store';
-import { generateRandomUsername, validateUsername } from '@/lib/utils/username';
+import { validateUsername } from '@/lib/utils/username';
 import { useI18n } from '@/lib/i18n/context';
 import { type Locale, locales } from '@/lib/i18n';
 import { useUserTheme } from '@/lib/theme/user-theme';
@@ -48,7 +48,7 @@ export default function HomePage() {
 
   const [mode, setMode] = useState<CreateMode>('random');
   const [manualUsername, setManualUsername] = useState('');
-  const [username, setUsername] = useState(() => generateRandomUsername());
+  const [username, setUsername] = useState('');
   const [domainId, setDomainId] = useState<number | undefined>(undefined);
   const [defaultDomain, setDefaultDomain] = useState('example.com');
   const [domains, setDomains] = useState<Array<{ id: number; name: string }>>([]);
@@ -103,7 +103,6 @@ export default function HomePage() {
     if (loading) return false;
     if (createdKey) return false;
     if (!turnstileSiteKey || !turnstileToken) return false;
-    if (!username.trim()) return false;
     if (mode === 'manual') return usernameValidation.valid;
     return true;
   }, [loading, createdKey, mode, turnstileSiteKey, turnstileToken, username, usernameValidation.valid]);
@@ -180,7 +179,7 @@ export default function HomePage() {
         : 'mdi:theme-light-dark';
 
   return (
-    <div className="relative min-h-[calc(100dvh-56px)] overflow-x-hidden">
+    <div className="relative min-h-full overflow-x-hidden">
       <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
         <mdui-dropdown placement="bottom-end">
           <mdui-button-icon
@@ -333,7 +332,7 @@ export default function HomePage() {
                       return;
                     }
                     setManualUsername(username);
-                    setUsername(generateRandomUsername());
+                    setUsername('');
                   }}
                 >
                   <mdui-segmented-button value="random">
@@ -353,7 +352,7 @@ export default function HomePage() {
                   }
                   clearable
                   disabled={mode !== 'manual' || loading || !!createdKey}
-                  value={username}
+                  value={mode === 'manual' ? username : ''}
                   onInput={(e) => {
                     const value = (e.target as HTMLInputElement).value;
                     setUsername(value);
@@ -402,23 +401,37 @@ export default function HomePage() {
 
                 {errorText ? <div className="text-sm text-red-600 dark:text-red-400">{errorText}</div> : null}
 
-                <mdui-button
-                  variant="filled"
-                  className="w-full fi-btn-filled"
-                  loading={loading}
-                  disabled={!canSubmit}
-                  onClick={submit}
-                >
-                  <Icon icon={mode === 'random' ? 'mdi:dice-multiple' : 'mdi:inbox-arrow-down'} slot="icon" />
-                  {mode === 'random' ? t.home.randomButton : t.home.createButton}
-                </mdui-button>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <mdui-button
+                    variant="filled"
+                    className="col-span-2 w-full fi-btn-filled"
+                    full-width
+                    loading={loading}
+                    disabled={!canSubmit}
+                    onClick={submit}
+                  >
+                    <Icon
+                      icon={mode === 'random' ? 'mdi:dice-multiple' : 'mdi:inbox-arrow-down'}
+                      slot="icon"
+                    />
+                    {mode === 'random' ? t.home.randomButton : t.home.createButton}
+                  </mdui-button>
 
-                <div className="flex justify-center gap-2 pt-1">
-                  <mdui-button variant="elevated" className="fi-btn-elevated" onClick={() => router.push('/claim')}>
+                  <mdui-button
+                    variant="elevated"
+                    className="w-full fi-btn-elevated"
+                    full-width
+                    onClick={() => router.push('/claim')}
+                  >
                     <Icon icon="mdi:key" slot="icon" />
                     {t.home.claimButton}
                   </mdui-button>
-                  <mdui-button variant="elevated" className="fi-btn-elevated" onClick={() => router.push('/recover')}>
+                  <mdui-button
+                    variant="elevated"
+                    className="w-full fi-btn-elevated"
+                    full-width
+                    onClick={() => router.push('/recover')}
+                  >
                     <Icon icon="mdi:history" slot="icon" />
                     {t.home.recoverButton}
                   </mdui-button>

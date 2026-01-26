@@ -111,7 +111,7 @@ export default function RecoverPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100dvh-56px)] items-center justify-center p-6">
+    <div className="flex min-h-full items-center justify-center p-6">
       <div className="w-full max-w-md space-y-4">
         <div className="text-center">
           <Icon icon="mdi:history" className="mx-auto h-12 w-12 text-[color:var(--mdui-color-primary)]" />
@@ -181,11 +181,9 @@ export default function RecoverPage() {
           {t.recover.recoverButton}
         </mdui-button>
 
-        <div className="flex justify-center">
-          <mdui-button variant="tonal" className="fi-btn-tonal" onClick={() => router.push('/')}>
-            {t.common.back}
-          </mdui-button>
-        </div>
+        <mdui-button variant="tonal" className="fi-btn-tonal" full-width onClick={() => router.push('/')}>
+          {t.common.back}
+        </mdui-button>
       </div>
     </div>
   );

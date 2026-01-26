@@ -353,7 +353,7 @@ export default function InboxPage() {
         : 'mdi:theme-light-dark';
 
   return (
-    <div className="min-h-[calc(100dvh-56px)] px-3 py-4">
+    <div className="min-h-full px-3 py-4">
       <div className="mx-auto w-full max-w-7xl">
         <div className="flex flex-col gap-4 md:flex-row">
           <aside className={[
