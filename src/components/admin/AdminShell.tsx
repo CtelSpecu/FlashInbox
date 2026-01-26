@@ -46,6 +46,7 @@ export function AdminShell({
   const [loggingOut, setLoggingOut] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sessionHint, setSessionHint] = useState('');
+  const year = new Date().getFullYear();
 
   const activeHref = useMemo(() => {
     if (!pathname) return '/admin';
@@ -273,6 +274,20 @@ export function AdminShell({
           <main className="flex-1 p-4">
             <div className="mx-auto w-full max-w-6xl">{children}</div>
           </main>
+          <footer className="border-t border-[color:var(--admin-border)] py-5 text-center text-xs text-[color:var(--admin-muted)]">
+            <div className="mx-auto w-full max-w-6xl px-4">
+              <span>© {year} </span>
+              <a
+                href="https://ctelspecu.hxcn.top"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline-offset-4 hover:underline"
+              >
+                CtelSpecu（星空之镜）
+              </a>
+              <span>。由 Cloudflare 强力驱动</span>
+            </div>
+          </footer>
         </div>
       </div>
     </div>

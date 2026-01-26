@@ -197,9 +197,15 @@ export default function AdminQuarantinePage() {
                   </Select>
                 </>
               ) : null}
-              <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={load}
+                disabled={loading}
+                aria-label={t.common.reload}
+                title={t.common.reload}
+              >
                 <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
-                {t.common.reload}
               </Button>
             </div>
           </div>
@@ -362,4 +368,3 @@ export default function AdminQuarantinePage() {
     </div>
   );
 }
-
