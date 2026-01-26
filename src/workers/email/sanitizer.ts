@@ -23,7 +23,7 @@ function stripInlineEventHandlers(input: string): string {
   return input.replace(/\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
 }
 
-function sanitizeCss(css: string): string {
+function sanitizeCss(css: string, options: { allowDataImageUrls?: boolean } = {}): string {
   if (!css) return '';
   let out = css;
 
@@ -33,7 +33,16 @@ function sanitizeCss(css: string): string {
   // Block external resource loading and legacy scriptable CSS.
   out = out.replace(/@import[^;]+;/gi, '');
   out = out.replace(/@font-face\s*{[\s\S]*?}/gi, '');
-  out = out.replace(/url\s*\(\s*[^)]+\s*\)/gi, '');
+  out = out.replace(/url\s*\(\s*([^)]+)\s*\)/gi, (_m, rawUrl) => {
+    const cleaned = String(rawUrl || '').trim();
+    const unquoted = cleaned.replace(/^['"]|['"]$/g, '');
+    const lower = unquoted.toLowerCase();
+    if (options.allowDataImageUrls && isSafeImageDataUrl(lower)) {
+      const escaped = unquoted.replace(/"/g, '\\"');
+      return `url("${escaped}")`;
+    }
+    return '';
+  });
   out = out.replace(/expression\s*\([^)]*\)/gi, '');
   out = out.replace(/-moz-binding\s*:\s*[^;]+;?/gi, '');
   out = out.replace(/\bbehavior\s*:\s*[^;]+;?/gi, '');
@@ -41,10 +50,10 @@ function sanitizeCss(css: string): string {
   return out.trim();
 }
 
-function sanitizeStyleAttributes(input: string): string {
+function sanitizeStyleAttributes(input: string, options: { allowDataImageUrls?: boolean } = {}): string {
   return input.replace(/\sstyle\s*=\s*(?:"([^"]*)"|'([^']*)')/gi, (_m, dq, sq) => {
     const raw = (dq ?? sq ?? '') as string;
-    const cleaned = sanitizeCss(raw);
+    const cleaned = sanitizeCss(raw, options);
     if (!cleaned) return '';
     // Keep as a quoted attribute; escape double quotes to avoid breaking HTML.
     const escaped = cleaned.replace(/"/g, '&quot;');
@@ -52,9 +61,9 @@ function sanitizeStyleAttributes(input: string): string {
   });
 }
 
-function sanitizeStyleTags(input: string): string {
+function sanitizeStyleTags(input: string, options: { allowDataImageUrls?: boolean } = {}): string {
   return input.replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gi, (_m, css) => {
-    const cleaned = sanitizeCss(String(css || ''));
+    const cleaned = sanitizeCss(String(css || ''), options);
     return `<style>${cleaned}</style>`;
   });
 }
@@ -79,7 +88,9 @@ export async function sanitizeHtml(html: string, options: SanitizeOptions = {}):
 
   let input = html;
   input = stripInlineEventHandlers(input);
-  input = sanitizeStyleTags(sanitizeStyleAttributes(input));
+  input = sanitizeStyleTags(sanitizeStyleAttributes(input, { allowDataImageUrls: allowDataUrls }), {
+    allowDataImageUrls: allowDataUrls,
+  });
 
   // Prefer Workers HTMLRewriter for correctness and safety
   const HTMLRewriterCtor = (globalThis as unknown as { HTMLRewriter?: unknown }).HTMLRewriter as
@@ -101,7 +112,7 @@ export async function sanitizeHtml(html: string, options: SanitizeOptions = {}):
       element(element) {
         const style = element.getAttribute('style');
         if (style) {
-          const cleaned = sanitizeCss(style);
+          const cleaned = sanitizeCss(style, { allowDataImageUrls: allowDataUrls });
           if (cleaned) {
             element.setAttribute('style', cleaned);
           } else {
@@ -117,7 +128,7 @@ export async function sanitizeHtml(html: string, options: SanitizeOptions = {}):
     })
     .on('style', {
       text(text) {
-        text.replace(sanitizeCss(text.text));
+        text.replace(sanitizeCss(text.text, { allowDataImageUrls: allowDataUrls }));
       },
     })
     .on('a', {
