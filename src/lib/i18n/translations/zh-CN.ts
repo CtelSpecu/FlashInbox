@@ -72,6 +72,7 @@ export const zhCN = {
     searchPlaceholder: '搜索',
     unreadOnly: '仅未读',
     loadingList: '加载邮件列表...',
+    emptyList: '暂无邮件。',
     loadingMessage: '加载邮件内容...',
     selectMessage: '选择一封邮件查看详情',
     noSubject: '(无主题)',

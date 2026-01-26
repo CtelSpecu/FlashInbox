@@ -72,6 +72,7 @@ export const zhTW = {
     searchPlaceholder: '搜尋',
     unreadOnly: '僅未讀',
     loadingList: '載入郵件列表...',
+    emptyList: '暫無郵件。',
     loadingMessage: '載入郵件內容...',
     selectMessage: '選擇一封郵件查看詳情',
     noSubject: '(無主旨)',

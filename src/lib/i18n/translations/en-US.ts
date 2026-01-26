@@ -69,6 +69,7 @@ export const enUS = {
     searchPlaceholder: 'Search',
     unreadOnly: 'Unread only',
     loadingList: 'Loading inbox...',
+    emptyList: 'No messages yet.',
     loadingMessage: 'Loading message...',
     selectMessage: 'Select a message to view details.',
     noSubject: '(No subject)',
@@ -143,4 +144,3 @@ export const enUS = {
     system: 'System',
   },
 } satisfies UserTranslations;
-

@@ -64,6 +64,7 @@ export interface UserTranslations {
     searchPlaceholder: string;
     unreadOnly: string;
     loadingList: string;
+    emptyList: string;
     loadingMessage: string;
     selectMessage: string;
     noSubject: string;
@@ -138,4 +139,3 @@ export interface UserTranslations {
     system: string;
   };
 }
-

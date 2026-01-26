@@ -83,6 +83,15 @@ export default function InboxPage() {
   const { t, format, locale, setLocale } = useI18n();
   const { theme, setTheme } = useUserTheme();
 
+  const splitContainerRef = useRef<HTMLDivElement | null>(null);
+  const resizingRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startWidth: number;
+    maxWidth: number;
+  } | null>(null);
+  const [listWidth, setListWidth] = useState(380);
+
   const [email, setEmail] = useState<string>('');
   const [unreadCount, setUnreadCount] = useState(0);
   const [keyExpiresAt, setKeyExpiresAt] = useState<number | null>(null);
@@ -108,6 +117,39 @@ export default function InboxPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const languageSelectRef = useRef<HTMLElement | null>(null);
   const themeSelectRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem('inbox:list-width');
+      const parsed = stored ? parseInt(stored, 10) : NaN;
+      if (Number.isFinite(parsed)) {
+        setListWidth(parsed);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    const clampToViewport = () => {
+      const el = splitContainerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const minList = 280;
+      const minDetail = 320;
+      const divider = 12;
+      const maxList = Math.max(minList, Math.floor(rect.width - divider - minDetail));
+      setListWidth((prev) => Math.min(prev, maxList));
+    };
+
+    clampToViewport();
+    window.addEventListener('resize', clampToViewport, { passive: true });
+    window.visualViewport?.addEventListener('resize', clampToViewport, { passive: true });
+    return () => {
+      window.removeEventListener('resize', clampToViewport);
+      window.visualViewport?.removeEventListener('resize', clampToViewport);
+    };
+  }, []);
 
   const queryString = useMemo(() => {
     const params = new URLSearchParams();
@@ -234,6 +276,63 @@ export default function InboxPage() {
     }
   }
 
+  function startResize(e: React.PointerEvent<HTMLDivElement>) {
+    const container = splitContainerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const minList = 280;
+    const minDetail = 320;
+    const divider = 12;
+    const maxList = Math.max(minList, Math.floor(rect.width - divider - minDetail));
+    const startWidth = Math.min(Math.max(listWidth, minList), maxList);
+
+    resizingRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startWidth,
+      maxWidth: maxList,
+    };
+
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function onResizeMove(e: React.PointerEvent<HTMLDivElement>) {
+    const state = resizingRef.current;
+    if (!state || state.pointerId !== e.pointerId) return;
+    const minList = 280;
+    const delta = e.clientX - state.startX;
+    const next = Math.min(Math.max(state.startWidth + delta, minList), state.maxWidth);
+    setListWidth(next);
+  }
+
+  function endResize(e: React.PointerEvent<HTMLDivElement>) {
+    const state = resizingRef.current;
+    if (!state || state.pointerId !== e.pointerId) return;
+    resizingRef.current = null;
+    try {
+      window.localStorage.setItem('inbox:list-width', String(listWidth));
+    } catch {
+      // ignore
+    }
+  }
+
+  function adjustWidthByKeyboard(delta: number) {
+    const container = splitContainerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const minList = 280;
+    const minDetail = 320;
+    const divider = 12;
+    const maxList = Math.max(minList, Math.floor(rect.width - divider - minDetail));
+    const next = Math.min(Math.max(listWidth + delta, minList), maxList);
+    setListWidth(next);
+    try {
+      window.localStorage.setItem('inbox:list-width', String(next));
+    } catch {
+      // ignore
+    }
+  }
+
   function installSelectViewportGuard(selectEl: HTMLElement | null) {
     if (!selectEl) return () => {};
 
@@ -243,6 +342,7 @@ export default function InboxPage() {
       const menu = root?.querySelector('mdui-menu') as HTMLElement | null;
       if (!menu) return;
 
+      menu.style.zIndex = '4000';
       menu.style.overflowY = 'auto';
       menu.style.overscrollBehavior = 'contain';
 
@@ -259,7 +359,8 @@ export default function InboxPage() {
       const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
       const spaceBelow = viewportHeight - rect.bottom;
       const spaceAbove = rect.top;
-      const nextPlacement = spaceBelow < 240 && spaceAbove > spaceBelow ? 'top' : 'bottom';
+      const preferTop = selectEl.closest('aside') !== null;
+      const nextPlacement = preferTop ? 'top' : spaceBelow < 240 && spaceAbove > spaceBelow ? 'top' : 'bottom';
       selectEl.setAttribute('placement', nextPlacement);
     };
 
@@ -329,7 +430,7 @@ export default function InboxPage() {
               <Icon icon={sidebarCollapsed ? 'mdi:chevron-right' : 'mdi:chevron-left'} className="h-5 w-5" />
             </mdui-button-icon>
             {sidebarCollapsed ? (
-              <div className="hidden md:flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/40">
+              <div className="hidden md:flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
                 <mdui-button-icon onClick={() => copyText(email)} title={email || t.inbox.title}>
                   <Icon icon={copied ? 'mdi:check' : 'mdi:email-outline'} className="h-5 w-5" />
                 </mdui-button-icon>
@@ -340,7 +441,7 @@ export default function InboxPage() {
                 )}
               </div>
             ) : null}
-            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/40', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/60', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="text-xs opacity-70">{t.inbox.title}</div>
@@ -363,7 +464,7 @@ export default function InboxPage() {
             </div>
 
             {sidebarCollapsed ? (
-              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/40">
+              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
                 <mdui-button-icon onClick={() => setUnreadOnly(false)} title={t.inbox.title} className={unreadOnly ? '' : 'text-[color:var(--mdui-color-primary)]'}>
                   <Icon icon="mdi:inbox" className="h-5 w-5" />
                 </mdui-button-icon>
@@ -372,7 +473,7 @@ export default function InboxPage() {
                 </mdui-button-icon>
               </div>
             ) : null}
-            <div className={['rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/40', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div className={['rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/60', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="grid gap-1">
                 <mdui-button
                   variant={unreadOnly ? 'text' : 'tonal'}
@@ -394,7 +495,7 @@ export default function InboxPage() {
             </div>
 
             {sidebarCollapsed ? (
-              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/40">
+              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
                 <mdui-button-icon onClick={() => loadList()} title={t.inbox.refreshButton}>
                   <Icon icon="mdi:refresh" className="h-5 w-5" />
                 </mdui-button-icon>
@@ -403,7 +504,7 @@ export default function InboxPage() {
                 </mdui-fab>
               </div>
             ) : null}
-            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/40 space-y-2', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/60 space-y-2', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="text-xs font-medium opacity-80">{t.inbox.renewButton}</div>
               <div className="flex items-center gap-2">
                 <mdui-button variant="tonal" className="flex-1" onClick={() => loadList()}>
@@ -424,7 +525,7 @@ export default function InboxPage() {
             </div>
 
             {sidebarCollapsed ? (
-              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/40">
+              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
                 <mdui-button-icon onClick={() => setDetailView('html')} title={t.inbox.htmlView} className={detailView === 'html' ? 'text-[color:var(--mdui-color-primary)]' : ''}>
                   <Icon icon="mdi:language-html5" className="h-5 w-5" />
                 </mdui-button-icon>
@@ -433,7 +534,7 @@ export default function InboxPage() {
                 </mdui-button-icon>
               </div>
             ) : null}
-            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/40 space-y-3', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div className={['rounded-xl border border-black/10 bg-white/60 p-3 backdrop-blur dark:border-white/10 dark:bg-slate-950/60 space-y-3', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="text-xs font-medium opacity-80">{t.inbox.htmlView} / {t.inbox.textView}</div>
               <mdui-segmented-button-group
                 selects="single"
@@ -455,7 +556,7 @@ export default function InboxPage() {
             </div>
 
             {sidebarCollapsed ? (
-              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/40">
+              <div className="hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 bg-white/60 p-2 backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
                 <mdui-button-icon onClick={() => setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'auto' : 'dark')} title={t.theme.label}>
                   <Icon icon={themeIcon} className="h-5 w-5" />
                 </mdui-button-icon>
@@ -523,7 +624,11 @@ export default function InboxPage() {
             </mdui-button>
           </aside>
 
-          <section className="min-w-0 flex-1 grid grid-cols-1 gap-4 lg:grid-cols-[380px_1fr]">
+          <section
+            ref={splitContainerRef}
+            className="min-w-0 flex-1 grid grid-cols-1 gap-4 lg:gap-0 lg:grid-cols-[var(--fi-inbox-list-width)_12px_1fr]"
+            style={{ '--fi-inbox-list-width': `${listWidth}px` } as React.CSSProperties}
+          >
             <div className="min-w-0 space-y-3">
               <div className="flex items-center gap-2">
                 <mdui-text-field
@@ -542,12 +647,13 @@ export default function InboxPage() {
               </div>
 
               {listError && <div className="text-sm text-red-600 dark:text-red-400">{listError}</div>}
-              {loadingList && <div className="text-sm opacity-70">{t.inbox.loadingList}</div>}
 
-              <div className="overflow-hidden rounded-xl border border-black/10 bg-white/60 backdrop-blur dark:border-white/10 dark:bg-slate-950/40">
+              <div className="overflow-hidden rounded-xl border border-black/10 bg-white/60 backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
                 <div className="divide-y divide-black/10 dark:divide-white/10">
-                  {messages.length === 0 ? (
+                  {loadingList ? (
                     <div className="p-4 text-sm opacity-70">{t.inbox.loadingList}</div>
+                  ) : messages.length === 0 ? (
+                    <div className="p-4 text-sm opacity-70">{t.inbox.emptyList}</div>
                   ) : (
                     messages.map((m) => {
                       const active = m.id === selectedId;
@@ -567,7 +673,9 @@ export default function InboxPage() {
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                <div className={['truncate text-sm', unread ? 'font-semibold' : 'font-medium'].join(' ')}>
+                                <div
+                                  className={['truncate text-sm', unread ? 'font-semibold' : 'font-medium'].join(' ')}
+                                >
                                   {label}
                                 </div>
                                 {unread ? (
@@ -600,12 +708,46 @@ export default function InboxPage() {
               </div>
             </div>
 
+            <div
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Resize panels"
+              aria-valuemin={280}
+              aria-valuenow={Math.round(listWidth)}
+              tabIndex={0}
+              className={[
+                'group relative hidden lg:flex cursor-col-resize select-none items-center justify-center',
+                'outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--mdui-color-primary)]',
+              ].join(' ')}
+              onPointerDown={startResize}
+              onPointerMove={onResizeMove}
+              onPointerUp={endResize}
+              onPointerCancel={endResize}
+              onLostPointerCapture={endResize}
+              onDoubleClick={() => adjustWidthByKeyboard(380 - listWidth)}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowLeft') {
+                  e.preventDefault();
+                  adjustWidthByKeyboard(-16);
+                }
+                if (e.key === 'ArrowRight') {
+                  e.preventDefault();
+                  adjustWidthByKeyboard(16);
+                }
+              }}
+            >
+              <div className="h-full w-px bg-black/10 dark:bg-white/10" />
+              <div className="absolute flex h-12 w-2 items-center justify-center rounded-full bg-black/5 transition-colors group-hover:bg-black/10 dark:bg-white/5 dark:group-hover:bg-white/10">
+                <div className="h-7 w-0.5 rounded-full bg-black/30 dark:bg-white/30" />
+              </div>
+            </div>
+
             <div className="min-w-0 space-y-3">
               {loadingDetail && <div className="text-sm opacity-70">{t.inbox.loadingMessage}</div>}
               {!loadingDetail && !detail && <div className="text-sm opacity-70">{t.inbox.selectMessage}</div>}
 
               {detail ? (
-                <div className="overflow-hidden rounded-xl border border-black/10 bg-white/60 backdrop-blur dark:border-white/10 dark:bg-slate-950/40">
+                <div className="overflow-hidden rounded-xl border border-black/10 bg-white/60 backdrop-blur dark:border-white/10 dark:bg-slate-950/60">
                   <div className="border-b border-black/10 px-4 py-3 dark:border-white/10">
                     <div className="text-base font-semibold">{detail.subject || t.inbox.noSubject}</div>
                     <div className="mt-1 text-xs opacity-70">
