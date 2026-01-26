@@ -161,8 +161,10 @@ export const zhCN = {
   footer: {
     copyright: '© {year}',
     brandName: 'CtelSpecu（星空之镜）',
-    officialSiteLabel: '官网：',
     officialSiteAria: '打开 CtelSpecu 官网',
+    githubLabel: 'GitHub 开源',
+    githubAria: '打开 FlashInbox GitHub 仓库',
+    licenseLabel: 'MIT 许可证',
     poweredByPrefix: '由',
     poweredBySuffix: '强力驱动',
     cloudflareAria: '打开 Cloudflare 官网',

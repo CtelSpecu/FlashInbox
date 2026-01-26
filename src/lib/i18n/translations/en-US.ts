@@ -153,8 +153,10 @@ export const enUS = {
   footer: {
     copyright: '© {year}',
     brandName: 'CtelSpecu (Star Mirror)',
-    officialSiteLabel: 'Official site:',
     officialSiteAria: 'Open CtelSpecu official site',
+    githubLabel: 'Open source on GitHub',
+    githubAria: 'Open FlashInbox GitHub repository',
+    licenseLabel: 'Under the MIT License',
     poweredByPrefix: 'Powered by',
     poweredBySuffix: '',
     cloudflareAria: 'Open Cloudflare website',

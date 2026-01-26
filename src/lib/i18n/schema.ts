@@ -148,8 +148,10 @@ export interface UserTranslations {
   footer: {
     copyright: string; // uses {year}
     brandName: string;
-    officialSiteLabel: string;
     officialSiteAria: string;
+    githubLabel: string;
+    githubAria: string;
+    licenseLabel: string;
     poweredByPrefix: string;
     poweredBySuffix: string;
     cloudflareAria: string;
