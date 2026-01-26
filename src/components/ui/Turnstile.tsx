@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 
 declare global {
   interface Window {
@@ -12,8 +12,8 @@ declare global {
       reset: (widgetId: string) => void;
       remove: (widgetId: string) => void;
       getResponse: (widgetId: string) => string | undefined;
+      isExpired?: (widgetId: string) => boolean;
     };
-    onTurnstileLoad?: () => void;
   }
 }
 
@@ -22,6 +22,7 @@ interface TurnstileOptions {
   callback?: (token: string) => void;
   'error-callback'?: (error: string) => void;
   'expired-callback'?: () => void;
+  'timeout-callback'?: () => void;
   theme?: 'light' | 'dark' | 'auto';
   size?: 'normal' | 'compact';
   tabindex?: number;
@@ -31,6 +32,8 @@ interface TurnstileOptions {
   'response-field-name'?: string;
   retry?: 'auto' | 'never';
   'retry-interval'?: number;
+  'refresh-expired'?: 'auto' | 'manual' | 'never';
+  'refresh-timeout'?: 'auto' | 'manual' | 'never';
   language?: string;
 }
 
@@ -39,6 +42,7 @@ interface TurnstileProps {
   onSuccess: (token: string) => void;
   onError?: (error: string) => void;
   onExpired?: () => void;
+  onTimeout?: () => void;
   theme?: 'light' | 'dark' | 'auto';
   size?: 'normal' | 'compact';
   action?: string;
@@ -47,11 +51,47 @@ interface TurnstileProps {
 
 const TURNSTILE_SCRIPT_URL = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
 
+let turnstileScriptPromise: Promise<void> | null = null;
+
+function loadTurnstileScript(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve();
+  if (window.turnstile) return Promise.resolve();
+  if (turnstileScriptPromise) return turnstileScriptPromise;
+
+  turnstileScriptPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>(
+      `script[src^="${TURNSTILE_SCRIPT_URL}"]`
+    );
+    if (existing) {
+      if (window.turnstile) {
+        resolve();
+        return;
+      }
+      existing.addEventListener('load', () => resolve(), { once: true });
+      existing.addEventListener('error', () => reject(new Error('Failed to load Turnstile')), {
+        once: true,
+      });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `${TURNSTILE_SCRIPT_URL}?render=explicit`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load Turnstile'));
+    document.head.appendChild(script);
+  });
+
+  return turnstileScriptPromise;
+}
+
 export function Turnstile({
   siteKey,
   onSuccess,
   onError,
   onExpired,
+  onTimeout,
   theme = 'auto',
   size = 'normal',
   action,
@@ -59,69 +99,60 @@ export function Turnstile({
 }: TurnstileProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
-  const scriptLoadedRef = useRef(false);
-
-  const renderWidget = useCallback(() => {
-    if (!containerRef.current || !window.turnstile || widgetIdRef.current) {
-      return;
-    }
-
-    widgetIdRef.current = window.turnstile.render(containerRef.current, {
-      sitekey: siteKey,
-      callback: onSuccess,
-      'error-callback': onError,
-      'expired-callback': onExpired,
-      theme,
-      size,
-      action,
-    });
-  }, [siteKey, onSuccess, onError, onExpired, theme, size, action]);
+  const callbacksRef = useRef({
+    onSuccess,
+    onError,
+    onExpired,
+    onTimeout,
+  });
 
   useEffect(() => {
-    // 检查脚本是否已加载
-    if (window.turnstile) {
-      renderWidget();
-      return;
+    callbacksRef.current = { onSuccess, onError, onExpired, onTimeout };
+  }, [onSuccess, onError, onExpired, onTimeout]);
+
+  useEffect(() => {
+    if (!siteKey) return;
+
+    let canceled = false;
+
+    function render() {
+      if (canceled) return;
+      if (!containerRef.current || !window.turnstile) return;
+
+      if (widgetIdRef.current) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
+
+      const { onSuccess: onSuccessCb, onError: onErrorCb, onExpired: onExpiredCb, onTimeout: onTimeoutCb } =
+        callbacksRef.current;
+
+      widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        sitekey: siteKey,
+        callback: (token) => onSuccessCb(token),
+        'error-callback': onErrorCb ? (err) => onErrorCb(err) : undefined,
+        'expired-callback': onExpiredCb ? () => onExpiredCb() : undefined,
+        'timeout-callback': onTimeoutCb ? () => onTimeoutCb() : undefined,
+        theme,
+        size,
+        action,
+      });
     }
 
-    // 检查脚本是否正在加载
-    const existingScript = document.querySelector(
-      `script[src^="${TURNSTILE_SCRIPT_URL}"]`
-    );
-    if (existingScript) {
-      // 等待脚本加载完成
-      window.onTurnstileLoad = renderWidget;
-      return;
-    }
-
-    // 加载脚本
-    if (!scriptLoadedRef.current) {
-      scriptLoadedRef.current = true;
-      const script = document.createElement('script');
-      script.src = `${TURNSTILE_SCRIPT_URL}?onload=onTurnstileLoad`;
-      script.async = true;
-      script.defer = true;
-      window.onTurnstileLoad = renderWidget;
-      document.head.appendChild(script);
-    }
+    loadTurnstileScript().then(render).catch((err) => {
+      if (canceled) return;
+      const { onError: onErrorCb } = callbacksRef.current;
+      onErrorCb?.(err instanceof Error ? err.message : 'Failed to load Turnstile');
+    });
 
     return () => {
-      // 清理 widget
+      canceled = true;
       if (widgetIdRef.current && window.turnstile) {
         window.turnstile.remove(widgetIdRef.current);
         widgetIdRef.current = null;
       }
     };
-  }, [renderWidget]);
-
-  // 当 siteKey 变化时重新渲染
-  useEffect(() => {
-    if (widgetIdRef.current && window.turnstile) {
-      window.turnstile.remove(widgetIdRef.current);
-      widgetIdRef.current = null;
-      renderWidget();
-    }
-  }, [siteKey, renderWidget]);
+  }, [siteKey, theme, size, action]);
 
   return <div ref={containerRef} className={className} />;
 }
@@ -144,4 +175,3 @@ export function getTurnstileResponse(widgetId: string): string | undefined {
   }
   return undefined;
 }
-
