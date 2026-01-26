@@ -93,7 +93,7 @@ export const GET = withAdminAuth(async (
       status: row.status,
       creationType: row.creation_type,
       keyExpiresAt: row.key_expires_at,
-      keyHashPrefix: row.key_hash ? row.key_hash.slice(0, 12) : null,
+      keyHashPrefix: row.status === 'claimed' && row.key_hash ? row.key_hash.slice(0, 12) : null,
       createdAt: row.created_at,
       claimedAt: row.claimed_at,
       destroyedAt: row.destroyed_at,

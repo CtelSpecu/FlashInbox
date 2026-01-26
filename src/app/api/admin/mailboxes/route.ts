@@ -122,7 +122,7 @@ export const GET = withAdminAuth(async (
     status: r.status,
     creationType: r.creation_type,
     keyExpiresAt: r.key_expires_at,
-    keyHashPrefix: r.key_hash ? r.key_hash.slice(0, 12) : null,
+    keyHashPrefix: r.status === 'claimed' && r.key_hash ? r.key_hash.slice(0, 12) : null,
     createdAt: r.created_at,
     claimedAt: r.claimed_at,
     lastLoginAt: r.last_login_at,
