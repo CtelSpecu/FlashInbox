@@ -196,7 +196,13 @@ export const adminZhCN = {
     statusAll: '全部',
     statusClaimed: '已认领',
     statusUnclaimed: '未认领',
+    statusBanned: '已禁用',
     statusDestroyed: '已销毁',
+    ban: '禁用',
+    confirmBanTitle: '禁用邮箱',
+    confirmBanText: '将撤销密钥并清空所有会话。用户将无法认领、恢复或续期该邮箱。',
+    confirmDestroyTitle: '删除邮箱',
+    confirmDestroyText: '将删除邮箱内容与会话，并把状态设为已销毁。该操作无法撤销。',
   },
 } satisfies AdminTranslations;
 

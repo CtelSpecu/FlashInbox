@@ -3,7 +3,7 @@ import { getCloudflareEnv } from '@/lib/env';
 import { withAdminAuth, AdminAuthContext } from '@/lib/middleware/admin-auth';
 import { success, error, ErrorCodes } from '@/lib/utils/response';
 
-type MailboxStatusFilter = 'all' | 'unclaimed' | 'claimed' | 'destroyed';
+type MailboxStatusFilter = 'all' | 'unclaimed' | 'claimed' | 'banned' | 'destroyed';
 
 export const GET = withAdminAuth(async (
   request: NextRequest,
@@ -20,7 +20,7 @@ export const GET = withAdminAuth(async (
   const search = (url.searchParams.get('search') || '').trim() || undefined;
   const offset = (page - 1) * pageSize;
 
-  if (!['all', 'unclaimed', 'claimed', 'destroyed'].includes(status)) {
+  if (!['all', 'unclaimed', 'claimed', 'banned', 'destroyed'].includes(status)) {
     return error(ErrorCodes.INVALID_REQUEST, 'Invalid status', 400);
   }
 
@@ -101,7 +101,7 @@ export const GET = withAdminAuth(async (
     .all<{
       id: string;
       username: string;
-      status: 'unclaimed' | 'claimed' | 'destroyed';
+      status: 'unclaimed' | 'claimed' | 'banned' | 'destroyed';
       creation_type: 'random' | 'manual' | 'inbound';
       key_expires_at: number | null;
       key_hash: string | null;
@@ -141,4 +141,3 @@ export const GET = withAdminAuth(async (
     },
   });
 });
-

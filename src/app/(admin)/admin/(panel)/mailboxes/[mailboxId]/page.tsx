@@ -19,7 +19,7 @@ interface SuccessResponse<T> {
   data: T;
 }
 
-type MailboxStatus = 'unclaimed' | 'claimed' | 'destroyed';
+type MailboxStatus = 'unclaimed' | 'claimed' | 'banned' | 'destroyed';
 type MailboxCreationType = 'random' | 'manual' | 'inbound';
 
 interface MailboxDto {
@@ -96,6 +96,9 @@ export default function AdminMailboxDetailPage() {
   const [loading, setLoading] = useState(true);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [mailbox, setMailbox] = useState<MailboxDto | null>(null);
+  const [banOpen, setBanOpen] = useState(false);
+  const [destroyOpen, setDestroyOpen] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [messages, setMessages] = useState<MessageListItem[]>([]);
@@ -193,6 +196,54 @@ export default function AdminMailboxDetailPage() {
     }
   }
 
+  async function banMailbox() {
+    if (!mailboxId) return;
+    setActionLoading(true);
+    setErrorText(null);
+    try {
+      await adminApiFetch<SuccessResponse<{ mailbox: { id: string; status: MailboxStatus } }>>(
+        `/api/admin/mailboxes/${mailboxId}`,
+        { method: 'PATCH', body: JSON.stringify({ status: 'banned' }) }
+      );
+      setBanOpen(false);
+      await loadMailbox();
+    } catch (e) {
+      const err = e as AdminApiError;
+      if (err.status === 401) {
+        clearAdminSession();
+        window.location.href = withAdminTracking('/admin/login');
+        return;
+      }
+      setErrorText(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function destroyMailbox() {
+    if (!mailboxId) return;
+    setActionLoading(true);
+    setErrorText(null);
+    try {
+      await adminApiFetch<SuccessResponse<{ mailbox: { id: string; status: MailboxStatus } }>>(
+        `/api/admin/mailboxes/${mailboxId}`,
+        { method: 'DELETE' }
+      );
+      setDestroyOpen(false);
+      window.location.href = withAdminTracking('/admin/mailboxes');
+    } catch (e) {
+      const err = e as AdminApiError;
+      if (err.status === 401) {
+        clearAdminSession();
+        window.location.href = withAdminTracking('/admin/login');
+        return;
+      }
+      setErrorText(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   useEffect(() => {
     loadMailbox();
     loadMessages(1);
@@ -200,6 +251,8 @@ export default function AdminMailboxDetailPage() {
   }, [mailboxId]);
 
   const title = mailbox?.email || t.mailboxes.title;
+  const canBan = mailbox?.status !== 'banned' && mailbox?.status !== 'destroyed';
+  const canDestroy = mailbox?.status !== 'destroyed';
 
   return (
     <div className="space-y-4">
@@ -207,12 +260,33 @@ export default function AdminMailboxDetailPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Icon icon="lucide:inbox" className="h-4 w-4" />
-            <span className="truncate" title={title}>
-              {title}
-            </span>
-          </CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle className="flex min-w-0 items-center gap-2">
+              <Icon icon="lucide:inbox" className="h-4 w-4" />
+              <span className="truncate" title={title}>
+                {title}
+              </span>
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              {canBan ? (
+                <Button variant="outline" size="sm" onClick={() => setBanOpen(true)} disabled={actionLoading}>
+                  <Icon icon="lucide:ban" className="h-4 w-4" />
+                  {t.mailboxes.ban}
+                </Button>
+              ) : null}
+              {canDestroy ? (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setDestroyOpen(true)}
+                  disabled={actionLoading}
+                >
+                  <Icon icon="lucide:trash-2" className="h-4 w-4" />
+                  {t.common.delete}
+                </Button>
+              ) : null}
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="grid gap-2 md:grid-cols-2">
           <div className="text-sm text-[color:var(--admin-muted)]">
@@ -396,6 +470,44 @@ export default function AdminMailboxDetailPage() {
             )}
           </div>
         )}
+      </Modal>
+
+      <Modal
+        open={banOpen}
+        onOpenChange={(o) => setBanOpen(o)}
+        title={t.mailboxes.confirmBanTitle}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setBanOpen(false)} disabled={actionLoading}>
+              {t.common.cancel}
+            </Button>
+            <Button variant="destructive" onClick={banMailbox} disabled={actionLoading}>
+              <Icon icon="lucide:ban" className="h-4 w-4" />
+              {t.mailboxes.ban}
+            </Button>
+          </div>
+        }
+      >
+        <div className="text-sm text-[color:var(--admin-muted)]">{t.mailboxes.confirmBanText}</div>
+      </Modal>
+
+      <Modal
+        open={destroyOpen}
+        onOpenChange={(o) => setDestroyOpen(o)}
+        title={t.mailboxes.confirmDestroyTitle}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDestroyOpen(false)} disabled={actionLoading}>
+              {t.common.cancel}
+            </Button>
+            <Button variant="destructive" onClick={destroyMailbox} disabled={actionLoading}>
+              <Icon icon="lucide:trash-2" className="h-4 w-4" />
+              {t.common.delete}
+            </Button>
+          </div>
+        }
+      >
+        <div className="text-sm text-[color:var(--admin-muted)]">{t.mailboxes.confirmDestroyText}</div>
       </Modal>
     </div>
   );

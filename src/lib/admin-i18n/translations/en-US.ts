@@ -196,6 +196,12 @@ export const adminEnUS = {
     statusAll: 'All',
     statusClaimed: 'Claimed',
     statusUnclaimed: 'Unclaimed',
+    statusBanned: 'Banned',
     statusDestroyed: 'Destroyed',
+    ban: 'Ban',
+    confirmBanTitle: 'Ban mailbox',
+    confirmBanText: 'This will revoke the key and clear all active sessions. Users will not be able to claim, recover, or renew this mailbox.',
+    confirmDestroyTitle: 'Destroy mailbox',
+    confirmDestroyText: 'This will delete all mailbox content and sessions and set the status to destroyed. This action cannot be undone.',
   },
 } satisfies AdminTranslations;

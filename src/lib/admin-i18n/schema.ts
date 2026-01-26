@@ -191,6 +191,12 @@ export interface AdminTranslations {
     statusAll: string;
     statusClaimed: string;
     statusUnclaimed: string;
+    statusBanned: string;
     statusDestroyed: string;
+    ban: string;
+    confirmBanTitle: string;
+    confirmBanText: string;
+    confirmDestroyTitle: string;
+    confirmDestroyText: string;
   };
 }

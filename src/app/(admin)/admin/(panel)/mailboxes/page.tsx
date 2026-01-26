@@ -32,7 +32,7 @@ interface DomainDto {
   updatedAt: number;
 }
 
-type MailboxStatus = 'unclaimed' | 'claimed' | 'destroyed';
+type MailboxStatus = 'unclaimed' | 'claimed' | 'banned' | 'destroyed';
 type MailboxStatusFilter = 'all' | MailboxStatus;
 type MailboxCreationType = 'random' | 'manual' | 'inbound';
 
@@ -188,6 +188,7 @@ export default function AdminMailboxesPage() {
             <option value="all">{t.mailboxes.statusAll}</option>
             <option value="claimed">{t.mailboxes.statusClaimed}</option>
             <option value="unclaimed">{t.mailboxes.statusUnclaimed}</option>
+            <option value="banned">{t.mailboxes.statusBanned}</option>
             <option value="destroyed">{t.mailboxes.statusDestroyed}</option>
           </Select>
 
