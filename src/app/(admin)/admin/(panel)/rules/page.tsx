@@ -68,6 +68,34 @@ export default function AdminRulesPage() {
   const editRule = useMemo(() => rules.find((r) => r.id === editId) || null, [rules, editId]);
   const [editDraft, setEditDraft] = useState<Partial<RuleDto>>({});
 
+  function getRuleTypeLabel(type: RuleType): string {
+    switch (type) {
+      case 'sender_domain':
+        return t.rules.typeSenderDomain;
+      case 'sender_addr':
+        return t.rules.typeSenderAddress;
+      case 'keyword':
+        return t.rules.typeKeyword;
+      case 'ip':
+        return t.rules.typeIp;
+      default:
+        return type;
+    }
+  }
+
+  function getRuleActionLabel(action: RuleAction): string {
+    switch (action) {
+      case 'drop':
+        return t.rules.actionDrop;
+      case 'quarantine':
+        return t.rules.actionQuarantine;
+      case 'allow':
+        return t.rules.actionAllow;
+      default:
+        return action;
+    }
+  }
+
   async function load() {
     setLoading(true);
     setErrorText(null);
@@ -234,31 +262,31 @@ export default function AdminRulesPage() {
         </CardHeader>
         <CardContent className="grid gap-2 md:grid-cols-6">
           <Select value={newType} onChange={(e) => setNewType(e.target.value as RuleType)} disabled={loading}>
-            <option value="sender_domain">sender_domain</option>
-            <option value="sender_addr">sender_addr</option>
-            <option value="keyword">keyword</option>
-            <option value="ip">ip</option>
+            <option value="sender_domain">{t.rules.typeSenderDomain}</option>
+            <option value="sender_addr">{t.rules.typeSenderAddress}</option>
+            <option value="keyword">{t.rules.typeKeyword}</option>
+            <option value="ip">{t.rules.typeIp}</option>
           </Select>
           <Input
-            placeholder="pattern"
+            placeholder={t.rules.patternPlaceholder}
             value={newPattern}
             onChange={(e) => setNewPattern(e.target.value)}
             disabled={loading}
           />
           <Select value={newAction} onChange={(e) => setNewAction(e.target.value as RuleAction)} disabled={loading}>
-            <option value="drop">drop</option>
-            <option value="quarantine">quarantine</option>
-            <option value="allow">allow</option>
+            <option value="drop">{t.rules.actionDrop}</option>
+            <option value="quarantine">{t.rules.actionQuarantine}</option>
+            <option value="allow">{t.rules.actionAllow}</option>
           </Select>
           <Input
             type="number"
-            placeholder="priority"
+            placeholder={t.rules.priorityPlaceholder}
             value={String(newPriority)}
             onChange={(e) => setNewPriority(parseInt(e.target.value || '100', 10))}
             disabled={loading}
           />
           <Select value={newDomainId} onChange={(e) => setNewDomainId(e.target.value)} disabled={loading}>
-            <option value="">(global)</option>
+            <option value="">{t.rules.domainPlaceholder}</option>
             {domains.map((d) => (
               <option key={d.id} value={String(d.id)}>
                 {d.name}
@@ -271,7 +299,7 @@ export default function AdminRulesPage() {
           </Button>
           <div className="md:col-span-6">
             <Input
-              placeholder={t.rules.description}
+              placeholder={t.rules.descriptionPlaceholder}
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
               disabled={loading}
@@ -353,11 +381,11 @@ export default function AdminRulesPage() {
                     />
                   </TD>
                   <TD className="text-[color:var(--admin-muted)]">{r.id}</TD>
-                  <TD>{r.type}</TD>
+                  <TD>{getRuleTypeLabel(r.type)}</TD>
                   <TD className="max-w-[320px] truncate" title={r.pattern}>
                     {r.pattern}
                   </TD>
-                  <TD>{r.action}</TD>
+                  <TD>{getRuleActionLabel(r.action)}</TD>
                   <TD>{r.priority}</TD>
                   <TD>
                     <Button
@@ -419,32 +447,32 @@ export default function AdminRulesPage() {
               onChange={(e) => setEditDraft((p) => ({ ...p, type: e.target.value as RuleType }))}
               disabled={loading}
             >
-              <option value="sender_domain">sender_domain</option>
-              <option value="sender_addr">sender_addr</option>
-              <option value="keyword">keyword</option>
-              <option value="ip">ip</option>
+              <option value="sender_domain">{t.rules.typeSenderDomain}</option>
+              <option value="sender_addr">{t.rules.typeSenderAddress}</option>
+              <option value="keyword">{t.rules.typeKeyword}</option>
+              <option value="ip">{t.rules.typeIp}</option>
             </Select>
             <Input
               value={String(editDraft.pattern ?? '')}
               onChange={(e) => setEditDraft((p) => ({ ...p, pattern: e.target.value }))}
               disabled={loading}
-              placeholder="pattern"
+              placeholder={t.rules.patternPlaceholder}
             />
             <Select
               value={String(editDraft.action || editRule.action)}
               onChange={(e) => setEditDraft((p) => ({ ...p, action: e.target.value as RuleAction }))}
               disabled={loading}
             >
-              <option value="drop">drop</option>
-              <option value="quarantine">quarantine</option>
-              <option value="allow">allow</option>
+              <option value="drop">{t.rules.actionDrop}</option>
+              <option value="quarantine">{t.rules.actionQuarantine}</option>
+              <option value="allow">{t.rules.actionAllow}</option>
             </Select>
             <Input
               type="number"
               value={String(editDraft.priority ?? editRule.priority)}
               onChange={(e) => setEditDraft((p) => ({ ...p, priority: parseInt(e.target.value || '100', 10) }))}
               disabled={loading}
-              placeholder="priority"
+              placeholder={t.rules.priorityPlaceholder}
             />
             <Select
               value={editDraft.domainId === null || editDraft.domainId === undefined ? '' : String(editDraft.domainId)}
@@ -453,7 +481,7 @@ export default function AdminRulesPage() {
               }
               disabled={loading}
             >
-              <option value="">(global)</option>
+              <option value="">{t.rules.domainPlaceholder}</option>
               {domains.map((d) => (
                 <option key={d.id} value={String(d.id)}>
                   {d.name}
@@ -464,7 +492,7 @@ export default function AdminRulesPage() {
               value={String(editDraft.description ?? '')}
               onChange={(e) => setEditDraft((p) => ({ ...p, description: e.target.value }))}
               disabled={loading}
-              placeholder={t.rules.description}
+              placeholder={t.rules.descriptionPlaceholder}
             />
             <div className="flex items-center justify-between rounded-md border border-[color:var(--admin-border)] p-2">
               <div className="text-sm text-[color:var(--admin-text)]">{t.rules.active}</div>
