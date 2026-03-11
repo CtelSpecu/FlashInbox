@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@iconify/react';
 
@@ -11,6 +11,11 @@ import { setSessionToken } from '@/lib/client/session-store';
 import { validateUsername } from '@/lib/utils/username';
 import { useI18n } from '@/lib/i18n/context';
 import { type Locale, locales } from '@/lib/i18n';
+import {
+  getSoundIcon,
+  getSoundSliderStyle,
+  SOUND_ACCENT_COLOR,
+} from '@/lib/sound/user-sound';
 import { useUserSound } from '@/lib/sound/user-sound-provider';
 import { useUserTheme } from '@/lib/theme/user-theme';
 import type { ThemeMode } from '@/lib/theme/types';
@@ -46,7 +51,7 @@ export default function HomeClient() {
   const router = useRouter();
   const { t, format, locale, setLocale } = useI18n();
   const { theme, setTheme } = useUserTheme();
-  const { volume, setVolume, playNotice } = useUserSound();
+  const { volume, setVolume, previewNotice, playNotice } = useUserSound();
 
   const [mode, setMode] = useState<CreateMode>('random');
   const [manualUsername, setManualUsername] = useState('');
@@ -67,6 +72,7 @@ export default function HomeClient() {
   const [copiedField, setCopiedField] = useState<'email' | 'key' | null>(null);
   const [soundPanelOpen, setSoundPanelOpen] = useState(false);
   const soundPanelRef = useRef<HTMLDivElement | null>(null);
+  const soundControlRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -97,18 +103,30 @@ export default function HomeClient() {
   }, []);
 
   useEffect(() => {
-    if (!soundPanelOpen) return;
+    if (!soundPanelOpen) {
+      return;
+    }
 
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target;
       if (!(target instanceof Node)) return;
-      if (!soundPanelRef.current?.contains(target)) {
+      if (!soundControlRef.current?.contains(target)) {
+        setSoundPanelOpen(false);
+      }
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
         setSoundPanelOpen(false);
       }
     };
 
     document.addEventListener('pointerdown', onPointerDown);
-    return () => document.removeEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
   }, [soundPanelOpen]);
 
   const usernameValidation = useMemo(() => {
@@ -197,10 +215,12 @@ export default function HomeClient() {
         ? 'mdi:weather-night'
         : 'mdi:theme-light-dark';
   const soundPercent = Math.round(volume * 100);
+  const soundIcon = getSoundIcon(soundPercent);
+  const soundSliderStyle = getSoundSliderStyle(soundPercent, 'vertical') as CSSProperties;
 
   return (
     <div className="relative min-h-full overflow-x-hidden">
-      <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
+      <div className="absolute right-4 top-4 z-20 flex flex-nowrap items-center gap-2">
         <mdui-dropdown placement="bottom-end">
           <mdui-button-icon
             slot="trigger"
@@ -257,40 +277,53 @@ export default function HomeClient() {
           </mdui-menu>
         </mdui-dropdown>
 
-        <div ref={soundPanelRef} className="relative">
+        <div ref={soundControlRef} className="relative shrink-0">
           <mdui-button-icon
             variant="tonal"
             aria-label={t.sound.label}
             title={`${t.sound.label}: ${soundPercent}%`}
             onClick={() => setSoundPanelOpen((open) => !open)}
           >
-            <Icon
-              icon={soundPercent === 0 ? 'mdi:volume-off' : 'mdi:volume-high'}
-              className="h-5 w-5 text-[color:var(--mdui-color-primary)]"
-            />
+            <Icon icon={soundIcon} className="h-5 w-5" />
           </mdui-button-icon>
 
           {soundPanelOpen ? (
             <div
-              className="fi-glass absolute right-0 top-12 flex h-44 w-20 flex-col items-center justify-between rounded-3xl border border-black/10 px-3 py-4 shadow-lg dark:border-white/10"
+              ref={soundPanelRef}
+              className="fi-glass absolute right-0 top-[calc(100%+12px)] z-30 w-28 rounded-2xl border border-[#E8DEF8] bg-white/70 px-3 py-3 shadow-[0_18px_36px_rgba(103,80,164,0.18)] dark:border-white/10 dark:bg-white/5"
               data-sound="off"
             >
-              <Icon
-                icon={soundPercent === 0 ? 'mdi:volume-off' : 'mdi:volume-high'}
-                className="h-5 w-5 text-[color:var(--mdui-color-primary)]"
-              />
-              <input
-                aria-label={t.sound.label}
-                className="h-24 w-5 cursor-pointer appearance-none bg-transparent accent-[color:var(--mdui-color-primary)] [writing-mode:vertical-lr] [direction:rtl]"
-                data-sound="off"
-                max={100}
-                min={0}
-                step={1}
-                type="range"
-                value={soundPercent}
-                onChange={(e) => setVolume(Number((e.target as HTMLInputElement).value) / 100)}
-              />
-              <span className="text-xs font-semibold text-[color:var(--mdui-color-primary)]">{soundPercent}%</span>
+              <div className="mb-3 flex items-center justify-between text-sm">
+                <span className="inline-flex items-center gap-2">
+                  <Icon
+                    icon={soundIcon}
+                    className="h-4 w-4"
+                    style={{ color: SOUND_ACCENT_COLOR }}
+                  />
+                  <span className="text-xs font-medium opacity-80">{t.sound.label}</span>
+                </span>
+                <span className="text-xs font-semibold" style={{ color: SOUND_ACCENT_COLOR }}>
+                  {soundPercent}%
+                </span>
+              </div>
+
+              <div className="flex justify-center">
+                <input
+                  aria-label={t.sound.label}
+                  className="fi-sound-slider fi-sound-slider-vertical h-32 w-7 cursor-pointer appearance-none bg-transparent [writing-mode:vertical-lr] [direction:rtl]"
+                  data-sound="off"
+                  max={100}
+                  min={0}
+                  step={1}
+                  style={soundSliderStyle}
+                  type="range"
+                  value={soundPercent}
+                  onChange={(e) => setVolume(Number((e.target as HTMLInputElement).value) / 100)}
+                  onMouseUp={previewNotice}
+                  onTouchEnd={previewNotice}
+                  onPointerUp={previewNotice}
+                />
+              </div>
             </div>
           ) : null}
         </div>

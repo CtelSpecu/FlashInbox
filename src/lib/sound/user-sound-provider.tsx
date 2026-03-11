@@ -11,6 +11,8 @@ import {
 } from 'react';
 
 import {
+  CLICK_SOUND_SELECTOR,
+  GENERIC_CLICK_SOUND_SELECTOR,
   clampSoundVolume,
   DEFAULT_SOUND_VOLUME,
   getNextMessageSound,
@@ -22,6 +24,7 @@ interface UserSoundContextValue {
   volume: number;
   enabled: boolean;
   setVolume: (volume: number) => void;
+  previewNotice: () => void;
   playClick: () => void;
   playNotice: () => void;
   playMessage: () => void;
@@ -80,9 +83,7 @@ export function UserSoundProvider({ children }: { children: React.ReactNode }) {
       const target = event.target;
       if (!(target instanceof Element)) return;
 
-      const el = target.closest<HTMLElement>(
-        '[data-sound], mdui-button, mdui-button-icon, mdui-menu-item, mdui-select, mdui-segmented-button'
-      );
+      const el = target.closest<HTMLElement>(CLICK_SOUND_SELECTOR);
       if (!el) return;
 
       const sound = el.dataset.sound;
@@ -93,7 +94,7 @@ export function UserSoundProvider({ children }: { children: React.ReactNode }) {
       }
       if (
         sound === 'click' ||
-        el.matches('mdui-button, mdui-button-icon, mdui-menu-item, mdui-select, mdui-segmented-button')
+        el.matches(GENERIC_CLICK_SOUND_SELECTOR)
       ) {
         play('/click.ogg');
       }
@@ -110,6 +111,7 @@ export function UserSoundProvider({ children }: { children: React.ReactNode }) {
     window.localStorage.setItem(USER_SOUND_STORAGE_KEY, normalized.toString());
   }, []);
 
+  const previewNotice = useCallback(() => play('/notice.ogg'), [play]);
   const playClick = useCallback(() => play('/click.ogg'), [play]);
   const playNotice = useCallback(() => play('/notice.ogg'), [play]);
   const playMessage = useCallback(() => {
@@ -123,11 +125,12 @@ export function UserSoundProvider({ children }: { children: React.ReactNode }) {
       volume,
       enabled: volume > 0,
       setVolume,
+      previewNotice,
       playClick,
       playNotice,
       playMessage,
     }),
-    [volume, setVolume, playClick, playNotice, playMessage]
+    [volume, setVolume, previewNotice, playClick, playNotice, playMessage]
   );
 
   return <UserSoundContext.Provider value={value}>{children}</UserSoundContext.Provider>;

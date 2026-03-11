@@ -10,6 +10,7 @@ import { installMduiSelectViewportGuard } from '@/lib/client/mdui-select-guard';
 import { clearSessionToken } from '@/lib/client/session-store';
 import { useI18n } from '@/lib/i18n/context';
 import { type Locale, locales } from '@/lib/i18n';
+import { getSoundIcon, getSoundSliderStyle, SOUND_ACCENT_COLOR } from '@/lib/sound/user-sound';
 import { useUserSound } from '@/lib/sound/user-sound-provider';
 import { useUserTheme } from '@/lib/theme/user-theme';
 import type { ThemeMode } from '@/lib/theme/types';
@@ -85,7 +86,7 @@ export default function InboxPage() {
   const router = useRouter();
   const { t, format, locale, setLocale } = useI18n();
   const { theme, setTheme } = useUserTheme();
-  const { volume, setVolume, enabled: soundEnabled, playMessage } = useUserSound();
+  const { volume, setVolume, previewNotice, playMessage } = useUserSound();
 
   const splitContainerRef = useRef<HTMLDivElement | null>(null);
   const resizingRef = useRef<{
@@ -368,6 +369,8 @@ export default function InboxPage() {
         ? 'mdi:weather-night'
         : 'mdi:theme-light-dark';
   const soundPercent = Math.round(volume * 100);
+  const soundIcon = getSoundIcon(soundPercent);
+  const soundSliderStyle = getSoundSliderStyle(soundPercent) as React.CSSProperties;
 
   return (
     <div className="min-h-full px-3 py-4">
@@ -387,7 +390,7 @@ export default function InboxPage() {
             </mdui-button-icon>
             {sidebarCollapsed ? (
               <div className="fi-glass hidden md:flex flex-col items-center gap-2 rounded-xl border border-black/10 p-2 dark:border-white/10">
-                <mdui-button-icon onClick={() => copyText(email)} title={copied ? t.common.copied : t.common.copy} aria-label={copied ? t.common.copied : t.common.copy}>
+                <mdui-button-icon data-sound="notice" onClick={() => copyText(email)} title={copied ? t.common.copied : t.common.copy} aria-label={copied ? t.common.copied : t.common.copy}>
                   <Icon icon={copied ? 'mdi:check' : 'mdi:email-outline'} className="h-5 w-5" />
                 </mdui-button-icon>
                 <div className="h-4 text-[10px] opacity-70">{copied ? t.common.copied : ''}</div>
@@ -399,21 +402,35 @@ export default function InboxPage() {
               </div>
             ) : null}
             <div className={['fi-glass rounded-xl border border-black/10 p-3 dark:border-white/10', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
-              <div className="flex items-start justify-between gap-2">
+              <div className="space-y-2">
                 <div className="min-w-0">
                   <div className="text-xs opacity-70">{t.inbox.title}</div>
-                  <div className="truncate text-sm font-semibold">{email || '...'}</div>
+                  <div className="mt-1 rounded-2xl border border-[#E8DEF8] bg-[#F7F2FA] px-3 py-2 text-sm font-semibold text-[#1D192B]">
+                    <span className="block truncate">{email || '...'}</span>
+                  </div>
                 </div>
                 {email ? (
-                  <mdui-button variant="text" className="min-w-0 px-2" onClick={() => copyText(email)} aria-label={copied ? t.common.copied : t.common.copy} title={copied ? t.common.copied : t.common.copy}>
-                    <Icon icon={copied ? 'mdi:check' : 'mdi:content-copy'} slot="icon" />
-                    <span className="text-xs">{copied ? t.common.copied : t.common.copy}</span>
-                  </mdui-button>
+                  <div>
+                    <mdui-button
+                      variant="text"
+                      className="fi-inbox-copy-button whitespace-nowrap px-2"
+                      data-sound="notice"
+                      style={{ backgroundColor: '#E8DEF8', borderRadius: '999px' }}
+                      onClick={() => copyText(email)}
+                      aria-label={copied ? t.common.copied : t.common.copy}
+                      title={copied ? t.common.copied : t.common.copy}
+                    >
+                      <Icon icon={copied ? 'mdi:check' : 'mdi:content-copy'} slot="icon" />
+                      <span className="text-xs">{copied ? t.common.copied : t.common.copy}</span>
+                    </mdui-button>
+                  </div>
                 ) : null}
               </div>
-              <div className="mt-2 flex items-center justify-between text-xs opacity-70">
-                <span>{format(t.inbox.unreadCount, { count: unreadCount })}</span>
-                <span>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                <span className="rounded-full bg-[#F7F2FA] px-3 py-1 font-medium text-[#6750A4]">
+                  {format(t.inbox.unreadCount, { count: unreadCount })}
+                </span>
+                <span className="rounded-full bg-[#F7F2FA] px-3 py-1 font-medium text-[#6750A4]">
                   {t.inbox.keyExpires}: {keyExpiresAt ? formatTime(keyExpiresAt) : t.common.na}
                 </span>
               </div>
@@ -601,31 +618,36 @@ export default function InboxPage() {
               <div className="space-y-1">
                 <div className="text-xs opacity-70">{t.sound.label}</div>
                 <div
-                  className="rounded-xl border border-black/10 px-3 py-3 dark:border-white/10"
+                  className="rounded-2xl border border-[#E8DEF8] bg-white/70 px-3 py-3 shadow-[0_10px_26px_rgba(103,80,164,0.08)] dark:border-white/10 dark:bg-white/5"
                   data-sound="off"
                 >
                   <div className="mb-2 flex items-center justify-between text-sm">
                     <span className="inline-flex items-center gap-2">
                       <Icon
-                        icon={soundEnabled ? 'mdi:volume-high' : 'mdi:volume-off'}
-                        className="h-4 w-4 text-[color:var(--mdui-color-primary)]"
+                        icon={soundIcon}
+                        className="h-4 w-4"
+                        style={{ color: SOUND_ACCENT_COLOR }}
                       />
                       {t.sound.label}
                     </span>
-                    <span className="text-xs font-semibold text-[color:var(--mdui-color-primary)]">
+                    <span className="text-xs font-semibold" style={{ color: SOUND_ACCENT_COLOR }}>
                       {soundPercent}%
                     </span>
                   </div>
                   <input
                     aria-label={t.sound.label}
-                    className="w-full cursor-pointer appearance-none bg-transparent accent-[color:var(--mdui-color-primary)]"
+                    className="fi-sound-slider fi-sound-slider-horizontal w-full cursor-pointer appearance-none bg-transparent"
                     data-sound="off"
                     max={100}
                     min={0}
                     step={1}
+                    style={soundSliderStyle}
                     type="range"
                     value={soundPercent}
                     onChange={(e) => setVolume(Number((e.target as HTMLInputElement).value) / 100)}
+                    onMouseUp={previewNotice}
+                    onTouchEnd={previewNotice}
+                    onPointerUp={previewNotice}
                   />
                 </div>
               </div>
