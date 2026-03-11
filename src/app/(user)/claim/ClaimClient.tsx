@@ -154,7 +154,7 @@ export default function ClaimClient() {
 
         {errorText && <div className="text-sm text-red-600 dark:text-red-400">{errorText}</div>}
 
-        <mdui-button variant="filled" className="fi-btn-filled" full-width loading={loading} disabled={!!key || !normalizedEmail || !turnstileToken} onClick={submit}>
+        <mdui-button variant="filled" className="fi-btn-filled" full-width data-sound="notice" loading={loading} disabled={!!key || !normalizedEmail || !turnstileToken} onClick={submit}>
           <Icon icon="mdi:check-circle" slot="icon" />
           {t.claim.claimButton}
         </mdui-button>
@@ -185,7 +185,7 @@ export default function ClaimClient() {
           <mdui-button slot="action" variant="tonal" className="fi-btn-tonal" onClick={dismissKeyDialog}>
             {t.common.close}
           </mdui-button>
-          <mdui-button slot="action" variant="filled" className="fi-btn-filled" disabled={!confirmSaved} onClick={closeKeyDialog}>
+          <mdui-button slot="action" variant="filled" className="fi-btn-filled" data-sound="notice" disabled={!confirmSaved} onClick={closeKeyDialog}>
             {t.claim.continueButton}
           </mdui-button>
         </mdui-dialog>

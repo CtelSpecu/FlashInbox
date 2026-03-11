@@ -145,6 +145,12 @@ export interface UserTranslations {
     system: string;
   };
 
+  sound: {
+    label: string;
+    on: string;
+    off: string;
+  };
+
   footer: {
     copyright: string; // uses {year}
     brandName: string;

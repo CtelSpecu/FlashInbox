@@ -3,6 +3,7 @@
 import 'mdui';
 import { I18nProvider } from '@/lib/i18n/context';
 import type { Locale } from '@/lib/i18n';
+import { UserSoundProvider } from '@/lib/sound/user-sound-provider';
 import { UserThemeProvider } from '@/lib/theme/user-theme';
 import { UmamiLoader } from '@/components/ui/UmamiLoader';
 
@@ -16,8 +17,10 @@ export function MduiProvider({
   return (
     <I18nProvider initialLocale={initialLocale}>
       <UserThemeProvider>
-        {children}
-        <UmamiLoader scope="user" />
+        <UserSoundProvider>
+          {children}
+          <UmamiLoader scope="user" />
+        </UserSoundProvider>
       </UserThemeProvider>
     </I18nProvider>
   );

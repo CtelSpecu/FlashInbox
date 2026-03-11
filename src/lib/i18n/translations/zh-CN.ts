@@ -158,6 +158,12 @@ export const zhCN = {
     system: '跟随系统',
   },
 
+  sound: {
+    label: '音效',
+    on: '音效已开',
+    off: '音效已关',
+  },
+
   footer: {
     copyright: '© {year}',
     brandName: '星空之镜',

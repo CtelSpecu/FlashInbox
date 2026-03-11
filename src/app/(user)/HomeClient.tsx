@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@iconify/react';
 
@@ -11,6 +11,7 @@ import { setSessionToken } from '@/lib/client/session-store';
 import { validateUsername } from '@/lib/utils/username';
 import { useI18n } from '@/lib/i18n/context';
 import { type Locale, locales } from '@/lib/i18n';
+import { useUserSound } from '@/lib/sound/user-sound-provider';
 import { useUserTheme } from '@/lib/theme/user-theme';
 import type { ThemeMode } from '@/lib/theme/types';
 
@@ -45,6 +46,7 @@ export default function HomeClient() {
   const router = useRouter();
   const { t, format, locale, setLocale } = useI18n();
   const { theme, setTheme } = useUserTheme();
+  const { volume, setVolume, playNotice } = useUserSound();
 
   const [mode, setMode] = useState<CreateMode>('random');
   const [manualUsername, setManualUsername] = useState('');
@@ -63,6 +65,8 @@ export default function HomeClient() {
   const [createdToken, setCreatedToken] = useState<string | null>(null);
   const [confirmSaved, setConfirmSaved] = useState(false);
   const [copiedField, setCopiedField] = useState<'email' | 'key' | null>(null);
+  const [soundPanelOpen, setSoundPanelOpen] = useState(false);
+  const soundPanelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -91,6 +95,21 @@ export default function HomeClient() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!soundPanelOpen) return;
+
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (!soundPanelRef.current?.contains(target)) {
+        setSoundPanelOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [soundPanelOpen]);
 
   const usernameValidation = useMemo(() => {
     if (mode !== 'manual') return { valid: true as const, error: null as string | null };
@@ -177,6 +196,7 @@ export default function HomeClient() {
       : theme === 'dark'
         ? 'mdi:weather-night'
         : 'mdi:theme-light-dark';
+  const soundPercent = Math.round(volume * 100);
 
   return (
     <div className="relative min-h-full overflow-x-hidden">
@@ -236,6 +256,44 @@ export default function HomeClient() {
             </mdui-menu-item>
           </mdui-menu>
         </mdui-dropdown>
+
+        <div ref={soundPanelRef} className="relative">
+          <mdui-button-icon
+            variant="tonal"
+            aria-label={t.sound.label}
+            title={`${t.sound.label}: ${soundPercent}%`}
+            onClick={() => setSoundPanelOpen((open) => !open)}
+          >
+            <Icon
+              icon={soundPercent === 0 ? 'mdi:volume-off' : 'mdi:volume-high'}
+              className="h-5 w-5 text-[color:var(--mdui-color-primary)]"
+            />
+          </mdui-button-icon>
+
+          {soundPanelOpen ? (
+            <div
+              className="fi-glass absolute right-0 top-12 flex h-44 w-20 flex-col items-center justify-between rounded-3xl border border-black/10 px-3 py-4 shadow-lg dark:border-white/10"
+              data-sound="off"
+            >
+              <Icon
+                icon={soundPercent === 0 ? 'mdi:volume-off' : 'mdi:volume-high'}
+                className="h-5 w-5 text-[color:var(--mdui-color-primary)]"
+              />
+              <input
+                aria-label={t.sound.label}
+                className="h-24 w-5 cursor-pointer appearance-none bg-transparent accent-[color:var(--mdui-color-primary)] [writing-mode:vertical-lr] [direction:rtl]"
+                data-sound="off"
+                max={100}
+                min={0}
+                step={1}
+                type="range"
+                value={soundPercent}
+                onChange={(e) => setVolume(Number((e.target as HTMLInputElement).value) / 100)}
+              />
+              <span className="text-xs font-semibold text-[color:var(--mdui-color-primary)]">{soundPercent}%</span>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
@@ -365,6 +423,8 @@ export default function HomeClient() {
               <mdui-select
                 label={t.home.domain}
                 value={String(domainId ?? '')}
+                data-sound="off"
+                onClick={() => playNotice()}
                 onChange={(e) =>
                   setDomainId(Number((e.target as HTMLElement & { value: string }).value))
                 }
@@ -406,6 +466,7 @@ export default function HomeClient() {
                     variant="filled"
                     className="col-span-2 w-full fi-btn-filled"
                     full-width
+                    data-sound={mode === 'random' ? 'notice' : 'click'}
                     loading={loading}
                     disabled={!canSubmit}
                     onClick={submit}
@@ -421,6 +482,7 @@ export default function HomeClient() {
                     variant="elevated"
                     className="w-full fi-btn-elevated"
                     full-width
+                    data-sound="notice"
                     onClick={() => router.push('/claim')}
                   >
                     <Icon icon="mdi:key" slot="icon" />
@@ -430,6 +492,7 @@ export default function HomeClient() {
                     variant="elevated"
                     className="w-full fi-btn-elevated"
                     full-width
+                    data-sound="notice"
                     onClick={() => router.push('/recover')}
                   >
                     <Icon icon="mdi:history" slot="icon" />
@@ -497,7 +560,7 @@ export default function HomeClient() {
         <mdui-button slot="action" variant="tonal" className="fi-btn-tonal" onClick={closeKeyDialog}>
           {t.common.close}
         </mdui-button>
-        <mdui-button slot="action" variant="filled" className="fi-btn-filled" disabled={!confirmSaved} onClick={continueToInbox}>
+        <mdui-button slot="action" variant="filled" className="fi-btn-filled" data-sound="notice" disabled={!confirmSaved} onClick={continueToInbox}>
           {t.claim.continueButton}
         </mdui-button>
       </mdui-dialog>

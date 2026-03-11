@@ -150,6 +150,12 @@ export const enUS = {
     system: 'System',
   },
 
+  sound: {
+    label: 'Sound',
+    on: 'Sound on',
+    off: 'Sound off',
+  },
+
   footer: {
     copyright: '© {year}',
     brandName: 'CtelSpecu',

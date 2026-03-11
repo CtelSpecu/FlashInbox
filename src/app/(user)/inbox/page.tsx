@@ -10,6 +10,7 @@ import { installMduiSelectViewportGuard } from '@/lib/client/mdui-select-guard';
 import { clearSessionToken } from '@/lib/client/session-store';
 import { useI18n } from '@/lib/i18n/context';
 import { type Locale, locales } from '@/lib/i18n';
+import { useUserSound } from '@/lib/sound/user-sound-provider';
 import { useUserTheme } from '@/lib/theme/user-theme';
 import type { ThemeMode } from '@/lib/theme/types';
 
@@ -84,6 +85,7 @@ export default function InboxPage() {
   const router = useRouter();
   const { t, format, locale, setLocale } = useI18n();
   const { theme, setTheme } = useUserTheme();
+  const { volume, setVolume, enabled: soundEnabled, playMessage } = useUserSound();
 
   const splitContainerRef = useRef<HTMLDivElement | null>(null);
   const resizingRef = useRef<{
@@ -119,6 +121,8 @@ export default function InboxPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const languageSelectRef = useRef<HTMLElement | null>(null);
   const themeSelectRef = useRef<HTMLElement | null>(null);
+  const seenMessageIdsRef = useRef<Set<string>>(new Set());
+  const hasLoadedMessagesRef = useRef(false);
 
   useEffect(() => {
     try {
@@ -174,6 +178,18 @@ export default function InboxPage() {
     setListError(null);
     try {
       const res = await apiFetch<InboxResponse>(`/api/mailbox/inbox?${queryString}`, { auth: true });
+      const nextIds = new Set(res.data.messages.map((message) => message.id));
+      const hasNewMessage =
+        hasLoadedMessagesRef.current &&
+        res.data.messages.some((message) => !seenMessageIdsRef.current.has(message.id));
+
+      seenMessageIdsRef.current = nextIds;
+      hasLoadedMessagesRef.current = true;
+
+      if (hasNewMessage) {
+        playMessage();
+      }
+
       setMessages(res.data.messages);
       setHasMore(res.data.hasMore);
       if (!selectedId && res.data.messages.length > 0) {
@@ -351,6 +367,7 @@ export default function InboxPage() {
       : theme === 'dark'
         ? 'mdi:weather-night'
         : 'mdi:theme-light-dark';
+  const soundPercent = Math.round(volume * 100);
 
   return (
     <div className="min-h-full px-3 py-4">
@@ -448,10 +465,10 @@ export default function InboxPage() {
 
             {sidebarCollapsed ? (
               <div className="fi-glass hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 p-2 dark:border-white/10">
-                <mdui-button-icon variant="tonal" className="fi-btn-tonal" onClick={() => loadList()} title={t.inbox.refreshButton}>
+                <mdui-button-icon variant="tonal" className="fi-btn-tonal" data-sound="notice" onClick={() => loadList()} title={t.inbox.refreshButton}>
                   <Icon icon="mdi:refresh" className="h-5 w-5" />
                 </mdui-button-icon>
-                <mdui-button-icon variant="tonal" className="fi-btn-tonal" onClick={renewKey} title={t.inbox.renewButton}>
+                <mdui-button-icon variant="tonal" className="fi-btn-tonal" data-sound="notice" onClick={renewKey} title={t.inbox.renewButton}>
                   <Icon icon="mdi:calendar-refresh" className="h-5 w-5" />
                 </mdui-button-icon>
               </div>
@@ -459,13 +476,14 @@ export default function InboxPage() {
             <div className={['fi-glass rounded-xl border border-black/10 p-3 dark:border-white/10 space-y-2', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="text-xs font-medium opacity-80">{t.inbox.renewButton}</div>
               <div className="flex items-center gap-2">
-                <mdui-button variant="tonal" className="flex-1 fi-btn-tonal" onClick={() => loadList()}>
+                <mdui-button variant="tonal" className="flex-1 fi-btn-tonal" data-sound="notice" onClick={() => loadList()}>
                   <Icon icon="mdi:refresh" slot="icon" />
                   {t.inbox.refreshButton}
                 </mdui-button>
                 <mdui-button
                   variant="tonal"
                   className="flex-1 fi-btn-tonal"
+                  data-sound="notice"
                   loading={renewLoading}
                   disabled={renewLoading}
                   onClick={renewKey}
@@ -579,6 +597,38 @@ export default function InboxPage() {
                 <mdui-menu-item value="dark">{t.theme.dark}</mdui-menu-item>
                 <mdui-menu-item value="light">{t.theme.light}</mdui-menu-item>
               </mdui-select>
+
+              <div className="space-y-1">
+                <div className="text-xs opacity-70">{t.sound.label}</div>
+                <div
+                  className="rounded-xl border border-black/10 px-3 py-3 dark:border-white/10"
+                  data-sound="off"
+                >
+                  <div className="mb-2 flex items-center justify-between text-sm">
+                    <span className="inline-flex items-center gap-2">
+                      <Icon
+                        icon={soundEnabled ? 'mdi:volume-high' : 'mdi:volume-off'}
+                        className="h-4 w-4 text-[color:var(--mdui-color-primary)]"
+                      />
+                      {t.sound.label}
+                    </span>
+                    <span className="text-xs font-semibold text-[color:var(--mdui-color-primary)]">
+                      {soundPercent}%
+                    </span>
+                  </div>
+                  <input
+                    aria-label={t.sound.label}
+                    className="w-full cursor-pointer appearance-none bg-transparent accent-[color:var(--mdui-color-primary)]"
+                    data-sound="off"
+                    max={100}
+                    min={0}
+                    step={1}
+                    type="range"
+                    value={soundPercent}
+                    onChange={(e) => setVolume(Number((e.target as HTMLInputElement).value) / 100)}
+                  />
+                </div>
+              </div>
             </div>
 
             {sidebarCollapsed ? (
@@ -618,7 +668,7 @@ export default function InboxPage() {
                 >
                   <Icon icon="mdi:magnify" slot="icon" />
                 </mdui-text-field>
-                <mdui-button variant="tonal" className="min-w-0 px-2 fi-btn-tonal" onClick={() => loadList()} aria-label={t.inbox.refreshButton} title={t.inbox.refreshButton}>
+                <mdui-button variant="tonal" className="min-w-0 px-2 fi-btn-tonal" data-sound="notice" onClick={() => loadList()} aria-label={t.inbox.refreshButton} title={t.inbox.refreshButton}>
                   <Icon icon="mdi:refresh" slot="icon" />
                   <span className="sr-only">{t.inbox.refreshButton}</span>
                 </mdui-button>

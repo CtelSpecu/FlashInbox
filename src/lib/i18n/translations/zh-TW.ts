@@ -158,6 +158,12 @@ export const zhTW = {
     system: '跟隨系統',
   },
 
+  sound: {
+    label: '音效',
+    on: '音效已開',
+    off: '音效已關',
+  },
+
   footer: {
     copyright: '© {year}',
     brandName: '星空之鏡',
