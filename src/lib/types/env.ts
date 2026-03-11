@@ -109,8 +109,8 @@ function parseRateLimitConfig(config: string, defaultCooldown = 10): RateLimitCo
  * 验证必需的环境变量
  */
 function validateRequiredEnv(env: CloudflareEnv): void {
-  // Keep this list minimal: user-facing flows should not depend on admin-only secrets.
-  const required = ['DEFAULT_DOMAIN', 'KEY_PEPPER', 'SESSION_SECRET'] as const;
+  // Keep this list minimal: user-facing flows should not depend on unrelated config.
+  const required = ['KEY_PEPPER', 'SESSION_SECRET'] as const;
   const missing: string[] = [];
 
   for (const key of required) {
