@@ -11,7 +11,7 @@ export function getSeoCopy(locale: Locale): {
 } {
   if (locale === 'zh-CN') {
     return {
-      titleHome: '临时邮箱',
+      titleHome: '闪收箱临时邮箱',
       descriptionHome:
         '匿名创建临时邮箱并接收邮件，不存储附件。支持认领获取 Key，并通过 username + key 恢复访问。',
       keywordsHome: ['临时邮箱', '一次性邮箱', '临时邮件', '匿名邮箱', '验证码邮箱'],
@@ -23,7 +23,7 @@ export function getSeoCopy(locale: Locale): {
   }
   if (locale === 'zh-TW') {
     return {
-      titleHome: '臨時郵箱',
+      titleHome: '閃收箱臨時郵箱',
       descriptionHome:
         '匿名建立臨時郵箱並接收郵件，不儲存附件。支援認領取得 Key，並透過 username + key 恢復存取。',
       keywordsHome: ['臨時郵箱', '一次性郵箱', '臨時郵件', '匿名郵箱', '驗證碼郵箱'],
@@ -34,7 +34,7 @@ export function getSeoCopy(locale: Locale): {
     };
   }
   return {
-    titleHome: 'Temporary Email',
+    titleHome: 'Free and Open Source Temporary Email Service',
     descriptionHome:
       'Create a temporary inbox anonymously and receive emails with no attachments. Claim a Key and recover access with username + key.',
     keywordsHome: ['temporary email', 'disposable email', 'temp mailbox', 'anonymous inbox'],

@@ -29,10 +29,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: baseUrl,
-    applicationName: 'FlashInbox',
+    applicationName: 'FlashInBox',
     title: {
-      default: 'FlashInbox',
-      template: '%s | FlashInbox',
+      default: 'FlashInBox',
+      template: '%s | FlashInBox',
     },
     description,
     alternates: {
@@ -50,8 +50,8 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     openGraph: {
       type: 'website',
-      siteName: 'FlashInbox',
-      title: 'FlashInbox',
+      siteName: 'FlashInBox',
+      title: 'FlashInBox',
       description,
       locale: getOgLocale(locale),
       alternateLocale: ['en_US', 'zh_CN', 'zh_TW'].filter((l) => l !== getOgLocale(locale)),
@@ -59,7 +59,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: 'summary',
-      title: 'FlashInbox',
+      title: 'FlashInBox',
       description,
       images: ['/FlashInbox_Colorful.svg'],
     },

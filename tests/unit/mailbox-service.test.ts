@@ -178,6 +178,22 @@ describe('MailboxService', () => {
         })
       ).rejects.toThrow('Domain is readonly');
     });
+
+    test('falls back to first enabled domain when configured default domain is missing', async () => {
+      service = new MailboxService(
+        d1,
+        createConfig({
+          defaultDomain: 'missing.example.com',
+        }),
+        'test-pepper'
+      );
+
+      const result = await service.create({
+        creationType: 'random',
+      });
+
+      expect(result.mailbox.domainId).toBe(domainId);
+    });
   });
 
   describe('claim', () => {

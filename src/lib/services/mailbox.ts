@@ -76,11 +76,16 @@ export class MailboxService {
     // 获取域名
     let domainId = input.domainId;
     if (!domainId) {
-      const domain = await this.domainRepo.findByName(this.config.defaultDomain);
-      if (!domain) {
-        throw new Error('Default domain not found');
+      const defaultDomain = await this.domainRepo.findByName(this.config.defaultDomain);
+      if (defaultDomain) {
+        domainId = defaultDomain.id;
+      } else {
+        const enabledDomains = await this.domainRepo.findEnabled();
+        if (enabledDomains.length === 0) {
+          throw new Error('Default domain not found');
+        }
+        domainId = enabledDomains[0].id;
       }
-      domainId = domain.id;
     }
 
     // 验证域名状态
