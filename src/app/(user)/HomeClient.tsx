@@ -220,60 +220,64 @@ export default function HomeClient() {
 
   return (
     <div className="relative min-h-full overflow-x-hidden">
-      <div className="absolute right-4 top-4 z-20 flex flex-nowrap items-center gap-2">
-        <mdui-dropdown placement="bottom-end">
-          <mdui-button-icon
-            slot="trigger"
-            variant="tonal"
-            aria-label={t.language.label}
-            title={t.language.label}
-          >
-            <Icon icon="mdi:translate" className="h-5 w-5" />
-          </mdui-button-icon>
-          <mdui-menu
-            selects="single"
-            value={locale}
-            onChange={(e) => setLocale((e.target as HTMLElement & { value: string }).value as Locale)}
-          >
-            {locales.map((loc) => (
-              <mdui-menu-item key={loc} value={loc}>
+      <div className="absolute right-4 top-4 z-20 flex flex-nowrap items-start gap-2">
+        <div className="flex h-10 shrink-0 items-center self-start">
+          <mdui-dropdown placement="bottom-end">
+            <mdui-button-icon
+              slot="trigger"
+              variant="tonal"
+              aria-label={t.language.label}
+              title={t.language.label}
+            >
+              <Icon icon="mdi:translate" className="h-5 w-5" />
+            </mdui-button-icon>
+            <mdui-menu
+              selects="single"
+              value={locale}
+              onChange={(e) => setLocale((e.target as HTMLElement & { value: string }).value as Locale)}
+            >
+              {locales.map((loc) => (
+                <mdui-menu-item key={loc} value={loc}>
+                  <Icon icon="mdi:check" slot="selected-icon" />
+                  {getLocaleLabel(t.language, loc)}
+                </mdui-menu-item>
+              ))}
+            </mdui-menu>
+          </mdui-dropdown>
+        </div>
+
+        <div className="flex h-10 shrink-0 items-center self-start">
+          <mdui-dropdown placement="bottom-end">
+            <mdui-button-icon
+              slot="trigger"
+              variant="tonal"
+              aria-label={t.theme.label}
+              title={t.theme.label}
+            >
+              <Icon icon={themeIcon} className="h-5 w-5" />
+            </mdui-button-icon>
+            <mdui-menu
+              selects="single"
+              value={theme}
+              onChange={(e) => setTheme((e.target as HTMLElement & { value: string }).value as ThemeMode)}
+            >
+              <mdui-menu-item value="auto">
                 <Icon icon="mdi:check" slot="selected-icon" />
-                {getLocaleLabel(t.language, loc)}
+                {t.theme.system}
               </mdui-menu-item>
-            ))}
-          </mdui-menu>
-        </mdui-dropdown>
+              <mdui-menu-item value="dark">
+                <Icon icon="mdi:check" slot="selected-icon" />
+                {t.theme.dark}
+              </mdui-menu-item>
+              <mdui-menu-item value="light">
+                <Icon icon="mdi:check" slot="selected-icon" />
+                {t.theme.light}
+              </mdui-menu-item>
+            </mdui-menu>
+          </mdui-dropdown>
+        </div>
 
-        <mdui-dropdown placement="bottom-end">
-          <mdui-button-icon
-            slot="trigger"
-            variant="tonal"
-            aria-label={t.theme.label}
-            title={t.theme.label}
-          >
-            <Icon icon={themeIcon} className="h-5 w-5" />
-          </mdui-button-icon>
-          <mdui-menu
-            selects="single"
-            value={theme}
-            onChange={(e) => setTheme((e.target as HTMLElement & { value: string }).value as ThemeMode)}
-          >
-            <mdui-menu-item value="auto">
-              <Icon icon="mdi:check" slot="selected-icon" />
-              {t.theme.system}
-            </mdui-menu-item>
-            <mdui-menu-item value="dark">
-              <Icon icon="mdi:check" slot="selected-icon" />
-              {t.theme.dark}
-            </mdui-menu-item>
-            <mdui-menu-item value="light">
-              <Icon icon="mdi:check" slot="selected-icon" />
-              {t.theme.light}
-            </mdui-menu-item>
-          </mdui-menu>
-        </mdui-dropdown>
-
-        <div ref={soundControlRef} className="relative shrink-0">
+        <div ref={soundControlRef} className="relative flex h-10 shrink-0 items-center self-start">
           <mdui-button-icon
             variant="tonal"
             aria-label={t.sound.label}
@@ -286,7 +290,7 @@ export default function HomeClient() {
           {soundPanelOpen ? (
             <div
               ref={soundPanelRef}
-              className="fi-glass absolute right-0 top-[calc(100%+12px)] z-30 w-28 rounded-2xl border border-[#E8DEF8] bg-white/70 px-3 py-3 shadow-[0_18px_36px_rgba(103,80,164,0.18)] dark:border-white/10 dark:bg-white/5"
+              className="fi-glass absolute left-1/2 top-full z-30 mt-3 w-28 -translate-x-1/2 rounded-2xl border border-[#E8DEF8] bg-white/70 px-3 py-3 shadow-[0_18px_36px_rgba(103,80,164,0.18)] dark:border-white/10 dark:bg-white/5"
               data-sound="off"
             >
               <div className="mb-3 flex items-center justify-between text-sm">
