@@ -136,6 +136,10 @@ export interface UserTranslations {
     enUS: string;
     zhCN: string;
     zhTW: string;
+    frFR: string;
+    deDE: string;
+    esES: string;
+    jaJP: string;
   };
 
   theme: {

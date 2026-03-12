@@ -1,27 +1,39 @@
 /**
  * i18n 国际化模块
- * 支持美式英文 (en-US)、简体中文 (zh-CN) 和繁体中文 (zh-TW)
+ * 支持美式英文、简体中文、繁体中文、法语、德语、西班牙语和日语
  */
 
+import type { UserTranslations } from './schema';
+import { deDE } from './translations/de-DE';
+import { enUS } from './translations/en-US';
+import { esES } from './translations/es-ES';
+import { frFR } from './translations/fr-FR';
+import { jaJP } from './translations/ja-JP';
 import { zhCN } from './translations/zh-CN';
 import { zhTW } from './translations/zh-TW';
-import { enUS } from './translations/en-US';
-import type { UserTranslations } from './schema';
 
-export type Locale = 'en-US' | 'zh-CN' | 'zh-TW';
+export type Locale = 'en-US' | 'zh-CN' | 'zh-TW' | 'fr-FR' | 'de-DE' | 'es-ES' | 'ja-JP';
 
-export const locales: Locale[] = ['en-US', 'zh-CN', 'zh-TW'];
+export const locales: Locale[] = ['zh-CN', 'zh-TW', 'en-US', 'fr-FR', 'de-DE', 'es-ES', 'ja-JP'];
 
 export const localeNames: Record<Locale, string> = {
   'en-US': 'English (US)',
   'zh-CN': '简体中文',
   'zh-TW': '繁體中文',
+  'fr-FR': 'Français',
+  'de-DE': 'Deutsch',
+  'es-ES': 'Español',
+  'ja-JP': '日本語',
 };
 
 const translations: Record<Locale, UserTranslations> = {
   'en-US': enUS,
   'zh-CN': zhCN,
   'zh-TW': zhTW,
+  'fr-FR': frFR,
+  'de-DE': deDE,
+  'es-ES': esES,
+  'ja-JP': jaJP,
 };
 
 /**
@@ -47,6 +59,10 @@ export function detectLocale(): Locale {
     const l = lang.toLowerCase();
 
     if (l.startsWith('en')) return 'en-US';
+    if (l.startsWith('fr')) return 'fr-FR';
+    if (l.startsWith('de')) return 'de-DE';
+    if (l.startsWith('es')) return 'es-ES';
+    if (l.startsWith('ja')) return 'ja-JP';
 
     // 繁体中文变体
     if (l.startsWith('zh-tw') || l.startsWith('zh-hk') || l.startsWith('zh-hant')) {
@@ -75,6 +91,20 @@ export function getTranslations(locale: Locale): UserTranslations {
   return translations[locale] || translations['en-US'];
 }
 
+export function getLocaleLabel(language: UserTranslations['language'], locale: Locale): string {
+  const labels: Record<Locale, string> = {
+    'en-US': language.enUS,
+    'zh-CN': language.zhCN,
+    'zh-TW': language.zhTW,
+    'fr-FR': language.frFR,
+    'de-DE': language.deDE,
+    'es-ES': language.esES,
+    'ja-JP': language.jaJP,
+  };
+
+  return labels[locale];
+}
+
 /**
  * 模板字符串替换
  * 支持 {key} 格式的占位符
@@ -90,4 +120,3 @@ export function formatMessage(
   });
 }
 export type { UserTranslations };
-

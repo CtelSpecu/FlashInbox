@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
+import { locales } from '@/lib/i18n';
 import { detectRequestLocale } from '@/lib/seo/request-locale';
-import { getOgLocale } from '@/lib/seo/seo-copy';
+import { getOgLocale, getSeoCopy } from '@/lib/seo/seo-copy';
 import { getSiteBaseUrl } from '@/lib/seo/site-url';
 
 export const dynamic = 'force-dynamic';
@@ -20,12 +21,12 @@ export const viewport: Viewport = {
 export async function generateMetadata(): Promise<Metadata> {
   const baseUrl = await getSiteBaseUrl();
   const locale = await detectRequestLocale();
-  const description =
-    locale === 'zh-CN'
-      ? '基于 Cloudflare Workers + D1 的临时邮箱服务，匿名创建邮箱并接收邮件，支持 Key 恢复访问。'
-      : locale === 'zh-TW'
-        ? '基於 Cloudflare Workers + D1 的臨時郵箱服務，匿名建立郵箱並接收郵件，支援 Key 恢復存取。'
-        : 'Temporary email service powered by Cloudflare Workers + D1. Create inboxes anonymously and recover access with a Key.';
+  const description = getSeoCopy(locale).descriptionHome;
+  const ogLocale = getOgLocale(locale);
+  const alternateLanguages = Object.fromEntries(locales.map((supportedLocale) => [supportedLocale, '/']));
+  const alternateOgLocales = Array.from(
+    new Set(locales.map((supportedLocale) => getOgLocale(supportedLocale)))
+  ).filter((value) => value !== ogLocale);
 
   return {
     metadataBase: baseUrl,
@@ -37,11 +38,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description,
     alternates: {
       canonical: '/',
-      languages: {
-        'en-US': '/',
-        'zh-CN': '/',
-        'zh-TW': '/',
-      },
+      languages: alternateLanguages,
     },
     icons: {
       icon: '/FlashInbox.svg',
@@ -53,8 +50,8 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: 'FlashInBox',
       title: 'FlashInBox',
       description,
-      locale: getOgLocale(locale),
-      alternateLocale: ['en_US', 'zh_CN', 'zh_TW'].filter((l) => l !== getOgLocale(locale)),
+      locale: ogLocale,
+      alternateLocale: alternateOgLocales,
       images: [{ url: '/FlashInbox_Colorful.svg' }],
     },
     twitter: {

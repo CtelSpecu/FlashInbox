@@ -10,7 +10,7 @@ import { getUserErrorMessage } from '@/lib/client/error-i18n';
 import { setSessionToken } from '@/lib/client/session-store';
 import { validateUsername } from '@/lib/utils/username';
 import { useI18n } from '@/lib/i18n/context';
-import { type Locale, locales } from '@/lib/i18n';
+import { getLocaleLabel, type Locale, locales } from '@/lib/i18n';
 import {
   getSoundIcon,
   getSoundSliderStyle,
@@ -238,11 +238,7 @@ export default function HomeClient() {
             {locales.map((loc) => (
               <mdui-menu-item key={loc} value={loc}>
                 <Icon icon="mdi:check" slot="selected-icon" />
-                {loc === 'en-US'
-                  ? t.language.enUS
-                  : loc === 'zh-CN'
-                    ? t.language.zhCN
-                    : t.language.zhTW}
+                {getLocaleLabel(t.language, loc)}
               </mdui-menu-item>
             ))}
           </mdui-menu>

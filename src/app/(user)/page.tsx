@@ -2,53 +2,40 @@ import type { Metadata } from 'next';
 
 import HomeClient from './HomeClient';
 
+import { locales } from '@/lib/i18n';
 import { detectRequestLocale } from '@/lib/seo/request-locale';
-import { getOgLocale, getSeoCopy } from '@/lib/seo/seo-copy';
+import { getHomeMetaTitle, getOgLocale, getSeoCopy } from '@/lib/seo/seo-copy';
 import { getSiteBaseUrl } from '@/lib/seo/site-url';
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await detectRequestLocale();
   const copy = getSeoCopy(locale);
   const ogLocale = getOgLocale(locale);
+  const title = getHomeMetaTitle(locale);
+  const alternateLanguages = Object.fromEntries(locales.map((supportedLocale) => [supportedLocale, '/']));
+  const alternateOgLocales = Array.from(
+    new Set(locales.map((supportedLocale) => getOgLocale(supportedLocale)))
+  ).filter((value) => value !== ogLocale);
 
   return {
     title: {
-      absolute:
-        locale === 'en-US'
-          ? 'FlashInBox | Free and Open Source Temporary Email Service'
-          : locale === 'zh-TW'
-            ? '閃收箱臨時郵箱 | FlashInBox'
-            : '闪收箱临时邮箱 | FlashInBox',
+      absolute: title,
     },
     description: copy.descriptionHome,
     keywords: copy.keywordsHome,
     alternates: {
       canonical: '/',
-      languages: {
-        'en-US': '/',
-        'zh-CN': '/',
-        'zh-TW': '/',
-      },
+      languages: alternateLanguages,
     },
     openGraph: {
-      title:
-        locale === 'en-US'
-          ? 'FlashInBox | Free and Open Source Temporary Email Service'
-          : locale === 'zh-TW'
-            ? '閃收箱臨時郵箱 | FlashInBox'
-            : '闪收箱临时邮箱 | FlashInBox',
+      title,
       description: copy.descriptionHome,
       url: '/',
       locale: ogLocale,
-      alternateLocale: ['en_US', 'zh_CN', 'zh_TW'].filter((l) => l !== ogLocale),
+      alternateLocale: alternateOgLocales,
     },
     twitter: {
-      title:
-        locale === 'en-US'
-          ? 'FlashInBox | Free and Open Source Temporary Email Service'
-          : locale === 'zh-TW'
-            ? '閃收箱臨時郵箱 | FlashInBox'
-            : '闪收箱临时邮箱 | FlashInBox',
+      title,
       description: copy.descriptionHome,
     },
   };

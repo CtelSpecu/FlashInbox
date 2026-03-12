@@ -141,6 +141,10 @@ export const enUS = {
     enUS: 'English (US)',
     zhCN: '简体中文',
     zhTW: '繁體中文',
+    frFR: 'Français',
+    deDE: 'Deutsch',
+    esES: 'Español',
+    jaJP: '日本語',
   },
 
   theme: {

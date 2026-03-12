@@ -148,6 +148,10 @@ export const zhTW = {
     enUS: 'English (US)',
     zhCN: '简体中文',
     zhTW: '繁體中文',
+    frFR: '法語',
+    deDE: '德語',
+    esES: '西班牙語',
+    jaJP: '日語',
   },
 
   // 主題

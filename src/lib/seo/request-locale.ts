@@ -7,6 +7,10 @@ function mapLanguageTagToLocale(tag: string): Locale | null {
   if (!lower) return null;
 
   if (lower.startsWith('en')) return 'en-US';
+  if (lower.startsWith('fr')) return 'fr-FR';
+  if (lower.startsWith('de')) return 'de-DE';
+  if (lower.startsWith('es')) return 'es-ES';
+  if (lower.startsWith('ja')) return 'ja-JP';
   if (lower.startsWith('zh-tw') || lower.startsWith('zh-hk') || lower.startsWith('zh-hant')) {
     return 'zh-TW';
   }
@@ -53,4 +57,3 @@ export async function detectRequestLocale(): Promise<Locale> {
   }
   return 'en-US';
 }
-

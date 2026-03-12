@@ -148,6 +148,10 @@ export const zhCN = {
     enUS: 'English (US)',
     zhCN: '简体中文',
     zhTW: '繁體中文',
+    frFR: '法语',
+    deDE: '德语',
+    esES: '西班牙语',
+    jaJP: '日语',
   },
 
   // 主题

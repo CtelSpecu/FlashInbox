@@ -8,8 +8,8 @@ import { apiFetch, type ApiError } from '@/lib/client/api';
 import { getUserErrorMessage } from '@/lib/client/error-i18n';
 import { installMduiSelectViewportGuard } from '@/lib/client/mdui-select-guard';
 import { clearSessionToken } from '@/lib/client/session-store';
+import { getLocaleLabel, type Locale, locales } from '@/lib/i18n';
 import { useI18n } from '@/lib/i18n/context';
-import { type Locale, locales } from '@/lib/i18n';
 import { getSoundIcon, getSoundSliderStyle, SOUND_ACCENT_COLOR } from '@/lib/sound/user-sound';
 import { useUserSound } from '@/lib/sound/user-sound-provider';
 import { useUserTheme } from '@/lib/theme/user-theme';
@@ -597,7 +597,7 @@ export default function InboxPage() {
                 <Icon icon="mdi:translate" slot="icon" />
                 {locales.map((loc) => (
                   <mdui-menu-item key={loc} value={loc}>
-                    {loc === 'en-US' ? t.language.enUS : loc === 'zh-CN' ? t.language.zhCN : t.language.zhTW}
+                    {getLocaleLabel(t.language, loc)}
                   </mdui-menu-item>
                 ))}
               </mdui-select>

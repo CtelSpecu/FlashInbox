@@ -43,6 +43,10 @@
 - `@spec/02design.md` - 系统设计文档
 - `@spec/03task.md` - 开发任务清单
 
+### 1.5 用户端语言支持
+
+- 当前支持 `en-US`、`zh-CN`、`zh-TW`、`fr-FR`、`de-DE`、`es-ES`、`ja-JP`
+
 ---
 
 ## 2. 架构/文件结构 (Architecture/Project Map)

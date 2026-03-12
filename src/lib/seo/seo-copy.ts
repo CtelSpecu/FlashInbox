@@ -33,6 +33,62 @@ export function getSeoCopy(locale: Locale): {
       descriptionRecover: '使用 username + key（以及網域）恢復對郵箱的存取，並進入收件箱。',
     };
   }
+  if (locale === 'fr-FR') {
+    return {
+      titleHome: "Service d'e-mail temporaire gratuit et open source",
+      descriptionHome:
+        "Créez anonymement une boîte mail temporaire et recevez des e-mails sans pièces jointes. Réclamez une clé et récupérez l'accès avec nom d'utilisateur + clé.",
+      keywordsHome: ['email temporaire', 'email jetable', 'boîte temporaire', 'boîte anonyme'],
+      titleClaim: 'Réclamer la boîte',
+      descriptionClaim:
+        'Réclamez une boîte non réclamée et obtenez une clé à usage unique. Enregistrez-la avant de fermer.',
+      titleRecover: "Récupérer l'accès",
+      descriptionRecover:
+        "Restaurez l'accès à la boîte avec nom d'utilisateur + clé (et domaine), puis ouvrez la boîte de réception.",
+    };
+  }
+  if (locale === 'de-DE') {
+    return {
+      titleHome: 'Kostenloser Open-Source-Dienst für temporäre E-Mails',
+      descriptionHome:
+        'Erstellen Sie anonym ein temporäres Postfach und empfangen Sie E-Mails ohne Anhänge. Beanspruchen Sie einen Schlüssel und stellen Sie den Zugriff mit Benutzername + Schlüssel wieder her.',
+      keywordsHome: ['temporäre E-Mail', 'Wegwerf-E-Mail', 'temporäres Postfach', 'anonymer Posteingang'],
+      titleClaim: 'Postfach beanspruchen',
+      descriptionClaim:
+        'Beanspruchen Sie ein unbeanspruchtes Postfach und erhalten Sie einen einmaligen Schlüssel. Speichern Sie ihn vor dem Schließen.',
+      titleRecover: 'Zugriff wiederherstellen',
+      descriptionRecover:
+        'Stellen Sie den Postfachzugriff mit Benutzername + Schlüssel (und Domain) wieder her und öffnen Sie dann den Posteingang.',
+    };
+  }
+  if (locale === 'es-ES') {
+    return {
+      titleHome: 'Servicio de correo temporal gratuito y de código abierto',
+      descriptionHome:
+        'Crea un buzón temporal de forma anónima y recibe correos sin archivos adjuntos. Reclama una clave y recupera el acceso con nombre de usuario + clave.',
+      keywordsHome: ['correo temporal', 'correo desechable', 'buzón temporal', 'bandeja anónima'],
+      titleClaim: 'Reclamar buzón',
+      descriptionClaim:
+        'Reclama un buzón no reclamado y obtén una clave de un solo uso. Guárdala antes de cerrar.',
+      titleRecover: 'Recuperar acceso',
+      descriptionRecover:
+        'Recupera el acceso al buzón con nombre de usuario + clave (y dominio) y luego entra en la bandeja.',
+    };
+  }
+  if (locale === 'ja-JP') {
+    return {
+      titleHome: '無料のオープンソース一時メールサービス',
+      descriptionHome:
+        '匿名で一時メールボックスを作成し、添付ファイルなしでメールを受信できます。キーを取得し、ユーザー名 + キーでアクセスを復元できます。',
+      keywordsHome: ['一時メール', '使い捨てメール', 'テンポラリメール', '匿名受信箱'],
+      titleClaim: 'メールボックスを claim',
+      descriptionClaim:
+        '未 claim のメールボックスを claim して一度きりのキーを取得します。閉じる前に保存してください。',
+      titleRecover: 'アクセスを復元',
+      descriptionRecover:
+        'ユーザー名 + キー（およびドメイン）でメールボックスへのアクセスを復元し、受信箱を開きます。',
+    };
+  }
   return {
     titleHome: 'Free and Open Source Temporary Email Service',
     descriptionHome:
@@ -48,5 +104,19 @@ export function getSeoCopy(locale: Locale): {
 export function getOgLocale(locale: Locale): string {
   if (locale === 'zh-CN') return 'zh_CN';
   if (locale === 'zh-TW') return 'zh_TW';
+  if (locale === 'fr-FR') return 'fr_FR';
+  if (locale === 'de-DE') return 'de_DE';
+  if (locale === 'es-ES') return 'es_ES';
+  if (locale === 'ja-JP') return 'ja_JP';
   return 'en_US';
+}
+
+export function getHomeMetaTitle(locale: Locale): string {
+  if (locale === 'zh-CN') return '闪收箱临时邮箱 | FlashInBox';
+  if (locale === 'zh-TW') return '閃收箱臨時郵箱 | FlashInBox';
+  if (locale === 'fr-FR') return "FlashInBox | Service d'e-mail temporaire gratuit et open source";
+  if (locale === 'de-DE') return 'FlashInBox | Kostenloser Open-Source-Dienst für temporäre E-Mails';
+  if (locale === 'es-ES') return 'FlashInBox | Servicio de correo temporal gratuito y de código abierto';
+  if (locale === 'ja-JP') return 'FlashInBox | 無料のオープンソース一時メールサービス';
+  return 'FlashInBox | Free and Open Source Temporary Email Service';
 }
