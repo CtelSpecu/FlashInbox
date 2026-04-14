@@ -55,7 +55,7 @@ export const enUS = {
     usernameRequired: 'Username is required.',
     usernameInvalid: 'Invalid username.',
     createFailed: 'Failed to create mailbox',
-    retryAfter: 'Retry after {seconds}s.',
+    retryAfter: 'Please refresh and retry after {seconds}s.',
     turnstileNotConfigured: 'Turnstile is not configured.',
     turnstileRequired: 'Turnstile verification is required.',
   },
@@ -132,7 +132,7 @@ export const enUS = {
     invalidUsername: 'Invalid username',
     keyExpired: 'Key expired',
     rateLimited: 'Too many requests',
-    turnstileFailed: 'Turnstile verification failed',
+    turnstileFailed: 'Turnstile verification failed. Please refresh the page manually and try again.',
     internalError: 'Internal server error',
   },
 

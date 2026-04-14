@@ -54,7 +54,7 @@ export const jaJP = {
     usernameRequired: 'ユーザー名は必須です。',
     usernameInvalid: '無効なユーザー名です。',
     createFailed: 'メールボックスの作成に失敗しました',
-    retryAfter: '{seconds}秒後に再試行してください。',
+    retryAfter: '{seconds}秒後にページを更新して再試行してください。',
     turnstileNotConfigured: 'Turnstile が設定されていません。',
     turnstileRequired: 'Turnstile の認証が必要です。',
   },
@@ -131,7 +131,7 @@ export const jaJP = {
     invalidUsername: '無効なユーザー名です',
     keyExpired: 'キーの有効期限が切れました',
     rateLimited: 'リクエストが多すぎます',
-    turnstileFailed: 'Turnstile の認証に失敗しました',
+    turnstileFailed: 'Turnstile の認証に失敗しました。ページを手動で更新して、もう一度お試しください。',
     internalError: 'サーバー内部エラー',
   },
 

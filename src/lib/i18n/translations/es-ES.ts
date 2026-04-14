@@ -54,7 +54,7 @@ export const esES = {
     usernameRequired: 'El nombre de usuario es obligatorio.',
     usernameInvalid: 'Nombre de usuario no válido.',
     createFailed: 'No se pudo crear el buzón',
-    retryAfter: 'Inténtalo de nuevo en {seconds}s.',
+    retryAfter: 'Por favor, actualice y vuelva a intentarlo en {seconds}s.',
     turnstileNotConfigured: 'Turnstile no está configurado.',
     turnstileRequired: 'La verificación de Turnstile es obligatoria.',
   },
@@ -131,7 +131,7 @@ export const esES = {
     invalidUsername: 'Nombre de usuario no válido',
     keyExpired: 'La clave ha caducado',
     rateLimited: 'Demasiadas solicitudes',
-    turnstileFailed: 'Falló la verificación de Turnstile',
+    turnstileFailed: 'Falló la verificación de Turnstile. Por favor, actualice la página manualmente e inténtelo de nuevo.',
     internalError: 'Error interno del servidor',
   },
 

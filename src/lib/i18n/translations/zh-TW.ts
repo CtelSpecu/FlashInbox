@@ -57,7 +57,7 @@ export const zhTW = {
     usernameRequired: '使用者名稱不能為空',
     usernameInvalid: '使用者名稱格式無效',
     createFailed: '建立郵箱失敗',
-    retryAfter: '請在 {seconds} 秒後重試',
+    retryAfter: '請在 {seconds} 秒後刷新重試',
     turnstileNotConfigured: 'Turnstile 未配置',
     turnstileRequired: '請完成人機驗證',
   },
@@ -138,7 +138,7 @@ export const zhTW = {
     invalidUsername: '使用者名稱無效',
     keyExpired: '金鑰已過期',
     rateLimited: '請求過於頻繁',
-    turnstileFailed: '人機驗證失敗',
+    turnstileFailed: '人機驗證失敗，請手動刷新頁面後重試',
     internalError: '伺服器內部錯誤',
   },
 

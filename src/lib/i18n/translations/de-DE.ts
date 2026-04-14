@@ -54,7 +54,7 @@ export const deDE = {
     usernameRequired: 'Benutzername ist erforderlich.',
     usernameInvalid: 'Ungültiger Benutzername.',
     createFailed: 'Postfach konnte nicht erstellt werden',
-    retryAfter: 'Erneut versuchen in {seconds}s.',
+    retryAfter: 'Bitte aktualisieren und nach {seconds}s erneut versuchen.',
     turnstileNotConfigured: 'Turnstile ist nicht konfiguriert.',
     turnstileRequired: 'Turnstile-Verifizierung ist erforderlich.',
   },
@@ -131,7 +131,7 @@ export const deDE = {
     invalidUsername: 'Ungültiger Benutzername',
     keyExpired: 'Schlüssel abgelaufen',
     rateLimited: 'Zu viele Anfragen',
-    turnstileFailed: 'Turnstile-Verifizierung fehlgeschlagen',
+    turnstileFailed: 'Turnstile-Verifizierung fehlgeschlagen. Bitte aktualisieren Sie die Seite manuell und versuchen Sie es erneut.',
     internalError: 'Interner Serverfehler',
   },
 

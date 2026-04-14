@@ -57,7 +57,7 @@ export const zhCN = {
     usernameRequired: '用户名不能为空',
     usernameInvalid: '用户名格式无效',
     createFailed: '创建邮箱失败',
-    retryAfter: '请在 {seconds} 秒后重试',
+    retryAfter: '请在 {seconds} 秒后刷新重试',
     turnstileNotConfigured: 'Turnstile 未配置',
     turnstileRequired: '请完成人机验证',
   },
@@ -138,7 +138,7 @@ export const zhCN = {
     invalidUsername: '用户名无效',
     keyExpired: '密钥已过期',
     rateLimited: '请求过于频繁',
-    turnstileFailed: '人机验证失败',
+    turnstileFailed: '人机验证失败，请手动刷新页面后重试',
     internalError: '服务器内部错误',
   },
 

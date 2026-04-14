@@ -53,7 +53,7 @@ export const frFR = {
     usernameRequired: "Le nom d'utilisateur est requis.",
     usernameInvalid: "Nom d'utilisateur invalide.",
     createFailed: 'Impossible de créer la boîte',
-    retryAfter: 'Réessayez dans {seconds}s.',
+    retryAfter: "Veuillez actualiser et réessayer après {seconds}s.",
     turnstileNotConfigured: "Turnstile n'est pas configuré.",
     turnstileRequired: 'La vérification Turnstile est requise.',
   },
@@ -130,7 +130,7 @@ export const frFR = {
     invalidUsername: "Nom d'utilisateur invalide",
     keyExpired: 'Clé expirée',
     rateLimited: 'Trop de requêtes',
-    turnstileFailed: 'Échec de la vérification Turnstile',
+    turnstileFailed: 'Échec de la vérification Turnstile. Veuillez actualiser la page manuellement et réessayer.',
     internalError: 'Erreur interne du serveur',
   },
 
