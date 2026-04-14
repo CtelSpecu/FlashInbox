@@ -223,5 +223,13 @@ export const adminEnUS = {
     confirmUnbanText: 'This will restore the mailbox status to claimed/unclaimed and allow users to use it again.',
     confirmDestroyTitle: 'Destroy mailbox',
     confirmDestroyText: 'This will delete all mailbox content and sessions and set the status to destroyed. This action cannot be undone.',
+    renew: 'Renew',
+    renewDays: 'Renew by days',
+    renewDaysPlaceholder: 'Number of days',
+    renewDate: 'Renew by date',
+    renewDatePlaceholder: 'Select date',
+    renewSuccess: 'Renewal successful',
+    renewFailed: 'Renewal failed',
+    expired: 'Expired',
   },
 } satisfies AdminTranslations;

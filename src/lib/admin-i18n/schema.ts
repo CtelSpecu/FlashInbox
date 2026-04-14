@@ -218,5 +218,13 @@ export interface AdminTranslations {
     confirmUnbanText: string;
     confirmDestroyTitle: string;
     confirmDestroyText: string;
+    renew: string;
+    renewDays: string;
+    renewDaysPlaceholder: string;
+    renewDate: string;
+    renewDatePlaceholder: string;
+    renewSuccess: string;
+    renewFailed: string;
+    expired: string;
   };
 }

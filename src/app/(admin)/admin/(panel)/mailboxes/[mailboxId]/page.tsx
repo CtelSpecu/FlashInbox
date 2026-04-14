@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/admin/ui/
 import { Button } from '@/components/admin/ui/Button';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/admin/ui/Table';
 import { Modal } from '@/components/admin/ui/Modal';
+import { SplitButton, MenuItem } from '@/components/admin/ui/SplitButton';
 import { useAdminI18n } from '@/lib/admin-i18n/context';
 
 interface SuccessResponse<T> {
@@ -99,6 +100,10 @@ export default function AdminMailboxDetailPage() {
   const [banOpen, setBanOpen] = useState(false);
   const [unbanOpen, setUnbanOpen] = useState(false);
   const [destroyOpen, setDestroyOpen] = useState(false);
+  const [renewOpen, setRenewOpen] = useState(false);
+  const [renewMode, setRenewMode] = useState<'days' | 'date'>('days');
+  const [renewDays, setRenewDays] = useState('7');
+  const [renewDate, setRenewDate] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -129,6 +134,11 @@ export default function AdminMailboxDetailPage() {
     } catch {
       return '-';
     }
+  }
+
+  function isExpired(ts: number | null | undefined): boolean {
+    if (!ts) return false;
+    return ts < Date.now();
   }
 
   async function loadMailbox() {
@@ -269,6 +279,55 @@ export default function AdminMailboxDetailPage() {
     }
   }
 
+  async function renewMailbox() {
+    if (!mailboxId) return;
+    setActionLoading(true);
+    setErrorText(null);
+    try {
+      let renewBody: { type: 'days'; days: number } | { type: 'date'; date: number };
+      if (renewMode === 'days') {
+        const days = parseInt(renewDays, 10);
+        if (isNaN(days) || days <= 0) {
+          setErrorText('Invalid days');
+          setActionLoading(false);
+          return;
+        }
+        renewBody = { type: 'days', days };
+      } else {
+        const dateStr = renewDate;
+        if (!dateStr) {
+          setErrorText('Invalid date');
+          setActionLoading(false);
+          return;
+        }
+        const selectedDate = new Date(dateStr);
+        if (isNaN(selectedDate.getTime())) {
+          setErrorText('Invalid date');
+          setActionLoading(false);
+          return;
+        }
+        renewBody = { type: 'date', date: selectedDate.getTime() };
+      }
+
+      await adminApiFetch<SuccessResponse<{ mailbox: { id: string; keyExpiresAt: number } }>>(
+        `/api/admin/mailboxes/${mailboxId}`,
+        { method: 'PATCH', body: JSON.stringify({ renew: renewBody }) }
+      );
+      setRenewOpen(false);
+      await loadMailbox();
+    } catch (e) {
+      const err = e as AdminApiError;
+      if (err.status === 401) {
+        clearAdminSession();
+        window.location.href = withAdminTracking('/admin/login');
+        return;
+      }
+      setErrorText(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   useEffect(() => {
     loadMailbox();
     loadMessages(1);
@@ -294,6 +353,33 @@ export default function AdminMailboxDetailPage() {
               </span>
             </CardTitle>
             <div className="flex items-center gap-2">
+              <SplitButton
+                trigger={{ variant: 'secondary', size: 'sm', children: t.mailboxes.renew }}
+                loading={actionLoading}
+              >
+                <MenuItem
+                  onClick={() => {
+                    setRenewMode('days');
+                    setRenewDays('7');
+                    setRenewOpen(true);
+                  }}
+                >
+                  <Icon icon="lucide:calendar" className="h-4 w-4" />
+                  {t.mailboxes.renewDays}
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    setRenewMode('date');
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 7);
+                    setRenewDate(tomorrow.toISOString().split('T')[0]);
+                    setRenewOpen(true);
+                  }}
+                >
+                  <Icon icon="lucide:calendar-range" className="h-4 w-4" />
+                  {t.mailboxes.renewDate}
+                </MenuItem>
+              </SplitButton>
               {canBan ? (
                 <Button variant="outline" size="sm" onClick={() => setBanOpen(true)} disabled={actionLoading}>
                   <Icon icon="lucide:ban" className="h-4 w-4" />
@@ -334,7 +420,9 @@ export default function AdminMailboxDetailPage() {
           </div>
           <div className="text-sm text-[color:var(--admin-muted)]">
             {t.mailboxes.keyExpiresAt}:{' '}
-            <span className="text-[color:var(--admin-text)]">{formatTs(mailbox?.keyExpiresAt)}</span>
+            <span className={isExpired(mailbox?.keyExpiresAt) ? 'text-red-600' : 'text-[color:var(--admin-text)]'}>
+              {isExpired(mailbox?.keyExpiresAt) ? t.mailboxes.expired : formatTs(mailbox?.keyExpiresAt)}
+            </span>
           </div>
           <div className="text-sm text-[color:var(--admin-muted)]">
             {t.mailboxes.createdAt}:{' '}
@@ -558,6 +646,53 @@ export default function AdminMailboxDetailPage() {
         }
       >
         <div className="text-sm text-[color:var(--admin-muted)]">{t.mailboxes.confirmDestroyText}</div>
+      </Modal>
+
+      <Modal
+        open={renewOpen}
+        onOpenChange={(o) => setRenewOpen(o)}
+        title={t.mailboxes.renew}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setRenewOpen(false)} disabled={actionLoading}>
+              {t.common.cancel}
+            </Button>
+            <Button onClick={renewMailbox} disabled={actionLoading}>
+              {t.mailboxes.renew}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          {renewMode === 'days' ? (
+            <div>
+              <label className="mb-1 block text-sm text-[color:var(--admin-muted)]">
+                {t.mailboxes.renewDays}
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={renewDays}
+                onChange={(e) => setRenewDays(e.target.value)}
+                placeholder={t.mailboxes.renewDaysPlaceholder}
+                className="w-full rounded-md border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)] px-3 py-2 text-sm text-[color:var(--admin-text)]"
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="mb-1 block text-sm text-[color:var(--admin-muted)]">
+                {t.mailboxes.renewDate}
+              </label>
+              <input
+                type="date"
+                value={renewDate}
+                onChange={(e) => setRenewDate(e.target.value)}
+                placeholder={t.mailboxes.renewDatePlaceholder}
+                className="w-full rounded-md border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)] px-3 py-2 text-sm text-[color:var(--admin-text)]"
+              />
+            </div>
+          )}
+        </div>
       </Modal>
     </div>
   );

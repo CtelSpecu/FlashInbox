@@ -223,6 +223,14 @@ export const adminZhCN = {
     confirmUnbanText: '将恢复邮箱状态为 claimed/unclaimed，允许再次使用。',
     confirmDestroyTitle: '删除邮箱',
     confirmDestroyText: '将删除邮箱内容与会话，并把状态设为已销毁。该操作无法撤销。',
+    renew: '续期',
+    renewDays: '按天数续期',
+    renewDaysPlaceholder: '天数',
+    renewDate: '按日期续期',
+    renewDatePlaceholder: '选择日期',
+    renewSuccess: '续期成功',
+    renewFailed: '续期失败',
+    expired: '已过期',
   },
 } satisfies AdminTranslations;
 

@@ -119,8 +119,39 @@ export const PATCH = withAdminAuth(async (
     return error(ErrorCodes.INVALID_REQUEST, 'Missing mailboxId', 400);
   }
 
-  const body = await parseJsonBody<{ status?: string }>(request);
+  const body = await parseJsonBody<{ status?: string; renew?: { type: 'days'; days: number } | { type: 'date'; date: number } }>(request);
   const nextStatus = body?.status;
+  const renewConfig = body?.renew;
+
+  if (renewConfig) {
+    const newExpiresAt = renewConfig.type === 'days'
+      ? Date.now() + renewConfig.days * 24 * 60 * 60 * 1000
+      : renewConfig.date;
+
+    const result = await env.DB.prepare(
+      `UPDATE mailboxes SET key_expires_at = ? WHERE id = ? RETURNING *`
+    ).bind(newExpiresAt, mailboxId).first();
+
+    if (!result) {
+      return error(ErrorCodes.MAILBOX_NOT_FOUND, 'Mailbox not found', 404);
+    }
+
+    await repos.auditLogs.create({
+      action: 'admin.mailbox_renewed',
+      actorType: 'admin',
+      actorId: context.session.id,
+      targetType: 'mailbox',
+      targetId: mailboxId,
+      success: true,
+      details: { newExpiresAt: result.key_expires_at },
+      ipAddress: request.headers.get('cf-connecting-ip') || undefined,
+      asn: request.headers.get('cf-ipcountry') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+    });
+
+    return success({ mailbox: { id: mailboxId, keyExpiresAt: result.key_expires_at } });
+  }
+
   if (nextStatus !== 'banned' && nextStatus !== 'unbanned') {
     return error(ErrorCodes.INVALID_REQUEST, 'Invalid status', 400);
   }

@@ -223,5 +223,13 @@ export const adminZhTW = {
     confirmUnbanText: '將恢復郵箱狀態為 claimed/unclaimed，允許再次使用。',
     confirmDestroyTitle: '刪除郵箱',
     confirmDestroyText: '將刪除郵箱內容與會話，並把狀態設為已銷毀。此操作無法撤銷。',
+    renew: '續期',
+    renewDays: '按天數續期',
+    renewDaysPlaceholder: '天數',
+    renewDate: '按日期續期',
+    renewDatePlaceholder: '選擇日期',
+    renewSuccess: '續期成功',
+    renewFailed: '續期失敗',
+    expired: '已過期',
   },
 } satisfies AdminTranslations;
