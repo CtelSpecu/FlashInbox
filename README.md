@@ -177,6 +177,16 @@ UMAMI_WEBSITE_ID = "00000000-0000-0000-0000-000000000000"
 UMAMI_ADMIN_WEBSITE_ID = "00000000-0000-0000-0000-000000000000" # optional
 ```
 
+或通过 `wrangler secret put` 设置：
+```bash
+wrangler secret put UMAMI_SCRIPT_URL --env production
+# 输入: "https://analytics.example.com/script.js"
+wrangler secret put UMAMI_WEBSITE_ID --env production
+# 输入: "00000000-0000-0000-0000-000000000000"
+wrangler secret put UMAMI_ADMIN_WEBSITE_ID --env production
+# 输入: "00000000-0000-0000-0000-000000000000"， 
+```
+
 ##### 2) 配置 CSP 白名单（必需时）
 
 本项目 CSP 由 `src/middleware.ts` 动态生成：
