@@ -97,20 +97,25 @@ export function AdminShell({
   }
 
   return (
-    <div className="min-h-screen bg-[color:var(--admin-bg)] text-[color:var(--admin-text)]">
+    <div className="min-h-screen bg-[color:var(--heroui-background)] text-[color:var(--heroui-foreground)] font-sans antialiased">
       <div className="flex min-h-screen">
-        <aside className="hidden w-64 border-r border-[color:var(--admin-border)] bg-[color:var(--admin-surface)] md:block">
-          <div className="flex items-center gap-2 px-4 py-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-transparent">
-              <img src="/FlashInbox.svg" alt="FlashInbox" className="h-9 w-9" draggable={false} />
-            </div>
-            <div className="min-w-0">
-              <div className="text-sm font-semibold text-[color:var(--admin-text)]">{t.common.appName}</div>
-              <div className="text-xs text-[color:var(--admin-muted)]">{t.common.admin}</div>
+        {/* Sidebar */}
+        <aside className="sidebar sidebar--left sidebar--default hidden w-64 border-r border-[color:var(--heroui-divider)] bg-[color:var(--heroui-background)] md:flex flex-col sticky top-0 h-screen overflow-hidden" data-slot="sidebar">
+          {/* Sidebar Header */}
+          <div className="sidebar__header p-4" data-slot="sidebar-header">
+            <div className="flex items-center gap-3 px-1 py-1">
+              <span className="avatar avatar--md size-10 rounded-xl bg-white flex items-center justify-center shadow-lg shadow-[color:var(--heroui-primary-500)]/10 border border-[color:var(--heroui-divider)]">
+                <img src="/FlashInbox_Colorful.svg" alt="FlashInbox" className="h-7 w-7" draggable={false} />
+              </span>
+              <div className="flex flex-col">
+                <span className="text-sm font-black tracking-tighter text-[color:var(--heroui-foreground)] leading-tight">{t.common.appName}</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[color:var(--heroui-primary-500)] leading-tight">{t.common.admin}</span>
+              </div>
             </div>
           </div>
 
-          <nav className="px-2 pb-4">
+          {/* Sidebar Content */}
+          <div className="sidebar__content flex-1 overflow-y-auto px-2 py-4 space-y-1" data-slot="sidebar-content">
             {navItems.map((item) => {
               const active = item.href === activeHref;
               const label =
@@ -131,165 +136,220 @@ export function AdminShell({
                 <AdminLink
                   key={item.href}
                   href={item.href}
-                  className={cn(
-                    'flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[color:var(--admin-text)] hover:bg-[color:var(--admin-hover)]',
-                    active && 'bg-[color:var(--admin-hover)] font-medium'
-                  )}
+                  className="sidebar__menu-item group"
+                  data-current={active ? "true" : "false"}
+                  data-slot="sidebar-menu-item"
                 >
-                  <Icon icon={item.icon} className="h-4 w-4" />
-                  <span>{label}</span>
+                  <div className={cn(
+                    "sidebar__menu-item-content w-full min-h-10 flex items-center gap-3 rounded-xl px-3 py-2 transition-all",
+                    active 
+                      ? "bg-[color:var(--heroui-default-100)] text-[color:var(--heroui-foreground)] shadow-sm" 
+                      : "text-[color:var(--heroui-default-500)] hover:bg-[color:var(--heroui-default-50)] hover:text-[color:var(--heroui-foreground)]"
+                  )} data-slot="sidebar-menu-item-content">
+                    <span className={cn(
+                      "sidebar__menu-icon flex items-center justify-center shrink-0 transition-colors",
+                      active ? "text-[color:var(--heroui-primary-500)]" : "text-[color:var(--heroui-default-400)] group-hover:text-[color:var(--heroui-primary-500)]"
+                    )} data-slot="sidebar-menu-icon">
+                      <Icon icon={item.icon} className="h-5 w-5" />
+                    </span>
+                    <span className="sidebar__menu-label flex-1 text-sm font-medium" data-slot="sidebar-menu-label">
+                       <span className="sidebar__menu-label-text">{label}</span>
+                    </span>
+                  </div>
                 </AdminLink>
               );
             })}
-          </nav>
-        </aside>
+          </div>
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-10 border-b border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]">
-            <div className="flex items-center justify-between gap-3 px-4 py-3">
-              <div className="min-w-0">
-                <div className="text-sm font-semibold text-[color:var(--admin-text)]">{title || derivedTitle}</div>
-                {sessionHint ? <div className="text-xs text-[color:var(--admin-muted)]">{sessionHint}</div> : null}
-              </div>
-              <div className="flex items-center gap-2">
+          {/* Sidebar Footer */}
+          <div className="sidebar__footer p-4 border-t border-[color:var(--heroui-divider)] space-y-4" data-slot="sidebar-footer">
+             <div className="space-y-2">
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[color:var(--heroui-default-400)] ml-1">{t.language.label}</div>
+                <Select
+                  value={locale}
+                  onChange={(val) => setLocale(val as AdminLocale)}
+                  size="sm"
+                  options={[
+                    { label: 'English', value: 'en-US' },
+                    { label: '简体中文', value: 'zh-CN' },
+                    { label: '繁體中文', value: 'zh-TW' },
+                  ]}
+                />
+             </div>
+
+             <div className="flex gap-2">
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="icon"
-                  className="md:hidden"
-                  onClick={() => setMobileNavOpen(true)}
-                  aria-label={t.nav.menu}
+                  className="flex-1 rounded-xl bg-[color:var(--heroui-default-100)] h-10"
+                  onClick={() => router.refresh()}
+                  title={t.common.reload}
                 >
-                  <Icon icon="lucide:menu" className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => router.refresh()}>
                   <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
-                  {t.common.reload}
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="icon"
                   onClick={cycleTheme}
+                  className="flex-1 rounded-xl bg-[color:var(--heroui-default-100)] h-10"
                   aria-label={`${t.theme.label}: ${themeLabel}`}
                   title={`${t.theme.label}: ${themeLabel}`}
                 >
                   <Icon icon={themeIcon} className="h-4 w-4" />
                 </Button>
-                <Select
-                  value={locale}
-                  onChange={(e) => setLocale(e.target.value as AdminLocale)}
-                  className="hidden md:block w-[140px]"
-                  aria-label={t.language.label}
-                >
-                  <option value="en-US">{t.language.enUS}</option>
-                  <option value="zh-CN">{t.language.zhCN}</option>
-                  <option value="zh-TW">{t.language.zhTW}</option>
-                </Select>
-                <Button variant="destructive" size="sm" onClick={logout} disabled={loggingOut}>
-                  <Icon icon="lucide:log-out" className="h-4 w-4" />
-                  {loggingOut ? t.auth.loggingOut : t.auth.logout}
-                </Button>
-              </div>
-            </div>
-          </header>
+             </div>
 
-          {mobileNavOpen ? (
-            <div
-              className="fixed inset-0 z-40 bg-black/40 md:hidden"
-              onMouseDown={() => setMobileNavOpen(false)}
-            >
-              <div
-                className="h-full w-72 bg-[color:var(--admin-surface)] shadow-lg"
-                onMouseDown={(e) => e.stopPropagation()}
+             <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={logout} 
+                disabled={loggingOut} 
+                className="w-full rounded-xl font-bold h-10 shadow-lg shadow-[color:var(--heroui-danger-500)]/20"
               >
-                <div className="flex items-center justify-between border-b border-[color:var(--admin-border)] px-4 py-3">
-                  <div className="text-sm font-semibold text-[color:var(--admin-text)]">{t.nav.navigation}</div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setMobileNavOpen(false)}
-                    aria-label={t.common.close}
-                  >
-                    <span className="text-lg leading-none">×</span>
-                  </Button>
+                <Icon icon="lucide:log-out" className="h-4 w-4" />
+                <span>{loggingOut ? t.auth.loggingOut : t.auth.logout}</span>
+             </Button>
+
+             {sessionHint ? (
+                <div className="text-center">
+                   <span className="text-[9px] font-black text-[color:var(--heroui-default-300)] uppercase tracking-widest">{sessionHint}</span>
                 </div>
-                <nav className="p-2">
-                  <div className="px-3 pb-2">
-                    <div className="text-xs font-medium text-[color:var(--admin-muted)]">{t.language.label}</div>
-                    <Select
-                      value={locale}
-                      onChange={(e) => setLocale(e.target.value as AdminLocale)}
-                      className="mt-1"
-                      aria-label={t.language.label}
-                    >
-                      <option value="en-US">{t.language.enUS}</option>
-                      <option value="zh-CN">{t.language.zhCN}</option>
-                      <option value="zh-TW">{t.language.zhTW}</option>
-                    </Select>
-                  </div>
-                  <div className="px-3 pb-2">
-                    <div className="text-xs font-medium text-[color:var(--admin-muted)]">{t.theme.label}</div>
-                    <Select
-                      value={theme}
-                      onChange={(e) => setTheme(e.target.value as ThemeMode)}
-                      className="mt-1"
-                      aria-label={t.theme.label}
-                    >
-                      <option value="light">{t.theme.light}</option>
-                      <option value="dark">{t.theme.dark}</option>
-                      <option value="auto">{t.theme.system}</option>
-                    </Select>
-                  </div>
-                  {navItems.map((item) => {
-                    const active = item.href === activeHref;
-                    const label =
-                      item.key === 'dashboard'
-                        ? t.nav.dashboard
-                        : item.key === 'domains'
-                          ? t.nav.domains
-                          : item.key === 'rules'
-                            ? t.nav.rules
-                            : item.key === 'quarantine'
-                              ? t.nav.quarantine
-                              : t.nav.audit;
-                    return (
-                      <AdminLink
-                        key={item.href}
-                        href={item.href}
-                        className={cn(
-                          'flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[color:var(--admin-text)] hover:bg-[color:var(--admin-hover)]',
-                          active && 'bg-[color:var(--admin-hover)] font-medium'
-                        )}
-                        onClick={() => setMobileNavOpen(false)}
-                      >
-                        <Icon icon={item.icon} className="h-4 w-4" />
-                        <span>{label}</span>
-                      </AdminLink>
-                    );
-                  })}
-                </nav>
-              </div>
-            </div>
-          ) : null}
+             ) : null}
+          </div>
+        </aside>
 
-          <main className="flex-1 p-4">
-            <div className="mx-auto w-full max-w-6xl">{children}</div>
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[color:var(--heroui-background)]">
+          {/* Mobile Floating Menu Button */}
+          <div className="fixed bottom-6 right-6 z-50 md:hidden">
+             <Button
+                variant="default"
+                size="icon"
+                className="h-14 w-14 rounded-full shadow-2xl shadow-[color:var(--heroui-primary-500)]/40"
+                onClick={() => setMobileNavOpen(true)}
+             >
+                <Icon icon="lucide:menu" className="h-6 w-6" />
+             </Button>
+          </div>
+
+          <main className="flex-1 overflow-y-auto p-4 md:p-10" data-slot="app-layout-main">
+            <div className="mx-auto w-full max-w-7xl animate-in fade-in slide-in-from-bottom-2 duration-500">{children}</div>
           </main>
-          <footer className="border-t border-[color:var(--admin-border)] py-5 text-center text-xs text-[color:var(--admin-muted)]">
-            <div className="mx-auto w-full max-w-6xl px-4">
-              <span>© {year} </span>
-              <a
-                href="https://ctelspecu.hxcn.top"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline-offset-4 hover:underline"
-              >
-                CtelSpecu（星空之镜）
-              </a>
-              <span>。由 Cloudflare 强力驱动</span>
+          
+          <footer className="shrink-0 border-t border-[color:var(--heroui-divider)] py-8 bg-[color:var(--heroui-background)]" data-slot="app-layout-footer">
+            <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                   <img src="/FlashInbox_Colorful.svg" alt="FlashInbox" className="h-6 w-6" />
+                   <span className="text-xs font-bold text-[color:var(--heroui-default-400)] tracking-tight">© {year} {t.common.appName}</span>
+                </div>
+                <div className="flex items-center gap-4 text-xs font-bold text-[color:var(--heroui-default-400)] tracking-widest uppercase">
+                  <a
+                    href="https://ctelspecu.hxcn.top"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-[color:var(--heroui-primary-500)] transition-colors"
+                  >
+                    CtelSpecu
+                  </a>
+                  <span className="opacity-20">|</span>
+                  <span>Cloudflare Driven</span>
+                </div>
+              </div>
             </div>
           </footer>
         </div>
       </div>
+
+      {mobileNavOpen ? (
+        <div
+          className="fixed inset-0 z-50 bg-[color:var(--heroui-foreground)]/20 md:hidden animate-in fade-in duration-300 backdrop-blur-sm"
+          onMouseDown={() => setMobileNavOpen(false)}
+        >
+          <div
+            className="h-full w-72 bg-[color:var(--heroui-content1)] shadow-2xl animate-in slide-in-from-left duration-300 ease-out flex flex-col"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[color:var(--heroui-divider)] px-6 py-5">
+              <div className="flex items-center gap-2">
+                <img src="/FlashInbox_Colorful.svg" alt="FlashInbox" className="h-8 w-8" />
+                <span className="text-lg font-black text-[color:var(--heroui-foreground)] tracking-tight">{t.nav.navigation}</span>
+              </div>
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={() => setMobileNavOpen(false)}
+                aria-label={t.common.close}
+                className="rounded-full bg-[color:var(--heroui-default-100)]"
+              >
+                <Icon icon="lucide:x" className="h-5 w-5" />
+              </Button>
+            </div>
+            <nav className="p-4 space-y-6 flex-1 overflow-y-auto">
+              <div className="space-y-2">
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[color:var(--heroui-default-400)] ml-1">{t.language.label}</div>
+                <Select
+                  value={locale}
+                  onChange={(val) => {
+                    setLocale(val as AdminLocale);
+                    setMobileNavOpen(false);
+                  }}
+                  options={[
+                    { label: 'English', value: 'en-US' },
+                    { label: '简体中文', value: 'zh-CN' },
+                    { label: '繁體中文', value: 'zh-TW' },
+                  ]}
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[color:var(--heroui-default-400)] ml-1">{t.theme.label}</div>
+                <Select
+                  value={theme}
+                  onChange={(val) => {
+                    setTheme(val as ThemeMode);
+                    setMobileNavOpen(false);
+                  }}
+                  options={[
+                    { label: t.theme.light, value: 'light' },
+                    { label: t.theme.dark, value: 'dark' },
+                    { label: t.theme.system, value: 'auto' },
+                  ]}
+                />
+              </div>
+              <div className="pt-2 space-y-1">
+                {navItems.map((item) => {
+                  const active = item.href === activeHref;
+                  const label =
+                    item.key === 'dashboard'
+                      ? t.nav.dashboard
+                      : item.key === 'domains'
+                        ? t.nav.domains
+                        : item.key === 'rules'
+                          ? t.nav.rules
+                          : item.key === 'quarantine'
+                            ? t.nav.quarantine
+                            : t.nav.audit;
+                  return (
+                    <AdminLink
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        'flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all',
+                        active
+                          ? 'bg-[color:var(--heroui-primary-500)] text-white shadow-lg shadow-[color:var(--heroui-primary-500)]/20'
+                          : 'text-[color:var(--heroui-default-500)] hover:bg-[color:var(--heroui-default-100)]'
+                      )}
+                      onClick={() => setMobileNavOpen(false)}
+                    >
+                      <Icon icon={item.icon} className="h-5 w-5" />
+                      <span>{label}</span>
+                    </AdminLink>
+                  );
+                })}
+              </div>
+            </nav>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
