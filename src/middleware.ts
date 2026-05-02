@@ -64,9 +64,9 @@ function getSecurityHeaders(isAdmin: boolean): Record<string, string> {
     headers['Content-Security-Policy'] = [
       "default-src 'self'",
       `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://static.cloudflareinsights.com ${umamiOrigins}`,
-      "style-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.googleapis.cn",
       "img-src 'self' data: https:",
-      "font-src 'self'",
+      "font-src 'self' https://fonts.gstatic.com https://fonts.gstatic.cn",
       `connect-src 'self' https://challenges.cloudflare.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com ${umamiOrigins}`,
       "frame-src https://challenges.cloudflare.com",
       "object-src 'none'",
