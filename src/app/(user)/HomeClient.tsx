@@ -288,26 +288,40 @@ export default function HomeClient() {
                   <Icon icon="mdi:account" slot="icon" />
                 </mdui-text-field>
 
-                <mdui-select
-                  label={t.home.domain}
-                  value={String(domainId ?? '')}
-                  data-sound="off"
-                  onClick={() => playNotice()}
-                  onChange={(e) =>
-                    setDomainId(Number((e.target as HTMLElement & { value: string }).value))
-                  }
-                  disabled={loading || !!createdKey}
-                >
-                  {domains.length === 0 ? (
-                    <mdui-menu-item value={String(domainId ?? '')}>@{defaultDomain}</mdui-menu-item>
-                  ) : (
-                    domains.map((d) => (
-                      <mdui-menu-item key={d.id} value={String(d.id)}>
-                        @{d.name}
-                      </mdui-menu-item>
-                    ))
-                  )}
-                </mdui-select>
+                <div className="relative">
+                  <mdui-dropdown placement="bottom-start">
+                    <mdui-button
+                      slot="trigger"
+                      variant="tonal"
+                      className="fi-btn-tonal w-full"
+                      data-sound="off"
+                      disabled={loading || !!createdKey}
+                    >
+                      <Icon icon="mdi:web" slot="icon" />
+                      {domains.length === 0
+                        ? `@${defaultDomain}`
+                        : `@${domains.find((d) => d.id === domainId)?.name || defaultDomain}`}
+                      <Icon icon="mdi:chevron-down" slot="end-icon" />
+                    </mdui-button>
+                    <mdui-menu
+                      selects="single"
+                      value={String(domainId ?? '')}
+                      onChange={(e) =>
+                        setDomainId(Number((e.target as HTMLElement & { value: string }).value))
+                      }
+                    >
+                      {domains.length === 0 ? (
+                        <mdui-menu-item value={String(domainId ?? '')}>@{defaultDomain}</mdui-menu-item>
+                      ) : (
+                        domains.map((d) => (
+                          <mdui-menu-item key={d.id} value={String(d.id)}>
+                            @{d.name}
+                          </mdui-menu-item>
+                        ))
+                      )}
+                    </mdui-menu>
+                  </mdui-dropdown>
+                </div>
 
                 {turnstileSiteKey ? (
                   <Turnstile
@@ -378,18 +392,6 @@ export default function HomeClient() {
         headline={t.claim.keyDialogTitle}
       >
         <div className="space-y-3">
-          <div className="flex justify-end">
-            <mdui-button variant="tonal" className="fi-btn-tonal fi-btn-copy" onClick={async () => {
-              const text = [createdEmail, createdKey].filter(Boolean).join('\n');
-              if (!text) return;
-              await navigator.clipboard.writeText(text);
-              setCopiedField('both');
-              setTimeout(() => setCopiedField(null), 2000);
-            }}>
-              <Icon icon={copiedField === 'both' ? 'mdi:check' : 'mdi:content-copy'} slot="icon" />
-              {copiedField === 'both' ? t.common.copied : t.common.copy}
-            </mdui-button>
-          </div>
           {createdEmail ? (
             <div>
               <div className="text-xs" style={{ color: 'var(--foreground)', opacity: 0.7 }}>{t.claim.emailLabel}</div>
@@ -429,12 +431,24 @@ export default function HomeClient() {
             <span className="text-xs">{t.claim.keyHint}</span>
           </div>
 
-          <mdui-checkbox
-            checked={confirmSaved}
-            onChange={(e) => setConfirmSaved((e.target as HTMLInputElement).checked)}
-          >
-            {t.claim.keySavedConfirm}
-          </mdui-checkbox>
+          <div className="flex items-center justify-between gap-2">
+            <mdui-checkbox
+              checked={confirmSaved}
+              onChange={(e) => setConfirmSaved((e.target as HTMLInputElement).checked)}
+            >
+              {t.claim.keySavedConfirm}
+            </mdui-checkbox>
+            <mdui-button variant="tonal" className="fi-btn-tonal fi-btn-copy shrink-0" onClick={async () => {
+              const text = [createdEmail, createdKey].filter(Boolean).join('\n');
+              if (!text) return;
+              await navigator.clipboard.writeText(text);
+              setCopiedField('both');
+              setTimeout(() => setCopiedField(null), 2000);
+            }}>
+              <Icon icon={copiedField === 'both' ? 'mdi:check' : 'mdi:content-copy'} slot="icon" />
+              {copiedField === 'both' ? t.common.copied : '一键复制'}
+            </mdui-button>
+          </div>
         </div>
 
         <mdui-button slot="action" variant="tonal" className="fi-btn-tonal" onClick={closeKeyDialog}>

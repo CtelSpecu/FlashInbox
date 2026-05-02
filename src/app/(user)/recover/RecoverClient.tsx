@@ -130,22 +130,35 @@ export default function RecoverClient() {
           <Icon icon="mdi:account" slot="icon" />
         </mdui-text-field>
 
-        <mdui-select
-          label={t.recover.domainLabel}
-          value={domain || defaultDomain}
-          onChange={(e) => setDomain((e.target as HTMLElement & { value: string }).value)}
-          disabled={loading}
-        >
-          {domains.length === 0 ? (
-            <mdui-menu-item value={defaultDomain}>@{defaultDomain}</mdui-menu-item>
-          ) : (
-            domains.map((d) => (
-              <mdui-menu-item key={d.id} value={d.name}>
-                @{d.name}
-              </mdui-menu-item>
-            ))
-          )}
-        </mdui-select>
+        <div className="relative">
+          <mdui-dropdown placement="bottom-start">
+            <mdui-button
+              slot="trigger"
+              variant="tonal"
+              className="fi-btn-tonal w-full"
+              disabled={loading}
+            >
+              <Icon icon="mdi:web" slot="icon" />
+              @{domain || defaultDomain}
+              <Icon icon="mdi:chevron-down" slot="end-icon" />
+            </mdui-button>
+            <mdui-menu
+              selects="single"
+              value={domain || defaultDomain}
+              onChange={(e) => setDomain((e.target as HTMLElement & { value: string }).value)}
+            >
+              {domains.length === 0 ? (
+                <mdui-menu-item value={defaultDomain}>@{defaultDomain}</mdui-menu-item>
+              ) : (
+                domains.map((d) => (
+                  <mdui-menu-item key={d.id} value={d.name}>
+                    @{d.name}
+                  </mdui-menu-item>
+                ))
+              )}
+            </mdui-menu>
+          </mdui-dropdown>
+        </div>
 
         {siteKey ? (
           <Turnstile
