@@ -118,7 +118,6 @@ export default function InboxPage() {
   const [renewLoading, setRenewLoading] = useState(false);
   const [renewNotice, setRenewNotice] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const seenMessageIdsRef = useRef<Set<string>>(new Set());
   const hasLoadedMessagesRef = useRef(false);
 
@@ -349,377 +348,302 @@ export default function InboxPage() {
     }
   }
 
-  const themeIcon =
-    theme === 'light'
-      ? 'mdi:white-balance-sunny'
-      : theme === 'dark'
-        ? 'mdi:weather-night'
-        : 'mdi:theme-light-dark';
-  const soundPercent = Math.round(volume * 100);
-  const soundIcon = getSoundIcon(soundPercent);
-  const soundSliderStyle = getSoundSliderStyle(soundPercent) as React.CSSProperties;
-
   return (
     <div className="min-h-full px-3 py-4" style={{ backgroundColor: 'var(--background)' }}>
-      <div className="mx-auto w-full max-w-7xl">
-        <div className="flex flex-col gap-4 md:flex-row">
-          <aside className={[
-              'md:shrink-0 space-y-3 transition-all duration-200',
-              sidebarCollapsed ? 'md:w-14' : 'md:w-72',
-            ].join(' ')}>
-            <mdui-button-icon
-              variant="standard"
-              className="hidden md:flex w-full fi-btn-tonal"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              title={sidebarCollapsed ? 'Expand' : 'Collapse'}
-            >
-              <Icon icon={sidebarCollapsed ? 'mdi:chevron-right' : 'mdi:chevron-left'} className="h-5 w-5" style={{ color: 'var(--primary)' }} />
-            </mdui-button-icon>
-            {sidebarCollapsed ? (
-              <div className="fi-card hidden md:flex flex-col items-center gap-2 rounded-xl p-2">
-                <mdui-button-icon data-sound="notice" onClick={() => copyText(email)} title={copied ? t.common.copied : t.common.copy} aria-label={copied ? t.common.copied : t.common.copy}>
-                  <Icon icon={copied ? 'mdi:check' : 'mdi:email-outline'} className="h-5 w-5" style={{ color: 'var(--primary)' }} />
+      <div className="mx-auto w-full max-w-7xl space-y-4">
+        {/* Inbox Header */}
+        <div className="fi-card flex flex-wrap items-center justify-between gap-4 rounded-xl p-4">
+          <div className="flex flex-wrap items-center gap-4 lg:gap-8">
+            <div className="min-w-0">
+              <div className="text-xs font-medium opacity-70">{t.inbox.title}</div>
+              <div className="mt-0.5 flex items-center gap-2">
+                <span className="truncate text-lg font-bold" style={{ color: 'var(--foreground)' }}>{email || '...'}</span>
+                <mdui-button-icon
+                  className="fi-btn-icon"
+                  data-sound="notice"
+                  onClick={() => copyText(email)}
+                  title={copied ? t.common.copied : t.common.copy}
+                >
+                  <Icon icon={copied ? 'mdi:check' : 'mdi:content-copy'} className="h-5 w-5" />
                 </mdui-button-icon>
-                <div className="h-4 text-[10px]">{copied ? t.common.copied : ''}</div>
-                {unreadCount > 0 && (
-                  <span className="rounded-full px-1.5 py-0.5 text-[10px] font-medium" style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-text)' }}>
-                    {unreadCount}
-                  </span>
-                )}
               </div>
-            ) : null}
-            <div className={['fi-card rounded-xl', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
-              <div className="space-y-2">
-                <div className="min-w-0">
-                  <div className="text-xs opacity-70">{t.inbox.title}</div>
-                  <div className="mt-1 rounded-2xl border px-3 py-2 text-sm font-semibold" style={{ borderColor: 'var(--secondary)', backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
-                    <span className="block whitespace-nowrap overflow-hidden text-ellipsis">{email || '...'}</span>
-                  </div>
-                </div>
-                {email ? (
-                  <div>
-                    <mdui-button
-                      variant="tonal"
-                      className="fi-inbox-copy-button whitespace-nowrap"
-                      data-sound="notice"
-                      onClick={() => copyText(email)}
-                      aria-label={copied ? t.common.copied : t.common.copy}
-                      title={copied ? t.common.copied : t.common.copy}
-                    >
-                      <Icon icon={copied ? 'mdi:check' : 'mdi:content-copy'} slot="icon" />
-                      <span className="text-xs">{copied ? t.common.copied : t.common.copy}</span>
-                    </mdui-button>
-                  </div>
-                ) : null}
-              </div>
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                <span className="rounded-full px-3 py-1 font-medium" style={{ backgroundColor: 'var(--secondary)', color: 'var(--primary)' }}>
-                  {format(t.inbox.unreadCount, { count: unreadCount })}
-                </span>
-                <span className="rounded-full px-3 py-1 font-medium" style={{ backgroundColor: 'var(--secondary)', color: 'var(--primary)' }}>
-                  {t.inbox.keyExpires}: {keyExpiresAt ? formatTime(keyExpiresAt) : t.common.na}
-                </span>
-              </div>
-              {renewNotice ? <div className="mt-2 text-xs opacity-80">{renewNotice}</div> : null}
             </div>
 
-            {sidebarCollapsed ? (
-              <div className="fi-card hidden md:flex flex-col items-center gap-1 rounded-xl p-2">
+            <div className="hidden h-10 w-px bg-black/10 dark:bg-white/10 sm:block" />
+
+            <div className="flex gap-4 lg:gap-8">
+              <div>
+                <div className="text-xs font-medium opacity-70">{t.inbox.unread}</div>
+                <div className="mt-0.5 text-lg font-semibold" style={{ color: 'var(--primary)' }}>{unreadCount}</div>
+              </div>
+              <div>
+                <div className="text-xs font-medium opacity-70">{t.inbox.keyExpires}</div>
+                <div className="mt-0.5 text-sm font-medium opacity-90">
+                  {keyExpiresAt ? formatTime(keyExpiresAt) : t.common.na}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {renewNotice && <span className="text-xs opacity-70 animate-in fade-in slide-in-from-right-2">{renewNotice}</span>}
+            <mdui-button
+              variant="tonal"
+              className="fi-btn-tonal"
+              data-sound="notice"
+              loading={loadingList}
+              onClick={() => loadList()}
+            >
+              <Icon icon="mdi:refresh" slot="icon" />
+              {t.inbox.refreshButton}
+            </mdui-button>
+            <mdui-button
+              variant="tonal"
+              className="fi-btn-tonal"
+              data-sound="notice"
+              loading={renewLoading}
+              disabled={renewLoading}
+              onClick={renewKey}
+            >
+              <Icon icon="mdi:calendar-refresh" slot="icon" />
+              {t.inbox.renewButton}
+            </mdui-button>
+            <mdui-button-icon
+              className="fi-btn-icon"
+              data-sound="notice"
+              onClick={() => {
+                clearSessionToken();
+                router.push('/');
+              }}
+              title={t.inbox.exitButton}
+            >
+              <Icon icon="mdi:logout" className="h-5 w-5" />
+            </mdui-button-icon>
+          </div>
+        </div>
+
+        <section
+          ref={splitContainerRef}
+          className="min-w-0 grid grid-cols-1 gap-4 lg:gap-0 lg:grid-cols-[var(--fi-inbox-list-width)_12px_1fr]"
+          style={{ '--fi-inbox-list-width': `${listWidth}px` } as React.CSSProperties}
+        >
+          {/* Email List Column */}
+          <div className="min-w-0 space-y-3">
+            <div className="flex items-center gap-2">
+              <mdui-text-field
+                label={t.common.search}
+                value={search}
+                onInput={(e) => setSearch((e.target as HTMLInputElement).value)}
+                clearable
+                className="flex-1"
+              >
+                <Icon icon="mdi:magnify" slot="icon" />
+              </mdui-text-field>
+
+              <mdui-dropdown placement="bottom-end">
                 <mdui-button-icon
-                  variant={unreadOnly ? 'standard' : 'filled'}
-                  className={unreadOnly ? 'fi-btn-elevated' : 'fi-btn-filled'}
-                  onClick={() => setUnreadOnly(false)}
-                  title={t.inbox.title}
-                >
-                  <Icon icon="mdi:inbox" className="h-5 w-5" />
-                </mdui-button-icon>
-                <mdui-button-icon
-                  variant={unreadOnly ? 'filled' : 'standard'}
-                  className={unreadOnly ? 'fi-btn-filled' : 'fi-btn-elevated'}
-                  onClick={() => setUnreadOnly(true)}
+                  slot="trigger"
+                  variant="tonal"
+                  className="fi-btn-tonal"
                   title={t.inbox.unreadOnly}
                 >
-                  <Icon icon="mdi:email" className="h-5 w-5" />
+                  <Icon icon={unreadOnly ? 'mdi:email-check-outline' : 'mdi:filter-variant'} className="h-5 w-5" />
                 </mdui-button-icon>
-              </div>
-            ) : null}
-            <div className={['fi-card rounded-xl', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
-              <div className="grid gap-1">
-                <mdui-button
-                  variant={unreadOnly ? 'elevated' : 'filled'}
-                  className={unreadOnly ? 'fi-btn-elevated' : 'fi-btn-filled'}
-                  full-width
-                  onClick={() => setUnreadOnly(false)}
+                <mdui-menu
+                  selects="single"
+                  value={unreadOnly ? 'unread' : 'all'}
+                  onChange={(e) => setUnreadOnly((e.target as any).value === 'unread')}
                 >
-                  <Icon icon="mdi:inbox" slot="icon" />
-                  {t.inbox.title}
-                </mdui-button>
-                <mdui-button
-                  variant={unreadOnly ? 'filled' : 'elevated'}
-                  className={unreadOnly ? 'fi-btn-filled' : 'fi-btn-elevated'}
-                  full-width
-                  onClick={() => setUnreadOnly(true)}
-                >
-                  <Icon icon="mdi:email" slot="icon" />
-                  {t.inbox.unreadOnly}
-                </mdui-button>
+                  <mdui-menu-item value="all">
+                    <Icon icon="mdi:inbox" slot="icon" />
+                    {t.inbox.title}
+                  </mdui-menu-item>
+                  <mdui-menu-item value="unread">
+                    <Icon icon="mdi:email" slot="icon" />
+                    {t.inbox.unreadOnly}
+                  </mdui-menu-item>
+                </mdui-menu>
+              </mdui-dropdown>
+            </div>
+
+            {listError && <div className="text-sm text-red-600 dark:text-red-400">{listError}</div>}
+
+            <div className="fi-card overflow-hidden rounded-xl">
+              <div className="divide-y divide-black/10 dark:divide-white/10">
+                {loadingList ? (
+                  <div className="p-4 text-sm opacity-70">{t.inbox.loadingList}</div>
+                ) : messages.length === 0 ? (
+                  <div className="p-4 text-sm opacity-70">{t.inbox.emptyList}</div>
+                ) : (
+                  messages.map((m) => {
+                    const active = m.id === selectedId;
+                    const unread = !m.readAt;
+                    const label = m.fromName || m.fromAddr;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setSelectedId(m.id)}
+                        className={[
+                          'w-full px-3 py-2 text-left transition-colors outline-none',
+                          'hover:bg-black/5 dark:hover:bg-white/5',
+                        ].join(' ')}
+                        style={active ? { backgroundColor: 'var(--secondary)', color: 'var(--foreground)' } : {}}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <div
+                                className={['truncate text-sm', unread ? 'font-semibold' : 'font-medium'].join(' ')}
+                              >
+                                {label}
+                              </div>
+                              {unread ? (
+                                <span className="rounded-full px-2 py-0.5 text-[10px] font-medium" style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-text)' }}>
+                                  {t.inbox.unread}
+                                </span>
+                              ) : null}
+                            </div>
+                            <div className={['truncate text-sm', unread ? 'opacity-90' : 'opacity-70'].join(' ')}>
+                              {m.subject || t.inbox.noSubject}
+                            </div>
+                          </div>
+                          <div className="shrink-0 text-[10px] opacity-70">{new Date(m.receivedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
               </div>
             </div>
 
-            {sidebarCollapsed ? (
-              <div className="fi-card hidden md:flex flex-col items-center gap-1 rounded-xl p-2">
-                <mdui-button-icon variant="tonal" className="fi-btn-tonal" data-sound="notice" onClick={() => loadList()} title={t.inbox.refreshButton}>
-                  <Icon icon="mdi:refresh" className="h-5 w-5" />
-                </mdui-button-icon>
-                <mdui-button-icon variant="tonal" className="fi-btn-tonal" data-sound="notice" onClick={renewKey} title={t.inbox.renewButton}>
-                  <Icon icon="mdi:calendar-refresh" className="h-5 w-5" />
-                </mdui-button-icon>
-              </div>
-            ) : null}
-            <div className={['fi-card rounded-xl space-y-2', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
-              <div className="text-xs font-medium opacity-80">{t.inbox.renewButton}</div>
-              <div className="flex items-center gap-2">
-                <mdui-button variant="tonal" className="flex-1 fi-btn-tonal" data-sound="notice" onClick={() => loadList()}>
-                  <Icon icon="mdi:refresh" slot="icon" />
-                  {t.inbox.refreshButton}
-                </mdui-button>
-                <mdui-button
-                  variant="tonal"
-                  className="flex-1 fi-btn-tonal"
-                  data-sound="notice"
-                  loading={renewLoading}
-                  disabled={renewLoading}
-                  onClick={renewKey}
-                >
-                  <Icon icon="mdi:calendar-refresh" slot="icon" />
-                  {t.inbox.renewButton}
-                </mdui-button>
-              </div>
-            </div>
-
-            {sidebarCollapsed ? (
-              <div className="fi-card hidden md:flex flex-col items-center gap-1 rounded-xl p-2">
-                <mdui-button-icon
-                  variant={detailView === 'html' ? 'filled' : 'standard'}
-                  className={detailView === 'html' ? 'fi-btn-filled' : 'fi-btn-elevated'}
-                  onClick={() => setDetailView('html')}
-                  title={t.inbox.htmlView}
-                >
-                  <Icon icon="mdi:language-html5" className="h-5 w-5" />
-                </mdui-button-icon>
-                <mdui-button-icon
-                  variant={detailView === 'text' ? 'filled' : 'standard'}
-                  className={detailView === 'text' ? 'fi-btn-filled' : 'fi-btn-elevated'}
-                  onClick={() => setDetailView('text')}
-                  title={t.inbox.textView}
-                >
-                  <Icon icon="mdi:text" className="h-5 w-5" />
-                </mdui-button-icon>
-              </div>
-            ) : null}
-            <div className={['fi-card rounded-xl space-y-3', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
-              <div className="text-xs font-medium opacity-80">{t.inbox.htmlView} / {t.inbox.textView}</div>
-              <div className="grid gap-1">
-                <mdui-button
-                  full-width
-                  variant={detailView === 'html' ? 'filled' : 'elevated'}
-                  className={detailView === 'html' ? 'fi-btn-filled' : 'fi-btn-elevated'}
-                  onClick={() => setDetailView('html')}
-                >
-                  <Icon icon="mdi:language-html5" slot="icon" />
-                  {t.inbox.htmlView}
-                </mdui-button>
-                <mdui-button
-                  full-width
-                  variant={detailView === 'text' ? 'filled' : 'elevated'}
-                  className={detailView === 'text' ? 'fi-btn-filled' : 'fi-btn-elevated'}
-                  onClick={() => setDetailView('text')}
-                >
-                  <Icon icon="mdi:text" slot="icon" />
-                  {t.inbox.textView}
-                </mdui-button>
-              </div>
-
-              <div className="space-y-1">
-                <div className="text-xs opacity-70">{t.inbox.loadExternal}</div>
-                <mdui-button
-                  full-width
-                  variant={loadExternal ? 'filled' : 'tonal'}
-                  className={loadExternal ? 'fi-btn-filled' : 'fi-btn-tonal'}
-                  onClick={() => setLoadExternal((v) => !v)}
-                >
-                  <Icon icon={loadExternal ? 'mdi:image-outline' : 'mdi:image-off-outline'} slot="icon" />
-                  {loadExternal ? t.inbox.externalAllowed : t.inbox.externalBlocked}
-                </mdui-button>
-              </div>
-</div>
-
-            <div className={['fi-card rounded-xl', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
-              <mdui-button
-                variant="tonal"
-                full-width
-                className="fi-btn-tonal"
-                onClick={() => {
-                  clearSessionToken();
-                  router.push('/');
-                }}
-              >
-                <Icon icon="mdi:logout" slot="icon" />
-                {t.inbox.exitButton}
+            <div className="flex items-center justify-between">
+              <mdui-button variant="tonal" className="fi-btn-tonal" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                {t.common.prev}
+              </mdui-button>
+              <div className="text-xs opacity-70">{format(t.common.page, { page })}</div>
+              <mdui-button variant="tonal" className="fi-btn-tonal" disabled={!hasMore} onClick={() => setPage((p) => p + 1)}>
+                {t.common.next}
               </mdui-button>
             </div>
-          </aside>
+          </div>
 
-          <section
-            ref={splitContainerRef}
-            className="min-w-0 flex-1 grid grid-cols-1 gap-4 lg:gap-0 lg:grid-cols-[var(--fi-inbox-list-width)_12px_1fr]"
-            style={{ '--fi-inbox-list-width': `${listWidth}px` } as React.CSSProperties}
+          {/* Divider */}
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize panels"
+            aria-valuemin={280}
+            aria-valuenow={Math.round(listWidth)}
+            tabIndex={0}
+            className={[
+              'group relative hidden lg:flex cursor-col-resize select-none items-center justify-center',
+              'outline-none focus-visible:ring-2 focus-visible:ring-[#60529A]',
+            ].join(' ')}
+            onPointerDown={startResize}
+            onPointerMove={onResizeMove}
+            onPointerUp={endResize}
+            onPointerCancel={endResize}
+            onLostPointerCapture={endResize}
+            onDoubleClick={() => adjustWidthByKeyboard(380 - listWidth)}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                adjustWidthByKeyboard(-16);
+              }
+              if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                adjustWidthByKeyboard(16);
+              }
+            }}
           >
-            <div className="min-w-0 space-y-3">
-              <div className="flex items-center gap-2">
-                <mdui-text-field
-                  label={t.common.search}
-                  value={search}
-                  onInput={(e) => setSearch((e.target as HTMLInputElement).value)}
-                  clearable
-                  className="flex-1"
+            <div className="h-full w-px bg-black/10 dark:bg-white/10" />
+            <div className="absolute flex h-12 w-2 items-center justify-center rounded-full bg-black/5 transition-colors group-hover:bg-black/10 dark:bg-white/5 dark:group-hover:bg-white/10">
+              <div className="h-7 w-0.5 rounded-full bg-black/30 dark:bg-white/30" />
+            </div>
+          </div>
+
+          {/* Email Detail Column */}
+          <div className="min-w-0 space-y-3">
+            <div className="flex items-center justify-between gap-4">
+              <div className="fi-tabs-list">
+                <button
+                  onClick={() => setDetailView('html')}
+                  className={[
+                    'fi-tab-item',
+                    detailView === 'html' ? 'active' : ''
+                  ].join(' ')}
                 >
-                  <Icon icon="mdi:magnify" slot="icon" />
-                </mdui-text-field>
-                <mdui-button variant="tonal" className="min-w-0 fi-btn-tonal" data-sound="notice" onClick={() => loadList()} aria-label={t.inbox.refreshButton} title={t.inbox.refreshButton}>
-                  <Icon icon="mdi:refresh" slot="icon" />
-                  <span className="sr-only">{t.inbox.refreshButton}</span>
-                </mdui-button>
+                  <Icon icon="mdi:language-html5" className="h-4 w-4" />
+                  {t.inbox.htmlView}
+                </button>
+                <button
+                  onClick={() => setDetailView('text')}
+                  className={[
+                    'fi-tab-item',
+                    detailView === 'text' ? 'active' : ''
+                  ].join(' ')}
+                >
+                  <Icon icon="mdi:text" className="h-4 w-4" />
+                  {t.inbox.textView}
+                </button>
               </div>
 
-              {listError && <div className="text-sm text-red-600 dark:text-red-400">{listError}</div>}
+              <mdui-button
+                variant={loadExternal ? 'filled' : 'tonal'}
+                className={loadExternal ? 'fi-btn-filled' : 'fi-btn-tonal'}
+                onClick={() => setLoadExternal((v) => !v)}
+              >
+                <Icon icon={loadExternal ? 'mdi:image-outline' : 'mdi:image-off-outline'} slot="icon" />
+                <span className="text-xs">{loadExternal ? t.inbox.externalAllowed : t.inbox.externalBlocked}</span>
+              </mdui-button>
+            </div>
 
-              <div className="fi-card overflow-hidden rounded-xl">
-                <div className="divide-y divide-black/10 dark:divide-white/10">
-                  {loadingList ? (
-                    <div className="p-4 text-sm opacity-70">{t.inbox.loadingList}</div>
-                  ) : messages.length === 0 ? (
-                    <div className="p-4 text-sm opacity-70">{t.inbox.emptyList}</div>
+            {loadingDetail && <div className="text-sm opacity-70 animate-pulse">{t.inbox.loadingMessage}</div>}
+            {!loadingDetail && !detail && (
+              <div className="fi-card flex h-64 flex-col items-center justify-center gap-2 rounded-xl opacity-50">
+                <Icon icon="mdi:email-outline" className="h-12 w-12" />
+                <div className="text-sm">{t.inbox.selectMessage}</div>
+              </div>
+            )}
+
+            {detail ? (
+              <div className="fi-card overflow-hidden rounded-xl animate-in fade-in zoom-in-95 duration-200">
+                <div className="border-b px-4 py-4" style={{ borderColor: 'var(--secondary)' }}>
+                  <div className="text-xl font-bold" style={{ color: 'var(--foreground)' }}>{detail.subject || t.inbox.noSubject}</div>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Icon icon="mdi:account" className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold">
+                          {detail.fromName || detail.fromAddr.split('@')[0]}
+                        </div>
+                        <div className="truncate text-xs opacity-60">{detail.fromAddr}</div>
+                      </div>
+                    </div>
+                    <div className="text-xs opacity-60">
+                      {formatTime(detail.receivedAt)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  {detailView === 'text' ? (
+                    <div className="rounded-lg bg-black/5 p-4 dark:bg-white/5">
+                      <pre className="whitespace-pre-wrap break-words text-sm font-sans">{detail.textBody || ''}</pre>
+                    </div>
                   ) : (
-                    messages.map((m) => {
-                      const active = m.id === selectedId;
-                      const unread = !m.readAt;
-                      const label = m.fromName || m.fromAddr;
-                      return (
-                        <button
-                          key={m.id}
-                          type="button"
-                          onClick={() => setSelectedId(m.id)}
-                          className={[
-                             'w-full px-3 py-2 text-left transition-colors outline-none',
-                             'hover:bg-black/5 dark:hover:bg-white/5',
-                             active ? '' : '',
-                           ].join(' ')}
-                          style={active ? { backgroundColor: 'var(--secondary)', color: 'var(--foreground)' } : {}}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className={['truncate text-sm', unread ? 'font-semibold' : 'font-medium'].join(' ')}
-                                >
-                                  {label}
-                                </div>
-                                {unread ? (
-                                  <span className="rounded-full px-2 py-0.5 text-[10px] font-medium" style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-text)' }}>
-                                    {t.inbox.unread}
-                                  </span>
-                                ) : null}
-                              </div>
-                              <div className={['truncate text-sm', unread ? 'opacity-90' : 'opacity-70'].join(' ')}>
-                                {m.subject || t.inbox.noSubject}
-                              </div>
-                            </div>
-                            <div className="shrink-0 text-[11px] opacity-70">{formatTime(m.receivedAt)}</div>
-                          </div>
-                        </button>
-                      );
-                    })
+                    <div className="relative overflow-hidden rounded-lg border" style={{ borderColor: 'var(--secondary)' }}>
+                      <iframe title="mail" sandbox="" className="h-[600px] w-full bg-white" srcDoc={htmlForDisplay} />
+                    </div>
                   )}
                 </div>
               </div>
-
-              <div className="flex items-center justify-between">
-                <mdui-button variant="tonal" className="fi-btn-tonal" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-                  {t.common.prev}
-                </mdui-button>
-                <div className="text-xs opacity-70">{format(t.common.page, { page })}</div>
-                <mdui-button variant="tonal" className="fi-btn-tonal" disabled={!hasMore} onClick={() => setPage((p) => p + 1)}>
-                  {t.common.next}
-                </mdui-button>
-              </div>
-            </div>
-
-            <div
-              role="separator"
-              aria-orientation="vertical"
-              aria-label="Resize panels"
-              aria-valuemin={280}
-              aria-valuenow={Math.round(listWidth)}
-              tabIndex={0}
-              className={[
-                'group relative hidden lg:flex cursor-col-resize select-none items-center justify-center',
-                'outline-none focus-visible:ring-2 focus-visible:ring-[#60529A]',
-              ].join(' ')}
-              onPointerDown={startResize}
-              onPointerMove={onResizeMove}
-              onPointerUp={endResize}
-              onPointerCancel={endResize}
-              onLostPointerCapture={endResize}
-              onDoubleClick={() => adjustWidthByKeyboard(380 - listWidth)}
-              onKeyDown={(e) => {
-                if (e.key === 'ArrowLeft') {
-                  e.preventDefault();
-                  adjustWidthByKeyboard(-16);
-                }
-                if (e.key === 'ArrowRight') {
-                  e.preventDefault();
-                  adjustWidthByKeyboard(16);
-                }
-              }}
-            >
-              <div className="h-full w-px bg-black/10 dark:bg-white/10" />
-              <div className="absolute flex h-12 w-2 items-center justify-center rounded-full bg-black/5 transition-colors group-hover:bg-black/10 dark:bg-white/5 dark:group-hover:bg-white/10">
-                <div className="h-7 w-0.5 rounded-full bg-black/30 dark:bg-white/30" />
-              </div>
-            </div>
-
-            <div className="min-w-0 space-y-3">
-              {loadingDetail && <div className="text-sm opacity-70">{t.inbox.loadingMessage}</div>}
-              {!loadingDetail && !detail && <div className="text-sm opacity-70">{t.inbox.selectMessage}</div>}
-
-              {detail ? (
-                <div className="fi-card overflow-hidden rounded-xl">
-                  <div className="border-b px-4 py-3" style={{ borderColor: 'var(--secondary)' }}>
-                    <div className="text-base font-semibold">{detail.subject || t.inbox.noSubject}</div>
-                    <div className="mt-1 text-xs opacity-70">
-                      {t.inbox.from}:{' '}
-                      {detail.fromName ? `${detail.fromName} <${detail.fromAddr}>` : detail.fromAddr}
-                    </div>
-                    <div className="text-xs opacity-70">
-                      {t.inbox.received}: {formatTime(detail.receivedAt)}
-                    </div>
-                  </div>
-
-                  <div className="p-4">
-                    {detailView === 'text' ? (
-                      <pre className="whitespace-pre-wrap break-words text-sm">{detail.textBody || ''}</pre>
-                    ) : (
-                      <div className="rounded border p-2" style={{ borderColor: 'var(--secondary)' }}>
-                        <iframe title="mail" sandbox="" className="h-[520px] w-full" srcDoc={htmlForDisplay} />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          </section>
-        </div>
+            ) : null}
+          </div>
+        </section>
       </div>
     </div>
   );
