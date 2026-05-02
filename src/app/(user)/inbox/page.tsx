@@ -6,7 +6,6 @@ import { Icon } from '@iconify/react';
 
 import { apiFetch, type ApiError } from '@/lib/client/api';
 import { getUserErrorMessage } from '@/lib/client/error-i18n';
-import { installMduiSelectViewportGuard } from '@/lib/client/mdui-select-guard';
 import { clearSessionToken } from '@/lib/client/session-store';
 import { getLocaleLabel, type Locale, locales } from '@/lib/i18n';
 import { useI18n } from '@/lib/i18n/context';
@@ -120,8 +119,6 @@ export default function InboxPage() {
   const [renewNotice, setRenewNotice] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const languageSelectRef = useRef<HTMLElement | null>(null);
-  const themeSelectRef = useRef<HTMLElement | null>(null);
   const seenMessageIdsRef = useRef<Set<string>>(new Set());
   const hasLoadedMessagesRef = useRef(false);
 
@@ -352,16 +349,6 @@ export default function InboxPage() {
     }
   }
 
-  useEffect(() => {
-    const cleanupLang = installMduiSelectViewportGuard(languageSelectRef.current, { margin: 12 });
-    const cleanupTheme = installMduiSelectViewportGuard(themeSelectRef.current, { margin: 12 });
-    return () => {
-      cleanupLang();
-      cleanupTheme();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const themeIcon =
     theme === 'light'
       ? 'mdi:white-balance-sunny'
@@ -373,7 +360,7 @@ export default function InboxPage() {
   const soundSliderStyle = getSoundSliderStyle(soundPercent) as React.CSSProperties;
 
   return (
-    <div className="min-h-full px-3 py-4">
+    <div className="min-h-full px-3 py-4" style={{ backgroundColor: 'var(--background)' }}>
       <div className="mx-auto w-full max-w-7xl">
         <div className="flex flex-col gap-4 md:flex-row">
           <aside className={[
@@ -381,41 +368,40 @@ export default function InboxPage() {
               sidebarCollapsed ? 'md:w-14' : 'md:w-72',
             ].join(' ')}>
             <mdui-button-icon
-              variant="tonal"
+              variant="standard"
               className="hidden md:flex w-full fi-btn-tonal"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               title={sidebarCollapsed ? 'Expand' : 'Collapse'}
             >
-              <Icon icon={sidebarCollapsed ? 'mdi:chevron-right' : 'mdi:chevron-left'} className="h-5 w-5" />
+              <Icon icon={sidebarCollapsed ? 'mdi:chevron-right' : 'mdi:chevron-left'} className="h-5 w-5" style={{ color: 'var(--primary)' }} />
             </mdui-button-icon>
             {sidebarCollapsed ? (
-              <div className="fi-glass hidden md:flex flex-col items-center gap-2 rounded-xl border border-black/10 p-2 dark:border-white/10">
+              <div className="fi-card hidden md:flex flex-col items-center gap-2 rounded-xl p-2">
                 <mdui-button-icon data-sound="notice" onClick={() => copyText(email)} title={copied ? t.common.copied : t.common.copy} aria-label={copied ? t.common.copied : t.common.copy}>
-                  <Icon icon={copied ? 'mdi:check' : 'mdi:email-outline'} className="h-5 w-5" />
+                  <Icon icon={copied ? 'mdi:check' : 'mdi:email-outline'} className="h-5 w-5" style={{ color: 'var(--primary)' }} />
                 </mdui-button-icon>
-                <div className="h-4 text-[10px] opacity-70">{copied ? t.common.copied : ''}</div>
+                <div className="h-4 text-[10px]">{copied ? t.common.copied : ''}</div>
                 {unreadCount > 0 && (
-                  <span className="rounded-full bg-[color:var(--mdui-color-primary)] px-1.5 py-0.5 text-[10px] text-[color:var(--mdui-color-on-primary)]">
+                  <span className="rounded-full px-1.5 py-0.5 text-[10px] font-medium" style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-text)' }}>
                     {unreadCount}
                   </span>
                 )}
               </div>
             ) : null}
-            <div className={['fi-glass rounded-xl border border-black/10 p-3 dark:border-white/10', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div className={['fi-card rounded-xl', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="space-y-2">
                 <div className="min-w-0">
                   <div className="text-xs opacity-70">{t.inbox.title}</div>
-                  <div className="mt-1 rounded-2xl border border-[#E8DEF8] bg-[#F7F2FA] px-3 py-2 text-sm font-semibold text-[#1D192B]">
-                    <span className="block truncate">{email || '...'}</span>
+                  <div className="mt-1 rounded-2xl border px-3 py-2 text-sm font-semibold" style={{ borderColor: 'var(--secondary)', backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
+                    <span className="block break-all">{email || '...'}</span>
                   </div>
                 </div>
                 {email ? (
                   <div>
                     <mdui-button
-                      variant="text"
-                      className="fi-inbox-copy-button whitespace-nowrap px-2"
+                      variant="tonal"
+                      className="fi-inbox-copy-button whitespace-nowrap"
                       data-sound="notice"
-                      style={{ backgroundColor: '#E8DEF8', borderRadius: '999px' }}
                       onClick={() => copyText(email)}
                       aria-label={copied ? t.common.copied : t.common.copy}
                       title={copied ? t.common.copied : t.common.copy}
@@ -427,10 +413,10 @@ export default function InboxPage() {
                 ) : null}
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                <span className="rounded-full bg-[#F7F2FA] px-3 py-1 font-medium text-[#6750A4]">
+                <span className="rounded-full px-3 py-1 font-medium" style={{ backgroundColor: 'var(--secondary)', color: 'var(--primary)' }}>
                   {format(t.inbox.unreadCount, { count: unreadCount })}
                 </span>
-                <span className="rounded-full bg-[#F7F2FA] px-3 py-1 font-medium text-[#6750A4]">
+                <span className="rounded-full px-3 py-1 font-medium" style={{ backgroundColor: 'var(--secondary)', color: 'var(--primary)' }}>
                   {t.inbox.keyExpires}: {keyExpiresAt ? formatTime(keyExpiresAt) : t.common.na}
                 </span>
               </div>
@@ -438,7 +424,7 @@ export default function InboxPage() {
             </div>
 
             {sidebarCollapsed ? (
-              <div className="fi-glass hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 p-2 dark:border-white/10">
+              <div className="fi-card hidden md:flex flex-col items-center gap-1 rounded-xl p-2">
                 <mdui-button-icon
                   variant={unreadOnly ? 'standard' : 'filled'}
                   className={unreadOnly ? 'fi-btn-elevated' : 'fi-btn-filled'}
@@ -457,7 +443,7 @@ export default function InboxPage() {
                 </mdui-button-icon>
               </div>
             ) : null}
-            <div className={['fi-glass rounded-xl border border-black/10 p-2 dark:border-white/10', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div className={['fi-card rounded-xl', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="grid gap-1">
                 <mdui-button
                   variant={unreadOnly ? 'elevated' : 'filled'}
@@ -481,7 +467,7 @@ export default function InboxPage() {
             </div>
 
             {sidebarCollapsed ? (
-              <div className="fi-glass hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 p-2 dark:border-white/10">
+              <div className="fi-card hidden md:flex flex-col items-center gap-1 rounded-xl p-2">
                 <mdui-button-icon variant="tonal" className="fi-btn-tonal" data-sound="notice" onClick={() => loadList()} title={t.inbox.refreshButton}>
                   <Icon icon="mdi:refresh" className="h-5 w-5" />
                 </mdui-button-icon>
@@ -490,7 +476,7 @@ export default function InboxPage() {
                 </mdui-button-icon>
               </div>
             ) : null}
-            <div className={['fi-glass rounded-xl border border-black/10 p-3 dark:border-white/10 space-y-2', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div className={['fi-card rounded-xl space-y-2', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="text-xs font-medium opacity-80">{t.inbox.renewButton}</div>
               <div className="flex items-center gap-2">
                 <mdui-button variant="tonal" className="flex-1 fi-btn-tonal" data-sound="notice" onClick={() => loadList()}>
@@ -512,7 +498,7 @@ export default function InboxPage() {
             </div>
 
             {sidebarCollapsed ? (
-              <div className="fi-glass hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 p-2 dark:border-white/10">
+              <div className="fi-card hidden md:flex flex-col items-center gap-1 rounded-xl p-2">
                 <mdui-button-icon
                   variant={detailView === 'html' ? 'filled' : 'standard'}
                   className={detailView === 'html' ? 'fi-btn-filled' : 'fi-btn-elevated'}
@@ -531,7 +517,7 @@ export default function InboxPage() {
                 </mdui-button-icon>
               </div>
             ) : null}
-            <div className={['fi-glass rounded-xl border border-black/10 p-3 dark:border-white/10 space-y-3', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+            <div className={['fi-card rounded-xl space-y-3', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
               <div className="text-xs font-medium opacity-80">{t.inbox.htmlView} / {t.inbox.textView}</div>
               <div className="grid gap-1">
                 <mdui-button
@@ -566,112 +552,22 @@ export default function InboxPage() {
                   {loadExternal ? t.inbox.externalAllowed : t.inbox.externalBlocked}
                 </mdui-button>
               </div>
-            </div>
+</div>
 
-            {sidebarCollapsed ? (
-              <div className="fi-glass hidden md:flex flex-col items-center gap-1 rounded-xl border border-black/10 p-2 dark:border-white/10">
-                <mdui-button-icon onClick={() => setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'auto' : 'dark')} title={t.theme.label}>
-                  <Icon icon={themeIcon} className="h-5 w-5" />
-                </mdui-button-icon>
-                <mdui-button-icon onClick={() => {
-                  const idx = locales.indexOf(locale);
-                  setLocale(locales[(idx + 1) % locales.length]);
-                }} title={t.language.label}>
-                  <Icon icon="mdi:translate" className="h-5 w-5" />
-                </mdui-button-icon>
-              </div>
-            ) : null}
-            <div
-              className={[
-                'fi-glass rounded-xl border border-black/10 p-3 dark:border-white/10 space-y-3',
-                sidebarCollapsed ? 'hidden md:hidden' : '',
-              ].join(' ')}
-            >
-              <mdui-select
-                ref={languageSelectRef}
-                variant="outlined"
-                label={t.language.label}
-                value={locale}
-                onChange={(e) => setLocale((e.target as HTMLElement & { value: string }).value as Locale)}
+            <div className={['fi-card rounded-xl', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}>
+              <mdui-button
+                variant="tonal"
+                full-width
+                className="fi-btn-tonal"
+                onClick={() => {
+                  clearSessionToken();
+                  router.push('/');
+                }}
               >
-                <Icon icon="mdi:translate" slot="icon" />
-                {locales.map((loc) => (
-                  <mdui-menu-item key={loc} value={loc}>
-                    {getLocaleLabel(t.language, loc)}
-                  </mdui-menu-item>
-                ))}
-              </mdui-select>
-
-              <mdui-select
-                ref={themeSelectRef}
-                variant="outlined"
-                label={t.theme.label}
-                value={theme}
-                onChange={(e) => setTheme((e.target as HTMLElement & { value: string }).value as ThemeMode)}
-              >
-                <Icon icon={themeIcon} slot="icon" />
-                <mdui-menu-item value="auto">{t.theme.system}</mdui-menu-item>
-                <mdui-menu-item value="dark">{t.theme.dark}</mdui-menu-item>
-                <mdui-menu-item value="light">{t.theme.light}</mdui-menu-item>
-              </mdui-select>
-
-              <div className="space-y-1">
-                <div className="text-xs opacity-70">{t.sound.label}</div>
-                <div
-                  className="rounded-2xl border border-[#E8DEF8] bg-white/70 px-3 py-3 shadow-[0_10px_26px_rgba(103,80,164,0.08)] dark:border-white/10 dark:bg-white/5"
-                  data-sound="off"
-                >
-                  <div className="mb-2 flex items-center justify-between text-sm">
-                    <span className="inline-flex items-center gap-2">
-                      <Icon
-                        icon={soundIcon}
-                        className="h-4 w-4"
-                        style={{ color: SOUND_ACCENT_COLOR }}
-                      />
-                      {t.sound.label}
-                    </span>
-                    <span className="text-xs font-semibold" style={{ color: SOUND_ACCENT_COLOR }}>
-                      {soundPercent}%
-                    </span>
-                  </div>
-                  <input
-                    aria-label={t.sound.label}
-                    className="fi-sound-slider fi-sound-slider-horizontal w-full cursor-pointer appearance-none bg-transparent"
-                    data-sound="off"
-                    max={100}
-                    min={0}
-                    step={1}
-                    style={soundSliderStyle}
-                    type="range"
-                    value={soundPercent}
-                    onChange={(e) => setVolume(Number((e.target as HTMLInputElement).value) / 100)}
-                    onMouseUp={previewNotice}
-                    onTouchEnd={previewNotice}
-                    onPointerUp={previewNotice}
-                  />
-                </div>
-              </div>
+                <Icon icon="mdi:logout" slot="icon" />
+                {t.inbox.exitButton}
+              </mdui-button>
             </div>
-
-            {sidebarCollapsed ? (
-              <div className="hidden md:flex justify-center">
-                <mdui-button-icon variant="tonal" className="fi-btn-tonal" onClick={() => { clearSessionToken(); router.push('/'); }} title={t.inbox.exitButton}>
-                  <Icon icon="mdi:logout" className="h-5 w-5" />
-                </mdui-button-icon>
-              </div>
-            ) : null}
-            <mdui-button
-              variant="tonal"
-              full-width
-              className={['fi-btn-tonal', sidebarCollapsed ? 'hidden md:hidden' : ''].join(' ')}
-              onClick={() => {
-                clearSessionToken();
-                router.push('/');
-              }}
-            >
-              <Icon icon="mdi:logout" slot="icon" />
-              {t.inbox.exitButton}
-            </mdui-button>
           </aside>
 
           <section
@@ -690,7 +586,7 @@ export default function InboxPage() {
                 >
                   <Icon icon="mdi:magnify" slot="icon" />
                 </mdui-text-field>
-                <mdui-button variant="tonal" className="min-w-0 px-2 fi-btn-tonal" data-sound="notice" onClick={() => loadList()} aria-label={t.inbox.refreshButton} title={t.inbox.refreshButton}>
+                <mdui-button variant="tonal" className="min-w-0 fi-btn-tonal" data-sound="notice" onClick={() => loadList()} aria-label={t.inbox.refreshButton} title={t.inbox.refreshButton}>
                   <Icon icon="mdi:refresh" slot="icon" />
                   <span className="sr-only">{t.inbox.refreshButton}</span>
                 </mdui-button>
@@ -698,7 +594,7 @@ export default function InboxPage() {
 
               {listError && <div className="text-sm text-red-600 dark:text-red-400">{listError}</div>}
 
-              <div className="fi-glass overflow-hidden rounded-xl border border-black/10 dark:border-white/10">
+              <div className="fi-card overflow-hidden rounded-xl">
                 <div className="divide-y divide-black/10 dark:divide-white/10">
                   {loadingList ? (
                     <div className="p-4 text-sm opacity-70">{t.inbox.loadingList}</div>
@@ -715,10 +611,11 @@ export default function InboxPage() {
                           type="button"
                           onClick={() => setSelectedId(m.id)}
                           className={[
-                            'w-full px-3 py-2 text-left transition-colors outline-none',
-                            'hover:bg-black/5 dark:hover:bg-white/5',
-                            active ? 'bg-[color:var(--mdui-color-primary-container)] text-[color:var(--mdui-color-on-primary-container)]' : '',
-                          ].join(' ')}
+                             'w-full px-3 py-2 text-left transition-colors outline-none',
+                             'hover:bg-black/5 dark:hover:bg-white/5',
+                             active ? '' : '',
+                           ].join(' ')}
+                          style={active ? { backgroundColor: 'var(--secondary)', color: 'var(--foreground)' } : {}}
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
@@ -729,7 +626,7 @@ export default function InboxPage() {
                                   {label}
                                 </div>
                                 {unread ? (
-                                  <span className="rounded-full bg-[color:var(--mdui-color-primary)] px-2 py-0.5 text-[10px] text-[color:var(--mdui-color-on-primary)]">
+                                  <span className="rounded-full px-2 py-0.5 text-[10px] font-medium" style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-text)' }}>
                                     {t.inbox.unread}
                                   </span>
                                 ) : null}
@@ -767,7 +664,7 @@ export default function InboxPage() {
               tabIndex={0}
               className={[
                 'group relative hidden lg:flex cursor-col-resize select-none items-center justify-center',
-                'outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--mdui-color-primary)]',
+                'outline-none focus-visible:ring-2 focus-visible:ring-[#60529A]',
               ].join(' ')}
               onPointerDown={startResize}
               onPointerMove={onResizeMove}
@@ -797,8 +694,8 @@ export default function InboxPage() {
               {!loadingDetail && !detail && <div className="text-sm opacity-70">{t.inbox.selectMessage}</div>}
 
               {detail ? (
-                <div className="fi-glass overflow-hidden rounded-xl border border-black/10 dark:border-white/10">
-                  <div className="border-b border-black/10 px-4 py-3 dark:border-white/10">
+                <div className="fi-card overflow-hidden rounded-xl">
+                  <div className="border-b px-4 py-3" style={{ borderColor: 'var(--secondary)' }}>
                     <div className="text-base font-semibold">{detail.subject || t.inbox.noSubject}</div>
                     <div className="mt-1 text-xs opacity-70">
                       {t.inbox.from}:{' '}
@@ -813,7 +710,7 @@ export default function InboxPage() {
                     {detailView === 'text' ? (
                       <pre className="whitespace-pre-wrap break-words text-sm">{detail.textBody || ''}</pre>
                     ) : (
-                      <div className="rounded border border-black/10 dark:border-white/10 p-2">
+                      <div className="rounded border p-2" style={{ borderColor: 'var(--secondary)' }}>
                         <iframe title="mail" sandbox="" className="h-[520px] w-full" srcDoc={htmlForDisplay} />
                       </div>
                     )}
