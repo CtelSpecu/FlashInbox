@@ -121,10 +121,10 @@ export default function ClaimClient() {
   }
 
   return (
-    <div className="flex min-h-full items-center justify-center p-6">
+    <div className="flex min-h-full items-center justify-center p-6" style={{ backgroundColor: 'var(--background)' }}>
       <div className="w-full max-w-md space-y-4">
         <div className="text-center">
-          <Icon icon="mdi:key" className="mx-auto h-12 w-12 text-[color:var(--mdui-color-primary)]" />
+          <Icon icon="mdi:key" className="mx-auto h-12 w-12" style={{ color: '#60529A' }} />
           <h1 className="mt-2 text-xl font-semibold">{t.claim.title}</h1>
           <p className="mt-1 text-sm opacity-80">{t.claim.subtitle}</p>
         </div>
@@ -152,7 +152,7 @@ export default function ClaimClient() {
           <div className="text-xs opacity-70">{t.claim.turnstileNotConfigured}</div>
         )}
 
-        {errorText && <div className="text-sm text-red-600 dark:text-red-400">{errorText}</div>}
+        {errorText && <div className="text-sm" style={{ color: '#B3261E' }}>{errorText}</div>}
 
         <mdui-button variant="filled" className="fi-btn-filled" full-width data-sound="notice" loading={loading} disabled={!!key || !normalizedEmail || !turnstileToken} onClick={submit}>
           <Icon icon="mdi:check-circle" slot="icon" />

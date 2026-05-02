@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@iconify/react';
 
@@ -10,15 +10,7 @@ import { getUserErrorMessage } from '@/lib/client/error-i18n';
 import { setSessionToken } from '@/lib/client/session-store';
 import { validateUsername } from '@/lib/utils/username';
 import { useI18n } from '@/lib/i18n/context';
-import { getLocaleLabel, type Locale, locales } from '@/lib/i18n';
-import {
-  getSoundIcon,
-  getSoundSliderStyle,
-  SOUND_ACCENT_COLOR,
-} from '@/lib/sound/user-sound';
 import { useUserSound } from '@/lib/sound/user-sound-provider';
-import { useUserTheme } from '@/lib/theme/user-theme';
-import type { ThemeMode } from '@/lib/theme/types';
 
 type CreateMode = 'random' | 'manual';
 
@@ -49,9 +41,8 @@ interface UserDomainsResponse {
 
 export default function HomeClient() {
   const router = useRouter();
-  const { t, format, locale, setLocale } = useI18n();
-  const { theme, setTheme } = useUserTheme();
-  const { volume, setVolume, previewNotice, playNotice } = useUserSound();
+  const { t, format } = useI18n();
+  const { playNotice } = useUserSound();
 
   const [mode, setMode] = useState<CreateMode>('random');
   const [manualUsername, setManualUsername] = useState('');
@@ -69,10 +60,7 @@ export default function HomeClient() {
   const [createdKeyExpiresAt, setCreatedKeyExpiresAt] = useState<number | null>(null);
   const [createdToken, setCreatedToken] = useState<string | null>(null);
   const [confirmSaved, setConfirmSaved] = useState(false);
-  const [copiedField, setCopiedField] = useState<'email' | 'key' | null>(null);
-  const [soundPanelOpen, setSoundPanelOpen] = useState(false);
-  const soundPanelRef = useRef<HTMLDivElement | null>(null);
-  const soundControlRef = useRef<HTMLDivElement | null>(null);
+  const [copiedField, setCopiedField] = useState<'email' | 'key' | 'both' | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -90,7 +78,6 @@ export default function HomeClient() {
         if (found) setDomainId(found.id);
       })
       .catch(() => {
-        // safe fallback
         if (!active) return;
         setDefaultDomain('example.com');
         setDomains([]);
@@ -101,33 +88,6 @@ export default function HomeClient() {
       active = false;
     };
   }, []);
-
-  useEffect(() => {
-    if (!soundPanelOpen) {
-      return;
-    }
-
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target;
-      if (!(target instanceof Node)) return;
-      if (!soundControlRef.current?.contains(target)) {
-        setSoundPanelOpen(false);
-      }
-    };
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setSoundPanelOpen(false);
-      }
-    };
-
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [soundPanelOpen]);
 
   const usernameValidation = useMemo(() => {
     if (mode !== 'manual') return { valid: true as const, error: null as string | null };
@@ -208,138 +168,13 @@ export default function HomeClient() {
     router.push('/inbox');
   }
 
-  const themeIcon =
-    theme === 'light'
-      ? 'mdi:white-balance-sunny'
-      : theme === 'dark'
-        ? 'mdi:weather-night'
-        : 'mdi:theme-light-dark';
-  const soundPercent = Math.round(volume * 100);
-  const soundIcon = getSoundIcon(soundPercent);
-  const soundSliderStyle = getSoundSliderStyle(soundPercent, 'vertical') as CSSProperties;
-
   return (
-    <div className="relative min-h-full overflow-x-hidden">
-      <div className="absolute right-4 top-4 z-20 flex flex-nowrap items-start gap-2">
-        <div className="flex h-10 shrink-0 items-center self-start">
-          <mdui-dropdown placement="bottom-end">
-            <mdui-button-icon
-              slot="trigger"
-              variant="tonal"
-              aria-label={t.language.label}
-              title={t.language.label}
-            >
-              <Icon icon="mdi:translate" className="h-5 w-5" />
-            </mdui-button-icon>
-            <mdui-menu
-              selects="single"
-              value={locale}
-              onChange={(e) => setLocale((e.target as HTMLElement & { value: string }).value as Locale)}
-            >
-              {locales.map((loc) => (
-                <mdui-menu-item key={loc} value={loc}>
-                  <Icon icon="mdi:check" slot="selected-icon" />
-                  {getLocaleLabel(t.language, loc)}
-                </mdui-menu-item>
-              ))}
-            </mdui-menu>
-          </mdui-dropdown>
-        </div>
-
-        <div className="flex h-10 shrink-0 items-center self-start">
-          <mdui-dropdown placement="bottom-end">
-            <mdui-button-icon
-              slot="trigger"
-              variant="tonal"
-              aria-label={t.theme.label}
-              title={t.theme.label}
-            >
-              <Icon icon={themeIcon} className="h-5 w-5" />
-            </mdui-button-icon>
-            <mdui-menu
-              selects="single"
-              value={theme}
-              onChange={(e) => setTheme((e.target as HTMLElement & { value: string }).value as ThemeMode)}
-            >
-              <mdui-menu-item value="auto">
-                <Icon icon="mdi:check" slot="selected-icon" />
-                {t.theme.system}
-              </mdui-menu-item>
-              <mdui-menu-item value="dark">
-                <Icon icon="mdi:check" slot="selected-icon" />
-                {t.theme.dark}
-              </mdui-menu-item>
-              <mdui-menu-item value="light">
-                <Icon icon="mdi:check" slot="selected-icon" />
-                {t.theme.light}
-              </mdui-menu-item>
-            </mdui-menu>
-          </mdui-dropdown>
-        </div>
-
-        <div ref={soundControlRef} className="relative flex h-10 shrink-0 items-center self-start">
-          <mdui-button-icon
-            variant="tonal"
-            aria-label={t.sound.label}
-            title={`${t.sound.label}: ${soundPercent}%`}
-            onClick={() => setSoundPanelOpen((open) => !open)}
-          >
-            <Icon icon={soundIcon} className="h-5 w-5" />
-          </mdui-button-icon>
-
-          {soundPanelOpen ? (
-            <div
-              ref={soundPanelRef}
-              className="fi-glass absolute left-1/2 top-full z-30 mt-3 w-28 -translate-x-1/2 rounded-2xl border border-[#E8DEF8] bg-white/70 px-3 py-3 shadow-[0_18px_36px_rgba(103,80,164,0.18)] dark:border-white/10 dark:bg-white/5"
-              data-sound="off"
-            >
-              <div className="mb-3 flex items-center justify-between text-sm">
-                <span className="inline-flex items-center gap-2">
-                  <Icon
-                    icon={soundIcon}
-                    className="h-4 w-4"
-                    style={{ color: SOUND_ACCENT_COLOR }}
-                  />
-                  <span className="text-xs font-medium opacity-80">{t.sound.label}</span>
-                </span>
-                <span className="text-xs font-semibold" style={{ color: SOUND_ACCENT_COLOR }}>
-                  {soundPercent}%
-                </span>
-              </div>
-
-              <div className="flex justify-center">
-                <input
-                  aria-label={t.sound.label}
-                  className="fi-sound-slider fi-sound-slider-vertical h-32 w-7 cursor-pointer appearance-none bg-transparent [writing-mode:vertical-lr] [direction:rtl]"
-                  data-sound="off"
-                  max={100}
-                  min={0}
-                  step={1}
-                  style={soundSliderStyle}
-                  type="range"
-                  value={soundPercent}
-                  onChange={(e) => setVolume(Number((e.target as HTMLInputElement).value) / 100)}
-                  onMouseUp={previewNotice}
-                  onTouchEnd={previewNotice}
-                  onPointerUp={previewNotice}
-                />
-              </div>
-            </div>
-          ) : null}
-        </div>
-      </div>
-
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -top-24 left-1/2 h-[440px] w-[440px] -translate-x-1/2 rounded-full bg-indigo-500/10 blur-3xl dark:bg-indigo-400/10" />
-        <div className="absolute -bottom-28 left-6 h-[380px] w-[380px] rounded-full bg-sky-500/10 blur-3xl dark:bg-sky-400/10" />
-        <div className="absolute inset-0 opacity-[0.14] [background-image:linear-gradient(to_right,rgba(0,0,0,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.12)_1px,transparent_1px)] [background-size:28px_28px] dark:opacity-[0.08]" />
-      </div>
-
+    <div className="relative min-h-full overflow-x-hidden" style={{ backgroundColor: 'var(--background)' }}>
       <div className="mx-auto w-full max-w-6xl px-4 py-10 md:py-16">
         <div className="grid gap-10 md:grid-cols-[1.15fr_0.85fr] md:items-start">
           <section className="space-y-8">
             <div className="space-y-4">
-              <div className="fi-glass inline-flex items-center gap-3 rounded-2xl border border-black/5 px-3 py-2 shadow-sm dark:border-white/10">
+              <div className="fi-glass inline-flex items-center gap-3 rounded-2xl border border-[var(--secondary)] px-3 py-2" style={{ backgroundColor: 'var(--card-bg, var(--background))' }}>
                 <img
                   src="/FlashInbox_Animated.svg"
                   alt="FlashInbox"
@@ -347,68 +182,68 @@ export default function HomeClient() {
                   draggable={false}
                 />
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold tracking-tight">{t.home.title}</div>
-                  <div className="text-xs opacity-70">{t.home.subtitle}</div>
+                  <div className="text-sm font-semibold tracking-tight" style={{ color: 'var(--foreground)' }}>{t.home.title}</div>
+                  <div className="text-xs" style={{ color: 'var(--foreground)', opacity: 0.7 }}>{t.home.subtitle}</div>
                 </div>
               </div>
 
-              <h1 className="text-balance text-3xl font-semibold tracking-tight md:text-4xl">
+              <h1 className="text-balance text-3xl font-semibold tracking-tight md:text-4xl" style={{ color: 'var(--foreground)' }}>
                 {t.home.heroTitle}
               </h1>
-              <p className="text-pretty text-sm opacity-80 md:text-base">{t.home.heroSubtitle}</p>
+              <p className="text-pretty text-sm md:text-base" style={{ color: 'var(--foreground)', opacity: 0.7 }}>{t.home.heroSubtitle}</p>
             </div>
 
             <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-2">
-                <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md bg-[color:var(--mdui-color-primary-container)] text-[color:var(--mdui-color-on-primary-container)]">
+                <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md" style={{ backgroundColor: 'var(--secondary)', color: 'var(--primary)' }}>
                   <Icon icon="mdi:flash-outline" className="h-4 w-4" />
                 </span>
-                <span>{t.home.featureNoSignup}</span>
+                <span style={{ color: 'var(--foreground)' }}>{t.home.featureNoSignup}</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md bg-[color:var(--mdui-color-primary-container)] text-[color:var(--mdui-color-on-primary-container)]">
+                <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md" style={{ backgroundColor: 'var(--secondary)', color: 'var(--primary)' }}>
                   <Icon icon="mdi:key-outline" className="h-4 w-4" />
                 </span>
-                <span>{t.home.featureRecoverKey}</span>
+                <span style={{ color: 'var(--foreground)' }}>{t.home.featureRecoverKey}</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md bg-[color:var(--mdui-color-primary-container)] text-[color:var(--mdui-color-on-primary-container)]">
+                <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md" style={{ backgroundColor: 'var(--secondary)', color: 'var(--primary)' }}>
                   <Icon icon="mdi:shield-lock-outline" className="h-4 w-4" />
                 </span>
-                <span>{t.home.featureNoAttachments}</span>
+                <span style={{ color: 'var(--foreground)' }}>{t.home.featureNoAttachments}</span>
               </li>
             </ul>
 
-            <div className="fi-glass rounded-2xl border border-black/5 p-4 shadow-sm dark:border-white/10">
-              <div className="text-sm font-semibold">{t.home.howItWorks}</div>
+            <div className="fi-card rounded-2xl" style={{ backgroundColor: 'var(--card-bg, #FFFDFF)' }}>
+              <div className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{t.home.howItWorks}</div>
               <ol className="mt-3 space-y-2 text-sm">
                 <li className="flex items-start gap-3">
-                  <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-[color:var(--mdui-color-primary)] text-xs font-semibold text-[color:var(--mdui-color-on-primary)]">
+                  <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold" style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-text)' }}>
                     1
                   </span>
-                  <span>{t.home.howStepCreate}</span>
+                  <span style={{ color: 'var(--foreground)', opacity: 0.7 }}>{t.home.howStepCreate}</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-[color:var(--mdui-color-primary)] text-xs font-semibold text-[color:var(--mdui-color-on-primary)]">
+                  <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold" style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-text)' }}>
                     2
                   </span>
-                  <span>{t.home.howStepReceive}</span>
+                  <span style={{ color: 'var(--foreground)', opacity: 0.7 }}>{t.home.howStepReceive}</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-[color:var(--mdui-color-primary)] text-xs font-semibold text-[color:var(--mdui-color-on-primary)]">
+                  <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold" style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-text)' }}>
                     3
                   </span>
-                  <span>{t.home.howStepClaimRecover}</span>
+                  <span style={{ color: 'var(--foreground)', opacity: 0.7 }}>{t.home.howStepClaimRecover}</span>
                 </li>
               </ol>
             </div>
           </section>
 
           <section className="md:sticky md:top-20">
-            <div className="fi-glass rounded-2xl border border-black/10 p-5 shadow-sm dark:border-white/10">
+            <div className="fi-card rounded-2xl p-5">
               <div className="mb-4">
-                <div className="text-sm font-semibold">{t.home.formTitle}</div>
-                <div className="mt-1 text-xs opacity-70">{t.home.formSubtitle}</div>
+                <div className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{t.home.formTitle}</div>
+                <div className="mt-1 text-xs" style={{ color: 'var(--foreground)', opacity: 0.7 }}>{t.home.formSubtitle}</div>
               </div>
 
               <div className="space-y-4">
@@ -453,16 +288,16 @@ export default function HomeClient() {
                   <Icon icon="mdi:account" slot="icon" />
                 </mdui-text-field>
 
-              <mdui-select
-                label={t.home.domain}
-                value={String(domainId ?? '')}
-                data-sound="off"
-                onClick={() => playNotice()}
-                onChange={(e) =>
-                  setDomainId(Number((e.target as HTMLElement & { value: string }).value))
-                }
-                disabled={loading || !!createdKey}
-              >
+                <mdui-select
+                  label={t.home.domain}
+                  value={String(domainId ?? '')}
+                  data-sound="off"
+                  onClick={() => playNotice()}
+                  onChange={(e) =>
+                    setDomainId(Number((e.target as HTMLElement & { value: string }).value))
+                  }
+                  disabled={loading || !!createdKey}
+                >
                   {domains.length === 0 ? (
                     <mdui-menu-item value={String(domainId ?? '')}>@{defaultDomain}</mdui-menu-item>
                   ) : (
@@ -483,21 +318,21 @@ export default function HomeClient() {
                     onExpired={() => setTurnstileToken(null)}
                   />
                 ) : (
-                  <div className="text-xs opacity-70">{t.home.turnstileNotConfigured}</div>
+                  <div className="text-xs" style={{ color: 'var(--foreground)', opacity: 0.7 }}>{t.home.turnstileNotConfigured}</div>
                 )}
 
                 {!usernameValidation.valid ? (
-                  <div className="text-sm text-red-600 dark:text-red-400">
+                  <div className="text-sm" style={{ color: '#B3261E' }}>
                     {usernameValidation.error}
                   </div>
                 ) : null}
 
-                {errorText ? <div className="text-sm text-red-600 dark:text-red-400">{errorText}</div> : null}
+                {errorText ? <div className="text-sm" style={{ color: '#B3261E' }}>{errorText}</div> : null}
 
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <mdui-button
                     variant="filled"
-                    className="col-span-2 w-full fi-btn-filled"
+                    className="fi-btn-filled col-span-2 w-full"
                     full-width
                     data-sound={mode === 'random' ? 'notice' : 'click'}
                     loading={loading}
@@ -512,8 +347,8 @@ export default function HomeClient() {
                   </mdui-button>
 
                   <mdui-button
-                    variant="elevated"
-                    className="w-full fi-btn-elevated"
+                    variant="tonal"
+                    className="w-full fi-btn-tonal"
                     full-width
                     data-sound="notice"
                     onClick={() => router.push('/claim')}
@@ -522,8 +357,8 @@ export default function HomeClient() {
                     {t.home.claimButton}
                   </mdui-button>
                   <mdui-button
-                    variant="elevated"
-                    className="w-full fi-btn-elevated"
+                    variant="tonal"
+                    className="w-full fi-btn-tonal"
                     full-width
                     data-sound="notice"
                     onClick={() => router.push('/recover')}
@@ -543,14 +378,26 @@ export default function HomeClient() {
         headline={t.claim.keyDialogTitle}
       >
         <div className="space-y-3">
+          <div className="flex justify-end">
+            <mdui-button variant="tonal" className="fi-btn-tonal fi-btn-copy" onClick={async () => {
+              const text = [createdEmail, createdKey].filter(Boolean).join('\n');
+              if (!text) return;
+              await navigator.clipboard.writeText(text);
+              setCopiedField('both');
+              setTimeout(() => setCopiedField(null), 2000);
+            }}>
+              <Icon icon={copiedField === 'both' ? 'mdi:check' : 'mdi:content-copy'} slot="icon" />
+              {copiedField === 'both' ? t.common.copied : t.common.copy}
+            </mdui-button>
+          </div>
           {createdEmail ? (
             <div>
-              <div className="text-xs opacity-70">{t.claim.emailLabel}</div>
+              <div className="text-xs" style={{ color: 'var(--foreground)', opacity: 0.7 }}>{t.claim.emailLabel}</div>
               <div className="mt-1 flex items-start gap-2">
-                <div className="flex-1 rounded border border-black/10 p-2 font-mono text-sm break-all dark:border-white/10">
+                <div className="flex-1 rounded border p-2 font-mono text-sm break-all" style={{ borderColor: 'var(--secondary)', backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
                   {createdEmail}
                 </div>
-                <mdui-button variant="text" onClick={() => copyText(createdEmail, 'email')}>
+                <mdui-button variant="text" className="fi-btn-tonal fi-btn-copy" onClick={() => copyText(createdEmail, 'email')}>
                   <Icon icon={copiedField === 'email' ? 'mdi:check' : 'mdi:content-copy'} slot="icon" />
                   {copiedField === 'email' ? t.common.copied : t.common.copy}
                 </mdui-button>
@@ -559,26 +406,26 @@ export default function HomeClient() {
           ) : null}
 
           <div>
-            <div className="text-xs opacity-70">{t.recover.keyLabel}</div>
+            <div className="text-xs" style={{ color: 'var(--foreground)', opacity: 0.7 }}>{t.recover.keyLabel}</div>
             <div className="mt-1 flex items-start gap-2">
-              <div className="flex-1 rounded border border-black/10 p-2 font-mono text-sm break-all dark:border-white/10">
+              <div className="flex-1 rounded border p-2 font-mono text-sm break-all" style={{ borderColor: 'var(--secondary)', backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
                 {createdKey || ''}
               </div>
-              <mdui-button variant="text" onClick={() => (createdKey ? copyText(createdKey, 'key') : undefined)}>
+              <mdui-button variant="text" className="fi-btn-tonal fi-btn-copy" onClick={() => (createdKey ? copyText(createdKey, 'key') : undefined)}>
                 <Icon icon={copiedField === 'key' ? 'mdi:check' : 'mdi:content-copy'} slot="icon" />
                 {copiedField === 'key' ? t.common.copied : t.common.copy}
               </mdui-button>
             </div>
           </div>
 
-          <div className="text-xs opacity-70">
+          <div className="text-xs" style={{ color: 'var(--foreground)', opacity: 0.7 }}>
             {format(t.claim.keyExpires, {
               time: createdKeyExpiresAt ? new Date(createdKeyExpiresAt).toLocaleString() : t.common.na,
             })}
           </div>
 
-          <div className="flex items-start gap-2 rounded-lg bg-[color:var(--mdui-color-tertiary-container)] px-3 py-2 text-[color:var(--mdui-color-on-tertiary-container)]">
-            <Icon icon="mdi:information-outline" className="mt-0.5 h-4 w-4 shrink-0" />
+          <div className="flex items-start gap-2 rounded-lg px-3 py-2" style={{ backgroundColor: 'var(--secondary)', color: 'var(--foreground)' }}>
+            <Icon icon="mdi:information-outline" className="mt-0.5 h-4 w-4 shrink-0" style={{ color: 'var(--primary)' }} />
             <span className="text-xs">{t.claim.keyHint}</span>
           </div>
 
