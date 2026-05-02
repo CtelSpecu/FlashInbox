@@ -16,6 +16,7 @@ export interface AdminTranslations {
     yes: string;
     no: string;
     empty: string;
+    search: string;
     bulkActions: string;
     selectedCount: string; // {count}
     apply: string;
