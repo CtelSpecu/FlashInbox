@@ -247,29 +247,31 @@ export default function HomeClient() {
               </div>
 
               <div className="space-y-4">
-                <mdui-segmented-button-group
-                  selects="single"
-                  value={mode}
-                  onChange={(e) => {
-                    const nextMode = (e.target as HTMLElement & { value: string }).value as CreateMode;
-                    setMode(nextMode);
-                    if (nextMode === 'manual') {
-                      setUsername(manualUsername);
-                      return;
-                    }
-                    setManualUsername(username);
-                    setUsername('');
-                  }}
-                >
-                  <mdui-segmented-button value="random">
-                    <Icon icon="mdi:dice-multiple" slot="icon" />
+                <div className="fi-tabs-list w-full">
+                  <button
+                    type="button"
+                    className={['fi-tab-item flex-1', mode === 'random' ? 'active' : ''].join(' ')}
+                    onClick={() => {
+                      setMode('random');
+                      setManualUsername(username);
+                      setUsername('');
+                    }}
+                  >
+                    <Icon icon="mdi:dice-multiple" className="h-4 w-4" />
                     {t.home.modeRandom}
-                  </mdui-segmented-button>
-                  <mdui-segmented-button value="manual">
-                    <Icon icon="mdi:account-edit" slot="icon" />
+                  </button>
+                  <button
+                    type="button"
+                    className={['fi-tab-item flex-1', mode === 'manual' ? 'active' : ''].join(' ')}
+                    onClick={() => {
+                      setMode('manual');
+                      setUsername(manualUsername);
+                    }}
+                  >
+                    <Icon icon="mdi:account-edit" className="h-4 w-4" />
                     {t.home.modeManual}
-                  </mdui-segmented-button>
-                </mdui-segmented-button-group>
+                  </button>
+                </div>
 
                 <mdui-text-field
                   label={t.home.username}
