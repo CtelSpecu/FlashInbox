@@ -16,26 +16,81 @@
   --accent: #60529A;
   --accent-hover: #4A4180;
 
-  /* Admin theme tokens (default: light) */
-  --admin-bg: #f8fafc;
-  --admin-surface: #ffffff;
-  --admin-border: #e2e8f0;
-  --admin-text: #0f172a;
-  --admin-muted: #64748b;
-  --admin-hover: #f1f5f9;
-  --admin-ring: #94a3b8;
+  /* HeroUI (NextUI) 1:1 Semantic Tokens - Purple Hue (291) */
+  --heroui-background: #FFFFFF;
+  --heroui-foreground: #11181C;
+  --heroui-divider: #E4E4E7;
+  --heroui-focus: #7828C8;
+  
+  --heroui-content1: #FFFFFF;
+  --heroui-content2: #F4F4F5;
+  --heroui-content3: #E4E4E7;
+  --heroui-content4: #D4D4D8;
 
-  --admin-primary: #0f172a;
-  --admin-primary-text: #ffffff;
-  --admin-primary-hover: #1e293b;
+  --heroui-default-50: #F4F4F5;
+  --heroui-default-100: #E4E4E7;
+  --heroui-default-200: #D4D4D8;
+  --heroui-default-300: #A1A1AA;
+  --heroui-default-400: #71717A;
+  --heroui-default-500: #52525B;
+  --heroui-default-600: #3F3F46;
+  --heroui-default-700: #27272A;
+  --heroui-default-800: #18181B;
+  --heroui-default-900: #09090B;
 
-  --admin-secondary: #f1f5f9;
-  --admin-secondary-text: #0f172a;
-  --admin-secondary-hover: #e2e8f0;
+  --heroui-primary-50: #FAF5FF;
+  --heroui-primary-100: #F3E8FF;
+  --heroui-primary-200: #E9D5FF;
+  --heroui-primary-300: #D8B4FE;
+  --heroui-primary-400: #A855F7;
+  --heroui-primary-500: #7828C8;
+  --heroui-primary-600: #9333EA;
+  --heroui-primary-700: #7E22CE;
+  --heroui-primary-800: #6B21A8;
+  --heroui-primary-900: #581C87;
 
-  --admin-danger: #dc2626;
-  --admin-danger-text: #ffffff;
-  --admin-danger-hover: #b91c1c;
+  --heroui-danger-50: #FFF1F2;
+  --heroui-danger-100: #FFE4E6;
+  --heroui-danger-200: #FECDD3;
+  --heroui-danger-300: #FDA4AF;
+  --heroui-danger-400: #FB7185;
+  --heroui-danger-500: #F31260;
+  --heroui-danger-600: #E11D48;
+  --heroui-danger-700: #BE123C;
+  --heroui-danger-800: #9F1239;
+  --heroui-danger-900: #881337;
+
+  /* Spacing and Radius */
+  --heroui-radius-small: 8px;
+  --heroui-radius-medium: 12px;
+  --heroui-radius-large: 14px;
+  --heroui-radius-xlarge: 18px;
+
+  /* Shadow */
+  --heroui-shadow-small: 0 2px 8px 0 rgba(0, 0, 0, 0.05);
+  --heroui-shadow-medium: 0 4px 16px 0 rgba(0, 0, 0, 0.08);
+  --heroui-shadow-large: 0 8px 32px 0 rgba(0, 0, 0, 0.12);
+
+  /* Mapping to Admin Theme Variables for backward compatibility */
+  --admin-bg: var(--heroui-background);
+  --admin-surface: var(--heroui-content1);
+  --admin-border: var(--heroui-divider);
+  --admin-text: var(--heroui-foreground);
+  --admin-muted: var(--heroui-default-500);
+  --admin-hover: var(--heroui-default-100);
+  --admin-ring: var(--heroui-primary-200);
+
+  --admin-primary: var(--heroui-primary-500);
+  --admin-primary-text: #FFFFFF;
+  --admin-primary-hover: var(--heroui-primary-600);
+
+  --admin-secondary: var(--heroui-default-100);
+  --admin-secondary-text: var(--heroui-foreground);
+  --admin-secondary-hover: var(--heroui-default-200);
+
+  --admin-danger: var(--heroui-danger-500);
+  --admin-danger-text: #FFFFFF;
+  --admin-danger-hover: var(--heroui-danger-600);
 }
 
 @theme inline {
@@ -83,25 +138,37 @@
 }
 
 .admin-theme-dark {
-  --admin-bg: #0b1220;
-  --admin-surface: #0f172a;
-  --admin-border: #243041;
-  --admin-text: #e5e7eb;
-  --admin-muted: #94a3b8;
-  --admin-hover: #111c2e;
-  --admin-ring: #60a5fa;
+  --heroui-background: #000000;
+  --heroui-foreground: #ECEDEE;
+  --heroui-divider: #27272A;
+  --heroui-focus: #9353D3;
+  
+  --heroui-content1: #18181B;
+  --heroui-content2: #27272A;
+  --heroui-content3: #3F3F46;
+  --heroui-content4: #52525B;
 
-  --admin-primary: #3b82f6;
-  --admin-primary-text: #0b1220;
-  --admin-primary-hover: #2563eb;
+  --heroui-default-50: #27272A;
+  --heroui-default-100: #3F3F46;
+  --heroui-default-200: #52525B;
+  --heroui-default-300: #71717A;
+  --heroui-default-400: #A1A1AA;
+  --heroui-default-500: #D4D4D8;
+  --heroui-default-600: #E4E4E7;
+  --heroui-default-700: #F4F4F5;
+  --heroui-default-800: #FAFAFA;
+  --heroui-default-900: #FFFFFF;
 
-  --admin-secondary: #111c2e;
-  --admin-secondary-text: #e5e7eb;
-  --admin-secondary-hover: #16243a;
-
-  --admin-danger: #ef4444;
-  --admin-danger-text: #0b1220;
-  --admin-danger-hover: #dc2626;
+  --heroui-primary-50: #2E1065;
+  --heroui-primary-100: #4C1D95;
+  --heroui-primary-200: #5B21B6;
+  --heroui-primary-300: #6D28D9;
+  --heroui-primary-400: #7C3AED;
+  --heroui-primary-500: #8B5CF6;
+  --heroui-primary-600: #A78BFA;
+  --heroui-primary-700: #C4B5FD;
+  --heroui-primary-800: #DDD6FE;
+  --heroui-primary-900: #EDE9FE;
 
   color-scheme: dark;
 }
