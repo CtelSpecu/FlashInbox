@@ -13,8 +13,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   colorScheme: 'light dark',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0b0b0f' },
+    { media: '(prefers-color-scheme: light)', color: '#F5F3FF' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f0d13' },
   ],
 };
 
@@ -69,9 +69,16 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = await detectRequestLocale();
-  // Note: HTML lang may be refined by client-side i18n after hydration.
   return (
     <html lang={locale} suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="font-sans antialiased" suppressHydrationWarning>{children}</body>
     </html>
   );
