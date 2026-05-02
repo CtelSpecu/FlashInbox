@@ -27,29 +27,31 @@ export function SplitButton({ trigger, loading, className, children, ...props }:
     };
   }, [open, dropdownRef]);
 
+  const toggleSize = trigger?.size === 'sm' ? 'icon-sm' : trigger?.size === 'lg' ? 'icon-lg' : 'icon';
+
   return (
-    <div className={cn('relative inline-flex', className)} {...props}>
-      <Button {...trigger} disabled={trigger?.disabled || loading} onClick={() => setOpen(!open)} />
+    <div className={cn('relative inline-flex items-stretch shadow-sm', className)} {...props}>
+      <Button {...trigger} disabled={trigger?.disabled || loading} className={cn("rounded-r-none border-r-0", trigger?.className)} onClick={() => setOpen(!open)} />
       <Button
-        size="icon"
+        size={toggleSize}
         variant="outline"
-        className="border-l-0"
+        className="rounded-l-none border-l-[color:var(--heroui-divider)]"
         disabled={trigger?.disabled || loading}
         onClick={() => setOpen(!open)}
       >
         <svg
-          className={cn('h-4 w-4 transition-transform', open && 'rotate-180')}
+          className={cn('h-4 w-4 transition-transform duration-200', open && 'rotate-180')}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
         </svg>
       </Button>
       {open && (
         <div
           ref={setDropdownRef}
-          className="absolute right-0 top-full z-50 mt-1 min-w-[160px] rounded-md border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)] p-1 shadow-lg"
+          className="absolute right-0 top-full z-50 mt-2 min-w-[180px] rounded-2xl border border-[color:var(--heroui-divider)] bg-[color:var(--heroui-content1)] p-2 shadow-[color:var(--heroui-shadow-large)] animate-in fade-in zoom-in-95 duration-200"
         >
           {children}
         </div>
@@ -66,12 +68,12 @@ export function MenuItem({ icon, className, children, ...props }: MenuItemProps)
   return (
     <button
       className={cn(
-        'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[color:var(--admin-text)] hover:bg-[color:var(--admin-hover)]',
+        'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-[color:var(--heroui-foreground)] hover:bg-[color:var(--heroui-default-100)] transition-colors',
         className
       )}
       {...props}
     >
-      {icon && <span className="h-4 w-4">{icon}</span>}
+      {icon && <span className="h-4 w-4 shrink-0 text-[color:var(--heroui-default-400)]">{icon}</span>}
       {children}
     </button>
   );

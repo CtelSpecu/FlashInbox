@@ -6,25 +6,27 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils/cn';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--admin-ring)] disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-bold transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--heroui-focus)] disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
         default:
-          'bg-[color:var(--admin-primary)] text-[color:var(--admin-primary-text)] hover:bg-[color:var(--admin-primary-hover)]',
+          'bg-[color:var(--heroui-primary-500)] text-white shadow-lg shadow-[color:var(--heroui-primary-500)]/30 hover:bg-[color:var(--heroui-primary-600)]',
         secondary:
-          'bg-[color:var(--admin-secondary)] text-[color:var(--admin-secondary-text)] hover:bg-[color:var(--admin-secondary-hover)]',
+          'bg-[color:var(--heroui-default-100)] text-[color:var(--heroui-foreground)] hover:bg-[color:var(--heroui-default-200)]',
         outline:
-          'border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)] hover:bg-[color:var(--admin-hover)] text-[color:var(--admin-text)]',
+          'border-2 border-[color:var(--heroui-divider)] bg-transparent hover:bg-[color:var(--heroui-default-100)] text-[color:var(--heroui-foreground)]',
         destructive:
-          'bg-[color:var(--admin-danger)] text-[color:var(--admin-danger-text)] hover:bg-[color:var(--admin-danger-hover)]',
-        ghost: 'hover:bg-[color:var(--admin-hover)] text-[color:var(--admin-text)]',
+          'bg-[color:var(--heroui-danger-500)] text-white shadow-lg shadow-[color:var(--heroui-danger-500)]/30 hover:bg-[color:var(--heroui-danger-600)]',
+        ghost: 'hover:bg-[color:var(--heroui-default-100)] text-[color:var(--heroui-foreground)]',
       },
       size: {
-        default: 'h-9 px-4',
-        sm: 'h-8 px-3 text-xs',
-        lg: 'h-10 px-6',
-        icon: 'h-9 w-9',
+        default: 'h-11 px-6',
+        sm: 'h-9 px-4 text-xs',
+        lg: 'h-14 px-10 text-base',
+        icon: 'h-11 w-11',
+        'icon-sm': 'h-9 w-9',
+        'icon-lg': 'h-14 w-14',
       },
     },
     defaultVariants: {
