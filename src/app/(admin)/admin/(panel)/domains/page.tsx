@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Icon } from '@iconify/react';
 
+import { cn } from '@/lib/utils/cn';
 import { adminApiFetch, AdminApiError } from '@/lib/admin/api';
 import { clearAdminSession } from '@/lib/admin/session-store';
 import { withAdminTracking } from '@/lib/admin/tracking';
@@ -191,124 +192,164 @@ export default function AdminDomainsPage() {
   }
 
   return (
-    <div className="space-y-4">
-      {errorText ? <div className="text-sm text-red-700">{errorText}</div> : null}
+    <div className="space-y-8">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-black tracking-tight text-[color:var(--heroui-foreground)]">{t.domains.domains}</h1>
+        <p className="text-sm font-bold text-[color:var(--heroui-default-400)] uppercase tracking-widest">{t.domains.addDomain}</p>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t.domains.addDomain}</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-2 md:grid-cols-4">
-          <Input
-            placeholder={t.domains.domainPlaceholder}
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            disabled={loading}
-          />
-          <Select value={newStatus} onChange={(e) => setNewStatus(e.target.value as DomainStatus)} disabled={loading}>
-            <option value="enabled">{t.domains.statusEnabled}</option>
-            <option value="disabled">{t.domains.statusDisabled}</option>
-            <option value="readonly">{t.domains.statusReadonly}</option>
-          </Select>
-          <Input
-            placeholder={t.domains.notePlaceholder}
-            value={newNote}
-            onChange={(e) => setNewNote(e.target.value)}
-            disabled={loading}
-          />
-          <Button onClick={addDomain} disabled={loading || !newName.trim()}>
-            <Icon icon="lucide:plus" className="h-4 w-4" />
-            {t.common.add}
-          </Button>
+      {errorText ? (
+        <div className="rounded-2xl bg-red-50 p-5 text-sm text-red-800 border border-red-100 flex items-center gap-3 font-bold shadow-sm">
+           <Icon icon="lucide:alert-circle" className="h-5 w-5" />
+           {errorText}
+        </div>
+      ) : null}
+
+      <Card className="border-none shadow-[color:var(--heroui-shadow-medium)] bg-[color:var(--heroui-content1)]">
+        <CardContent className="grid gap-4 md:grid-cols-4 pt-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-[color:var(--heroui-default-400)] ml-1">{t.domains.domain}</label>
+            <Input
+              placeholder={t.domains.domainPlaceholder}
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              disabled={loading}
+              className="h-12 rounded-xl"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-[color:var(--heroui-default-400)] ml-1">{t.domains.status}</label>
+            <Select
+              value={newStatus}
+              onChange={(val) => setNewStatus(val as DomainStatus)}
+              disabled={loading}
+              options={[
+                { label: t.domains.statusEnabled, value: 'enabled' },
+                { label: t.domains.statusDisabled, value: 'disabled' },
+                { label: t.domains.statusReadonly, value: 'readonly' },
+              ]}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-[color:var(--heroui-default-400)] ml-1">{t.domains.note}</label>
+            <Input
+              placeholder={t.domains.notePlaceholder}
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              disabled={loading}
+              className="h-12 rounded-xl"
+            />
+          </div>
+          <div className="flex items-end pb-0.5">
+            <Button onClick={addDomain} disabled={loading || !newName.trim()} className="w-full h-12 rounded-xl font-bold shadow-lg shadow-[color:var(--heroui-primary-500)]/20">
+              <Icon icon="lucide:plus" className="h-5 w-5" />
+              {t.common.add}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-2">
-            <CardTitle>{t.domains.domains}</CardTitle>
-            <div className="flex items-center gap-2">
+      <Card className="border-none shadow-[color:var(--heroui-shadow-large)]">
+        <CardHeader className="p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+               <div className="h-10 w-10 rounded-xl bg-[color:var(--heroui-primary-500)]/10 flex items-center justify-center text-[color:var(--heroui-primary-500)]">
+                  <Icon icon="lucide:globe" className="h-6 w-6" />
+               </div>
+               <CardTitle className="text-xl font-black">{t.domains.domains}</CardTitle>
+            </div>
+            <div className="flex items-center gap-3">
               {selectedCount > 0 ? (
-                <>
-                  <div className="text-xs text-[color:var(--admin-muted)]">
+                <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="text-xs font-black uppercase tracking-widest text-[color:var(--heroui-primary-500)] bg-[color:var(--heroui-primary-500)]/10 px-3 py-1.5 rounded-full">
                     {format(t.common.selectedCount, { count: selectedCount })}
                   </div>
                   <Select
                     value=""
-                    onChange={(e) => {
-                      const v = e.target.value as DomainStatus | 'delete' | '';
-                      (e.target as HTMLSelectElement).value = '';
-                      if (!v) return;
-                      if (v === 'delete') setBulkDeleteOpen(true);
-                      else void bulkSetStatus(v);
+                    className="min-w-[160px]"
+                    onChange={(val) => {
+                      if (!val) return;
+                      if (val === 'delete') setBulkDeleteOpen(true);
+                      else void bulkSetStatus(val as DomainStatus);
                     }}
                     disabled={loading}
-                  >
-                    <option value="">{t.common.bulkActions}</option>
-                    <option value="enabled">{t.domains.statusEnabled}</option>
-                    <option value="disabled">{t.domains.statusDisabled}</option>
-                    <option value="readonly">{t.domains.statusReadonly}</option>
-                    <option value="delete">{t.common.delete}</option>
-                  </Select>
-                </>
+                    options={[
+                      { label: t.common.bulkActions, value: '' },
+                      { label: t.domains.statusEnabled, value: 'enabled' },
+                      { label: t.domains.statusDisabled, value: 'disabled' },
+                      { label: t.domains.statusReadonly, value: 'readonly' },
+                      { label: t.common.delete, value: 'delete' },
+                    ]}
+                  />
+                </div>
               ) : null}
 
-              <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-                <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
-                {t.common.reload}
+              <Button variant="secondary" size="sm" onClick={load} disabled={loading} className="h-10 w-10 rounded-xl p-0">
+                <Icon icon="lucide:refresh-cw" className={cn("h-5 w-5", loading && "animate-spin")} />
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <Table>
+        <CardContent className="p-0">
+          <Table className="border-none shadow-none rounded-none">
             <THead>
               <TR>
-                <TH className="w-10">
-                  <input
-                    type="checkbox"
-                    checked={allSelected}
-                    aria-label={t.common.bulkActions}
-                    onChange={(e) => setAll(e.target.checked)}
-                    disabled={loading || domains.length === 0}
-                    className="h-4 w-4 rounded border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]"
-                  />
+                <TH className="w-14">
+                  <div className="flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      aria-label={t.common.bulkActions}
+                      onChange={(e) => setAll(e.target.checked)}
+                      disabled={loading || domains.length === 0}
+                      className="h-5 w-5 rounded-lg border-2 border-[color:var(--heroui-divider)] bg-[color:var(--heroui-background)] checked:bg-[color:var(--heroui-primary-500)] transition-all cursor-pointer"
+                    />
+                  </div>
                 </TH>
                 <TH>{t.domains.id}</TH>
                 <TH>{t.domains.domain}</TH>
                 <TH>{t.domains.status}</TH>
                 <TH>{t.domains.mailboxes}</TH>
                 <TH>{t.domains.note}</TH>
-                <TH>{t.domains.actions}</TH>
+                <TH className="text-right">{t.domains.actions}</TH>
               </TR>
             </THead>
             <TBody>
               {domains.map((d) => (
                 <TR key={d.id}>
                   <TD>
-                    <input
-                      type="checkbox"
-                      checked={selected.has(d.id)}
-                      aria-label={d.name}
-                      onChange={(e) => toggleSelected(d.id, e.target.checked)}
-                      disabled={loading}
-                      className="h-4 w-4 rounded border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]"
-                    />
+                    <div className="flex items-center justify-center">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(d.id)}
+                        aria-label={d.name}
+                        onChange={(e) => toggleSelected(d.id, e.target.checked)}
+                        disabled={loading}
+                        className="h-5 w-5 rounded-lg border-2 border-[color:var(--heroui-divider)] bg-[color:var(--heroui-background)] checked:bg-[color:var(--heroui-primary-500)] transition-all cursor-pointer"
+                      />
+                    </div>
                   </TD>
-                  <TD className="text-[color:var(--admin-muted)]">{d.id}</TD>
-                  <TD className="font-medium">{d.name}</TD>
+                  <TD className="text-[color:var(--heroui-default-400)] font-bold">{d.id}</TD>
+                  <TD className="font-black text-base">{d.name}</TD>
                   <TD>
                     <Select
                       value={d.status}
-                      onChange={(e) => updateDomain(d.id, { status: e.target.value as DomainStatus })}
+                      className="min-w-[140px]"
+                      onChange={(val) => updateDomain(d.id, { status: val as DomainStatus })}
                       disabled={loading}
-                    >
-                      <option value="enabled">{t.domains.statusEnabled}</option>
-                      <option value="disabled">{t.domains.statusDisabled}</option>
-                      <option value="readonly">{t.domains.statusReadonly}</option>
-                    </Select>
+                      size="sm"
+                      options={[
+                        { label: t.domains.statusEnabled, value: 'enabled' },
+                        { label: t.domains.statusDisabled, value: 'disabled' },
+                        { label: t.domains.statusReadonly, value: 'readonly' },
+                      ]}
+                    />
                   </TD>
-                  <TD className="text-[color:var(--admin-muted)]">{d.mailboxCount}</TD>
+                  <TD>
+                     <span className="px-3 py-1 rounded-full bg-[color:var(--heroui-default-100)] font-black text-xs">
+                        {d.mailboxCount}
+                     </span>
+                  </TD>
                   <TD>
                     <Input
                       value={d.note || ''}
@@ -320,25 +361,29 @@ export default function AdminDomainsPage() {
                       }
                       onBlur={(e) => updateDomain(d.id, { note: e.target.value.trim() || null })}
                       disabled={loading}
+                      className="h-9 rounded-lg text-xs font-medium border-none bg-[color:var(--heroui-default-50)] focus-visible:bg-[color:var(--heroui-default-100)]"
                     />
                   </TD>
-                  <TD>
+                  <TD className="text-right">
                     <Button
                       variant="destructive"
                       size="sm"
                       disabled={loading}
                       onClick={() => setDeleteId(d.id)}
+                      className="h-9 w-9 rounded-lg p-0"
                     >
                       <Icon icon="lucide:trash-2" className="h-4 w-4" />
-                      {t.common.delete}
                     </Button>
                   </TD>
                 </TR>
               ))}
               {domains.length === 0 && !loading ? (
                 <TR>
-                  <TD colSpan={7} className="py-6 text-center text-[color:var(--admin-muted)]">
-                    {t.domains.noDomains}
+                  <TD colSpan={7} className="py-20 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                       <Icon icon="lucide:ghost" className="h-12 w-12 text-[color:var(--heroui-default-200)]" />
+                       <span className="text-sm font-bold text-[color:var(--heroui-default-400)] uppercase tracking-widest">{t.domains.noDomains}</span>
+                    </div>
                   </TD>
                 </TR>
               ) : null}
@@ -346,6 +391,7 @@ export default function AdminDomainsPage() {
           </Table>
         </CardContent>
       </Card>
+...
 
       <Modal
         open={deleteId !== null}

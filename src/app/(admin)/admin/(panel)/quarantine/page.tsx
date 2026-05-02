@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Icon } from '@iconify/react';
 
+import { cn } from '@/lib/utils/cn';
 import { adminApiFetch, AdminApiError } from '@/lib/admin/api';
 import { clearAdminSession } from '@/lib/admin/session-store';
 import { withAdminTracking } from '@/lib/admin/tracking';
@@ -163,144 +164,177 @@ export default function AdminQuarantinePage() {
   }
 
   return (
-    <div className="space-y-4">
-      {errorText ? <div className="text-sm text-red-700">{errorText}</div> : null}
+    <div className="space-y-8">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-black tracking-tight text-[color:var(--heroui-foreground)]">{t.quarantine.title}</h1>
+        <p className="text-sm font-bold text-[color:var(--heroui-default-400)] uppercase tracking-widest">{t.quarantine.pending}</p>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-2">
-            <CardTitle>{t.quarantine.title}</CardTitle>
-            <div className="flex items-center gap-2">
-              <Select value={status} onChange={(e) => setStatus(e.target.value as QStatus)} disabled={loading}>
-                <option value="pending">{t.quarantine.pending}</option>
-                <option value="released">{t.quarantine.released}</option>
-                <option value="deleted">{t.quarantine.deleted}</option>
-              </Select>
+      {errorText ? (
+        <div className="rounded-2xl bg-red-50 p-5 text-sm text-red-800 border border-red-100 flex items-center gap-3 font-bold shadow-sm">
+           <Icon icon="lucide:alert-circle" className="h-5 w-5" />
+           {errorText}
+        </div>
+      ) : null}
+
+      <Card className="border-none shadow-[color:var(--heroui-shadow-large)]">
+        <CardHeader className="p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+               <div className="h-10 w-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+                  <Icon icon="lucide:shield-alert" className="h-6 w-6" />
+               </div>
+               <CardTitle className="text-xl font-black">{t.quarantine.title}</CardTitle>
+               <Select
+                  value={status}
+                  onChange={(val) => setStatus(val as QStatus)}
+                  disabled={loading}
+                  className="min-w-[140px] ml-4"
+                  size="sm"
+                  options={[
+                    { label: t.quarantine.pending, value: 'pending' },
+                    { label: t.quarantine.released, value: 'released' },
+                    { label: t.quarantine.deleted, value: 'deleted' },
+                  ]}
+               />
+            </div>
+            <div className="flex items-center gap-3">
               {selectedCount > 0 ? (
-                <>
-                  <div className="text-xs text-[color:var(--admin-muted)]">
+                <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="text-xs font-black uppercase tracking-widest text-[color:var(--heroui-primary-500)] bg-[color:var(--heroui-primary-500)]/10 px-3 py-1.5 rounded-full">
                     {format(t.common.selectedCount, { count: selectedCount })}
                   </div>
                   <Select
                     value=""
-                    onChange={(e) => {
-                      const v = (e.target.value as 'release' | 'delete' | '') || '';
-                      (e.target as HTMLSelectElement).value = '';
-                      if (!v) return;
-                      setBulkConfirm({ action: v });
+                    className="min-w-[160px]"
+                    onChange={(val) => {
+                      if (!val) return;
+                      setBulkConfirm({ action: val as any });
                     }}
                     disabled={loading}
-                  >
-                    <option value="">{t.common.bulkActions}</option>
-                    {status === 'pending' ? <option value="release">{t.quarantine.release}</option> : null}
-                    <option value="delete">{t.quarantine.delete}</option>
-                  </Select>
-                </>
+                    options={[
+                      { label: t.common.bulkActions, value: '' },
+                      ...(status === 'pending' ? [{ label: t.quarantine.release, value: 'release' }] : []),
+                      { label: t.quarantine.delete, value: 'delete' },
+                    ]}
+                  />
+                </div>
               ) : null}
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={load}
-                disabled={loading}
-                aria-label={t.common.reload}
-                title={t.common.reload}
-              >
-                <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
+              
+              <div className="flex items-center gap-2 bg-[color:var(--heroui-default-100)] p-1 rounded-xl">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={loading || page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className="h-8 w-8 rounded-lg p-0 bg-transparent shadow-none"
+                >
+                  <Icon icon="lucide:chevron-left" className="h-5 w-5" />
+                </Button>
+                <span className="px-2 text-xs font-black text-[color:var(--heroui-default-500)]">{page}</span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={loading || !(data?.pagination.hasMore)}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="h-8 w-8 rounded-lg p-0 bg-transparent shadow-none"
+                >
+                  <Icon icon="lucide:chevron-right" className="h-5 w-5" />
+                </Button>
+              </div>
+
+              <Button variant="secondary" size="sm" onClick={load} disabled={loading} className="h-10 w-10 rounded-xl p-0">
+                <Icon icon="lucide:refresh-cw" className={cn("h-5 w-5", loading && "animate-spin")} />
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <Table>
+        <CardContent className="p-0">
+          <Table className="border-none shadow-none rounded-none">
             <THead>
               <TR>
-                <TH className="w-10">
-                  <input
-                    type="checkbox"
-                    checked={allSelected}
-                    aria-label={t.common.bulkActions}
-                    onChange={(e) => setAll(e.target.checked)}
-                    disabled={loading || items.length === 0}
-                    className="h-4 w-4 rounded border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]"
-                  />
+                <TH className="w-14">
+                  <div className="flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      aria-label={t.common.bulkActions}
+                      onChange={(e) => setAll(e.target.checked)}
+                      disabled={loading || items.length === 0}
+                      className="h-5 w-5 rounded-lg border-2 border-[color:var(--heroui-divider)] bg-[color:var(--heroui-background)] checked:bg-[color:var(--heroui-primary-500)] transition-all cursor-pointer"
+                    />
+                  </div>
                 </TH>
                 <TH>{t.quarantine.received}</TH>
                 <TH>{t.quarantine.mailbox}</TH>
                 <TH>{t.quarantine.from}</TH>
                 <TH>{t.quarantine.subject}</TH>
                 <TH>{t.quarantine.rule}</TH>
-                <TH>{t.quarantine.reason}</TH>
-                <TH>{t.domains.actions}</TH>
+                <TH className="text-right">{t.domains.actions}</TH>
               </TR>
             </THead>
             <TBody>
               {items.map((q) => (
                 <TR key={q.id}>
                   <TD>
-                    <input
-                      type="checkbox"
-                      checked={selected.has(q.id)}
-                      aria-label={q.id}
-                      onChange={(e) => toggleSelected(q.id, e.target.checked)}
-                      disabled={loading}
-                      className="h-4 w-4 rounded border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]"
-                    />
+                    <div className="flex items-center justify-center">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(q.id)}
+                        aria-label={q.id}
+                        onChange={(e) => toggleSelected(q.id, e.target.checked)}
+                        disabled={loading}
+                        className="h-5 w-5 rounded-lg border-2 border-[color:var(--heroui-divider)] bg-[color:var(--heroui-background)] checked:bg-[color:var(--heroui-primary-500)] transition-all cursor-pointer"
+                      />
+                    </div>
                   </TD>
-                  <TD className="text-[color:var(--admin-muted)]">{formatTime(q.receivedAt)}</TD>
-                  <TD className="font-medium">{q.mailboxEmail}</TD>
-                  <TD className="max-w-[220px] truncate" title={q.fromAddr}>
+                  <TD className="text-[color:var(--heroui-default-400)] font-bold text-xs">{formatTime(q.receivedAt)}</TD>
+                  <TD className="font-black text-sm text-[color:var(--heroui-primary-500)]">{q.mailboxEmail}</TD>
+                  <TD className="max-w-[200px] truncate font-bold text-[color:var(--heroui-default-600)]" title={q.fromAddr}>
                     {q.fromAddr}
                   </TD>
-                  <TD className="max-w-[240px] truncate" title={q.subject || ''}>
+                  <TD className="max-w-[240px] truncate font-bold" title={q.subject || ''}>
                     {q.subject || t.quarantine.noSubject}
                   </TD>
-                  <TD className="max-w-[220px] truncate" title={q.matchedRuleName || ''}>
-                    {q.matchedRuleName || '-'}
+                  <TD>
+                     <span className="px-2 py-0.5 rounded-lg bg-[color:var(--heroui-default-100)] text-[10px] font-black uppercase tracking-widest text-[color:var(--heroui-default-600)]">
+                        {q.matchedRuleName || '-'}
+                     </span>
                   </TD>
-                  <TD className="max-w-[220px] truncate" title={q.matchReason || ''}>
-                    {q.matchReason || '-'}
-                  </TD>
-                  <TD className="flex gap-2">
-                    {status === 'pending' ? (
-                      <>
-                        <Button variant="outline" size="sm" disabled={loading} onClick={() => setConfirm({ id: q.id, action: 'release' })}>
-                          <Icon icon="lucide:corner-up-right" className="h-4 w-4" />
-                          {t.quarantine.release}
-                        </Button>
-                        <Button variant="destructive" size="sm" disabled={loading} onClick={() => setConfirm({ id: q.id, action: 'delete' })}>
-                          <Icon icon="lucide:trash-2" className="h-4 w-4" />
-                          {t.quarantine.delete}
-                        </Button>
-                      </>
-                    ) : (
-                      <span className="text-xs text-[color:var(--admin-muted)]">{q.status}</span>
-                    )}
+                  <TD className="text-right">
+                    <div className="flex justify-end gap-2">
+                      {status === 'pending' ? (
+                        <>
+                          <Button variant="secondary" size="sm" disabled={loading} onClick={() => setConfirm({ id: q.id, action: 'release' })} className="h-9 px-4 rounded-lg font-bold bg-green-500/10 text-green-600 hover:bg-green-500/20">
+                            <Icon icon="lucide:corner-up-right" className="h-4 w-4" />
+                            {t.quarantine.release}
+                          </Button>
+                          <Button variant="destructive" size="sm" disabled={loading} onClick={() => setConfirm({ id: q.id, action: 'delete' })} className="h-9 w-9 rounded-lg p-0">
+                            <Icon icon="lucide:trash-2" className="h-4 w-4" />
+                          </Button>
+                        </>
+                      ) : (
+                        <span className="px-3 py-1 rounded-full bg-[color:var(--heroui-default-100)] text-[10px] font-black uppercase tracking-widest text-[color:var(--heroui-default-500)]">{q.status}</span>
+                      )}
+                    </div>
                   </TD>
                 </TR>
               ))}
               {(data?.items || []).length === 0 && !loading ? (
                 <TR>
-                  <TD colSpan={8} className="py-6 text-center text-[color:var(--admin-muted)]">
-                    {t.quarantine.noItems}
+                  <TD colSpan={8} className="py-20 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                       <Icon icon="lucide:ghost" className="h-12 w-12 text-[color:var(--heroui-default-200)]" />
+                       <span className="text-sm font-bold text-[color:var(--heroui-default-400)] uppercase tracking-widest">{t.quarantine.noItems}</span>
+                    </div>
                   </TD>
                 </TR>
               ) : null}
             </TBody>
           </Table>
-
-          <div className="flex items-center justify-between pt-3">
-            <Button variant="outline" size="sm" disabled={loading || page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-              {t.common.prev}
-            </Button>
-            <div className="text-xs text-[color:var(--admin-muted)]">
-              {format(t.quarantine.page, { page: data?.pagination.page || page })} / {Math.max(1, Math.ceil((data?.pagination.total || 0) / pageSize))}
-            </div>
-            <Button variant="outline" size="sm" disabled={loading || !(data?.pagination.hasMore)} onClick={() => setPage((p) => p + 1)}>
-              {t.common.next}
-            </Button>
-          </div>
         </CardContent>
       </Card>
+...
 
       <Modal
         open={!!confirm}

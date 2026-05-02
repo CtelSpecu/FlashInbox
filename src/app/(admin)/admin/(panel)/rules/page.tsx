@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Icon } from '@iconify/react';
 
+import { cn } from '@/lib/utils/cn';
 import { adminApiFetch, AdminApiError } from '@/lib/admin/api';
 import { clearAdminSession } from '@/lib/admin/session-store';
 import { withAdminTracking } from '@/lib/admin/tracking';
@@ -253,110 +254,154 @@ export default function AdminRulesPage() {
   }
 
   return (
-    <div className="space-y-4">
-      {errorText ? <div className="text-sm text-red-700">{errorText}</div> : null}
+    <div className="space-y-8">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-black tracking-tight text-[color:var(--heroui-foreground)]">{t.rules.rules}</h1>
+        <p className="text-sm font-bold text-[color:var(--heroui-default-400)] uppercase tracking-widest">{t.rules.addRule}</p>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t.rules.addRule}</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-2 md:grid-cols-6">
-          <Select value={newType} onChange={(e) => setNewType(e.target.value as RuleType)} disabled={loading}>
-            <option value="sender_domain">{t.rules.typeSenderDomain}</option>
-            <option value="sender_addr">{t.rules.typeSenderAddress}</option>
-            <option value="keyword">{t.rules.typeKeyword}</option>
-            <option value="ip">{t.rules.typeIp}</option>
-          </Select>
-          <Input
-            placeholder={t.rules.patternPlaceholder}
-            value={newPattern}
-            onChange={(e) => setNewPattern(e.target.value)}
-            disabled={loading}
-          />
-          <Select value={newAction} onChange={(e) => setNewAction(e.target.value as RuleAction)} disabled={loading}>
-            <option value="drop">{t.rules.actionDrop}</option>
-            <option value="quarantine">{t.rules.actionQuarantine}</option>
-            <option value="allow">{t.rules.actionAllow}</option>
-          </Select>
-          <Input
-            type="number"
-            placeholder={t.rules.priorityPlaceholder}
-            value={String(newPriority)}
-            onChange={(e) => setNewPriority(parseInt(e.target.value || '100', 10))}
-            disabled={loading}
-          />
-          <Select value={newDomainId} onChange={(e) => setNewDomainId(e.target.value)} disabled={loading}>
-            <option value="">{t.rules.domainPlaceholder}</option>
-            {domains.map((d) => (
-              <option key={d.id} value={String(d.id)}>
-                {d.name}
-              </option>
-            ))}
-          </Select>
-          <Button onClick={addRule} disabled={loading || !newPattern.trim()}>
-            <Icon icon="lucide:plus" className="h-4 w-4" />
-            {t.common.add}
-          </Button>
-          <div className="md:col-span-6">
+      {errorText ? (
+        <div className="rounded-2xl bg-red-50 p-5 text-sm text-red-800 border border-red-100 flex items-center gap-3 font-bold shadow-sm">
+           <Icon icon="lucide:alert-circle" className="h-5 w-5" />
+           {errorText}
+        </div>
+      ) : null}
+
+      <Card className="border-none shadow-[color:var(--heroui-shadow-medium)] bg-[color:var(--heroui-content1)]">
+        <CardContent className="grid gap-4 md:grid-cols-6 pt-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-[color:var(--heroui-default-400)] ml-1">{t.rules.type}</label>
+            <Select
+              value={newType}
+              onChange={(val) => setNewType(val as RuleType)}
+              disabled={loading}
+              options={[
+                { label: t.rules.typeSenderDomain, value: 'sender_domain' },
+                { label: t.rules.typeSenderAddress, value: 'sender_addr' },
+                { label: t.rules.typeKeyword, value: 'keyword' },
+                { label: t.rules.typeIp, value: 'ip' },
+              ]}
+            />
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-[color:var(--heroui-default-400)] ml-1">{t.rules.pattern}</label>
+            <Input
+              placeholder={t.rules.patternPlaceholder}
+              value={newPattern}
+              onChange={(e) => setNewPattern(e.target.value)}
+              disabled={loading}
+              className="h-12 rounded-xl"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-[color:var(--heroui-default-400)] ml-1">{t.rules.action}</label>
+            <Select
+              value={newAction}
+              onChange={(val) => setNewAction(val as RuleAction)}
+              disabled={loading}
+              options={[
+                { label: t.rules.actionDrop, value: 'drop' },
+                { label: t.rules.actionQuarantine, value: 'quarantine' },
+                { label: t.rules.actionAllow, value: 'allow' },
+              ]}
+            />
+          </div>
+          <div className="space-y-2">
+             <label className="text-[10px] font-black uppercase tracking-widest text-[color:var(--heroui-default-400)] ml-1">{t.rules.domain}</label>
+             <Select
+               value={newDomainId}
+               onChange={setNewDomainId}
+               disabled={loading}
+               options={[
+                 { label: t.rules.domainPlaceholder, value: '' },
+                 ...domains.map(d => ({ label: d.name, value: String(d.id) }))
+               ]}
+             />
+          </div>
+          <div className="flex items-end pb-0.5">
+            <Button onClick={addRule} disabled={loading || !newPattern.trim()} className="w-full h-12 rounded-xl font-bold shadow-lg shadow-[color:var(--heroui-primary-500)]/20">
+              <Icon icon="lucide:plus" className="h-5 w-5" />
+              {t.common.add}
+            </Button>
+          </div>
+          <div className="md:col-span-5 space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-[color:var(--heroui-default-400)] ml-1">{t.rules.description}</label>
             <Input
               placeholder={t.rules.descriptionPlaceholder}
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
               disabled={loading}
+              className="h-12 rounded-xl"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-[color:var(--heroui-default-400)] ml-1">{t.rules.priority}</label>
+            <Input
+              type="number"
+              placeholder="100"
+              value={String(newPriority)}
+              onChange={(e) => setNewPriority(parseInt(e.target.value || '100', 10))}
+              disabled={loading}
+              className="h-12 rounded-xl"
             />
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-2">
-            <CardTitle>{t.rules.rules}</CardTitle>
-            <div className="flex items-center gap-2">
+      <Card className="border-none shadow-[color:var(--heroui-shadow-large)]">
+        <CardHeader className="p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+               <div className="h-10 w-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+                  <Icon icon="lucide:filter" className="h-6 w-6" />
+               </div>
+               <CardTitle className="text-xl font-black">{t.rules.rules}</CardTitle>
+            </div>
+            <div className="flex items-center gap-3">
               {selectedCount > 0 ? (
-                <>
-                  <div className="text-xs text-[color:var(--admin-muted)]">
+                <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="text-xs font-black uppercase tracking-widest text-[color:var(--heroui-primary-500)] bg-[color:var(--heroui-primary-500)]/10 px-3 py-1.5 rounded-full">
                     {format(t.common.selectedCount, { count: selectedCount })}
                   </div>
                   <Select
                     value=""
-                    onChange={(e) => {
-                      const v = (e.target.value as 'activate' | 'deactivate' | 'delete' | '') || '';
-                      (e.target as HTMLSelectElement).value = '';
-                      if (!v) return;
-                      setBulkConfirm({ action: v as 'activate' | 'deactivate' | 'delete' });
+                    className="min-w-[160px]"
+                    onChange={(val) => {
+                      if (!val) return;
+                      setBulkConfirm({ action: val as any });
                     }}
                     disabled={loading}
-                  >
-                    <option value="">{t.common.bulkActions}</option>
-                    <option value="activate">{t.rules.on}</option>
-                    <option value="deactivate">{t.rules.off}</option>
-                    <option value="delete">{t.common.delete}</option>
-                  </Select>
-                </>
+                    options={[
+                      { label: t.common.bulkActions, value: '' },
+                      { label: t.rules.on, value: 'activate' },
+                      { label: t.rules.off, value: 'deactivate' },
+                      { label: t.common.delete, value: 'delete' },
+                    ]}
+                  />
+                </div>
               ) : null}
-              <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-                <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
-                {t.common.reload}
+              <Button variant="secondary" size="sm" onClick={load} disabled={loading} className="h-10 w-10 rounded-xl p-0">
+                <Icon icon="lucide:refresh-cw" className={cn("h-5 w-5", loading && "animate-spin")} />
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <Table>
+        <CardContent className="p-0">
+          <Table className="border-none shadow-none rounded-none">
             <THead>
               <TR>
-                <TH className="w-10">
-                  <input
-                    type="checkbox"
-                    checked={allSelected}
-                    aria-label={t.common.bulkActions}
-                    onChange={(e) => setAll(e.target.checked)}
-                    disabled={loading || rules.length === 0}
-                    className="h-4 w-4 rounded border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]"
-                  />
+                <TH className="w-14">
+                  <div className="flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      aria-label={t.common.bulkActions}
+                      onChange={(e) => setAll(e.target.checked)}
+                      disabled={loading || rules.length === 0}
+                      className="h-5 w-5 rounded-lg border-2 border-[color:var(--heroui-divider)] bg-[color:var(--heroui-background)] checked:bg-[color:var(--heroui-primary-500)] transition-all cursor-pointer"
+                    />
+                  </div>
                 </TH>
-                <TH>{t.domains.id}</TH>
                 <TH>{t.rules.type}</TH>
                 <TH>{t.rules.pattern}</TH>
                 <TH>{t.rules.action}</TH>
@@ -364,57 +409,83 @@ export default function AdminRulesPage() {
                 <TH>{t.rules.active}</TH>
                 <TH>{t.rules.domain}</TH>
                 <TH>{t.rules.hits}</TH>
-                <TH>{t.domains.actions}</TH>
+                <TH className="text-right">{t.domains.actions}</TH>
               </TR>
             </THead>
             <TBody>
               {rules.map((r) => (
                 <TR key={r.id}>
                   <TD>
-                    <input
-                      type="checkbox"
-                      checked={selected.has(r.id)}
-                      aria-label={String(r.id)}
-                      onChange={(e) => toggleSelected(r.id, e.target.checked)}
-                      disabled={loading}
-                      className="h-4 w-4 rounded border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]"
-                    />
+                    <div className="flex items-center justify-center">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(r.id)}
+                        aria-label={String(r.id)}
+                        onChange={(e) => toggleSelected(r.id, e.target.checked)}
+                        disabled={loading}
+                        className="h-5 w-5 rounded-lg border-2 border-[color:var(--heroui-divider)] bg-[color:var(--heroui-background)] checked:bg-[color:var(--heroui-primary-500)] transition-all cursor-pointer"
+                      />
+                    </div>
                   </TD>
-                  <TD className="text-[color:var(--admin-muted)]">{r.id}</TD>
-                  <TD>{getRuleTypeLabel(r.type)}</TD>
-                  <TD className="max-w-[320px] truncate" title={r.pattern}>
+                  <TD>
+                     <span className="px-2 py-0.5 rounded-lg bg-[color:var(--heroui-default-100)] text-[10px] font-black uppercase tracking-widest text-[color:var(--heroui-default-600)]">
+                        {getRuleTypeLabel(r.type)}
+                     </span>
+                  </TD>
+                  <TD className="max-w-[280px] font-black text-sm truncate" title={r.pattern}>
                     {r.pattern}
                   </TD>
-                  <TD>{getRuleActionLabel(r.action)}</TD>
-                  <TD>{r.priority}</TD>
                   <TD>
-                    <Button
-                      variant={r.isActive ? 'secondary' : 'outline'}
-                      size="sm"
+                     <span className={cn(
+                        "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest",
+                        r.action === 'allow' ? "bg-green-500/10 text-green-600" :
+                        r.action === 'quarantine' ? "bg-orange-500/10 text-orange-600" :
+                        "bg-red-500/10 text-red-600"
+                     )}>
+                        {getRuleActionLabel(r.action)}
+                     </span>
+                  </TD>
+                  <TD className="font-bold text-[color:var(--heroui-default-400)]">{r.priority}</TD>
+                  <TD>
+                    <button
                       disabled={loading}
                       onClick={() => patchRule(r.id, { isActive: !r.isActive })}
+                      className={cn(
+                        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[color:var(--heroui-focus)] focus:ring-offset-2",
+                        r.isActive ? "bg-[color:var(--heroui-primary-500)]" : "bg-[color:var(--heroui-default-200)]"
+                      )}
                     >
-                      {r.isActive ? t.rules.on : t.rules.off}
-                    </Button>
+                       <span className={cn(
+                          "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                          r.isActive ? "translate-x-5" : "translate-x-0"
+                       )} />
+                    </button>
                   </TD>
-                  <TD className="text-[color:var(--admin-muted)]">{r.domainName || t.rules.global}</TD>
-                  <TD className="text-[color:var(--admin-muted)]">{r.hitCount}</TD>
-                  <TD className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => openEdit(r)} disabled={loading}>
-                      <Icon icon="lucide:pencil" className="h-4 w-4" />
-                      {t.common.edit}
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={() => deleteRule(r.id)} disabled={loading}>
-                      <Icon icon="lucide:trash-2" className="h-4 w-4" />
-                      {t.common.delete}
-                    </Button>
+                  <TD className="text-xs font-bold text-[color:var(--heroui-default-400)] uppercase tracking-tight">{r.domainName || t.rules.global}</TD>
+                  <TD>
+                     <span className="px-3 py-1 rounded-full bg-[color:var(--heroui-default-100)] font-black text-xs">
+                        {r.hitCount}
+                     </span>
+                  </TD>
+                  <TD>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="secondary" size="sm" onClick={() => openEdit(r)} disabled={loading} className="h-9 w-9 rounded-lg p-0 bg-[color:var(--heroui-default-100)]">
+                        <Icon icon="lucide:pencil" className="h-4 w-4" />
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => deleteRule(r.id)} disabled={loading} className="h-9 w-9 rounded-lg p-0">
+                        <Icon icon="lucide:trash-2" className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TD>
                 </TR>
               ))}
               {rules.length === 0 && !loading ? (
                 <TR>
-                  <TD colSpan={10} className="py-6 text-center text-[color:var(--admin-muted)]">
-                    {t.rules.noRules}
+                  <TD colSpan={10} className="py-20 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                       <Icon icon="lucide:ghost" className="h-12 w-12 text-[color:var(--heroui-default-200)]" />
+                       <span className="text-sm font-bold text-[color:var(--heroui-default-400)] uppercase tracking-widest">{t.rules.noRules}</span>
+                    </div>
                   </TD>
                 </TR>
               ) : null}
@@ -422,6 +493,7 @@ export default function AdminRulesPage() {
           </Table>
         </CardContent>
       </Card>
+...
 
       <Modal
         open={!!editId}
@@ -444,14 +516,15 @@ export default function AdminRulesPage() {
           <div className="grid gap-2">
             <Select
               value={String(editDraft.type || editRule.type)}
-              onChange={(e) => setEditDraft((p) => ({ ...p, type: e.target.value as RuleType }))}
+              onChange={(val) => setEditDraft((p) => ({ ...p, type: val as RuleType }))}
               disabled={loading}
-            >
-              <option value="sender_domain">{t.rules.typeSenderDomain}</option>
-              <option value="sender_addr">{t.rules.typeSenderAddress}</option>
-              <option value="keyword">{t.rules.typeKeyword}</option>
-              <option value="ip">{t.rules.typeIp}</option>
-            </Select>
+              options={[
+                { label: t.rules.typeSenderDomain, value: 'sender_domain' },
+                { label: t.rules.typeSenderAddress, value: 'sender_addr' },
+                { label: t.rules.typeKeyword, value: 'keyword' },
+                { label: t.rules.typeIp, value: 'ip' },
+              ]}
+            />
             <Input
               value={String(editDraft.pattern ?? '')}
               onChange={(e) => setEditDraft((p) => ({ ...p, pattern: e.target.value }))}
@@ -460,13 +533,14 @@ export default function AdminRulesPage() {
             />
             <Select
               value={String(editDraft.action || editRule.action)}
-              onChange={(e) => setEditDraft((p) => ({ ...p, action: e.target.value as RuleAction }))}
+              onChange={(val) => setEditDraft((p) => ({ ...p, action: val as RuleAction }))}
               disabled={loading}
-            >
-              <option value="drop">{t.rules.actionDrop}</option>
-              <option value="quarantine">{t.rules.actionQuarantine}</option>
-              <option value="allow">{t.rules.actionAllow}</option>
-            </Select>
+              options={[
+                { label: t.rules.actionDrop, value: 'drop' },
+                { label: t.rules.actionQuarantine, value: 'quarantine' },
+                { label: t.rules.actionAllow, value: 'allow' },
+              ]}
+            />
             <Input
               type="number"
               value={String(editDraft.priority ?? editRule.priority)}
@@ -476,18 +550,15 @@ export default function AdminRulesPage() {
             />
             <Select
               value={editDraft.domainId === null || editDraft.domainId === undefined ? '' : String(editDraft.domainId)}
-              onChange={(e) =>
-                setEditDraft((p) => ({ ...p, domainId: e.target.value ? Number(e.target.value) : null }))
+              onChange={(val) =>
+                setEditDraft((p) => ({ ...p, domainId: val ? Number(val) : null }))
               }
               disabled={loading}
-            >
-              <option value="">{t.rules.domainPlaceholder}</option>
-              {domains.map((d) => (
-                <option key={d.id} value={String(d.id)}>
-                  {d.name}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { label: t.rules.domainPlaceholder, value: '' },
+                ...domains.map(d => ({ label: d.name, value: String(d.id) }))
+              ]}
+            />
             <Input
               value={String(editDraft.description ?? '')}
               onChange={(e) => setEditDraft((p) => ({ ...p, description: e.target.value }))}

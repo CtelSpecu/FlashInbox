@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@iconify/react';
 
+import { cn } from '@/lib/utils/cn';
 import { adminApiFetch, AdminApiError } from '@/lib/admin/api';
 import { clearAdminSession } from '@/lib/admin/session-store';
 import { withAdminTracking } from '@/lib/admin/tracking';
@@ -197,180 +198,218 @@ export default function AdminMailboxesPage() {
   }
 
   return (
-    <div className="space-y-4">
-      {errorText ? <div className="text-sm text-red-700">{errorText}</div> : null}
+    <div className="space-y-8">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-black tracking-tight text-[color:var(--heroui-foreground)]">{t.mailboxes.title}</h1>
+        <p className="text-sm font-bold text-[color:var(--heroui-default-400)] uppercase tracking-widest">{t.mailboxes.searchPlaceholder}</p>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t.mailboxes.title}</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-2 md:grid-cols-4">
-          <Select
-            value={domain}
-            onChange={(e) => {
-              setDomain(e.target.value);
-              setPage(1);
-            }}
-            disabled={loading}
-          >
-            <option value="">{t.mailboxes.statusAll}</option>
-            {domainOptions.map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </Select>
+      {errorText ? (
+        <div className="rounded-2xl bg-red-50 p-5 text-sm text-red-800 border border-red-100 flex items-center gap-3 font-bold shadow-sm">
+           <Icon icon="lucide:alert-circle" className="h-5 w-5" />
+           {errorText}
+        </div>
+      ) : null}
 
-          <Select
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value as MailboxStatusFilter);
-              setPage(1);
-            }}
-            disabled={loading}
-          >
-            <option value="all">{t.mailboxes.statusAll}</option>
-            <option value="claimed">{t.mailboxes.statusClaimed}</option>
-            <option value="unclaimed">{t.mailboxes.statusUnclaimed}</option>
-            <option value="banned">{t.mailboxes.statusBanned}</option>
-            <option value="destroyed">{t.mailboxes.statusDestroyed}</option>
-          </Select>
+      <Card className="border-none shadow-[color:var(--heroui-shadow-medium)]">
+        <CardContent className="grid gap-4 md:grid-cols-4 pt-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-[color:var(--heroui-default-400)] ml-1">{t.domains.domain}</label>
+            <Select
+              value={domain}
+              onChange={(val) => {
+                setDomain(val);
+                setPage(1);
+              }}
+              disabled={loading}
+              options={[
+                { label: t.mailboxes.statusAll, value: '' },
+                ...domainOptions.map(d => ({ label: d, value: d }))
+              ]}
+            />
+          </div>
 
-          <Input
-            placeholder={t.mailboxes.searchPlaceholder}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            disabled={loading}
-          />
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-[color:var(--heroui-default-400)] ml-1">{t.mailboxes.status}</label>
+            <Select
+              value={status}
+              onChange={(val) => {
+                setStatus(val as MailboxStatusFilter);
+                setPage(1);
+              }}
+              disabled={loading}
+              options={[
+                { label: t.mailboxes.statusAll, value: 'all' },
+                { label: t.mailboxes.statusClaimed, value: 'claimed' },
+                { label: t.mailboxes.statusUnclaimed, value: 'unclaimed' },
+                { label: t.mailboxes.statusBanned, value: 'banned' },
+                { label: t.mailboxes.statusDestroyed, value: 'destroyed' },
+              ]}
+            />
+          </div>
 
-          <Button variant="outline" onClick={() => loadMailboxes(1)} disabled={loading}>
-            <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
-            {t.common.reload}
-          </Button>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-[color:var(--heroui-default-400)] ml-1">{t.common.search}</label>
+            <Input
+              placeholder={t.mailboxes.searchPlaceholder}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              disabled={loading}
+              className="h-12 rounded-xl"
+            />
+          </div>
+
+          <div className="flex items-end pb-0.5">
+            <Button variant="secondary" onClick={() => loadMailboxes(1)} disabled={loading} className="w-full h-12 rounded-xl font-bold">
+              <Icon icon="lucide:refresh-cw" className={cn("h-5 w-5", loading && "animate-spin")} />
+              {t.common.reload}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="text-sm text-[color:var(--admin-muted)]">
-              {pagination ? `${pagination.total}` : loading ? '…' : '0'}
+      <Card className="border-none shadow-[color:var(--heroui-shadow-large)]">
+        <CardHeader className="p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+               <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 font-black text-xs">
+                  {pagination ? pagination.total : 0}
+               </div>
+               <CardTitle className="text-xl font-black">{t.mailboxes.title}</CardTitle>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               {selectedCount > 0 ? (
-                <>
-                  <div className="text-xs text-[color:var(--admin-muted)]">
+                <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="text-xs font-black uppercase tracking-widest text-[color:var(--heroui-primary-500)] bg-[color:var(--heroui-primary-500)]/10 px-3 py-1.5 rounded-full">
                     {format(t.common.selectedCount, { count: selectedCount })}
                   </div>
                   <Select
                     value=""
-                    onChange={(e) => {
-                      const v = (e.target.value as 'ban' | 'unban' | 'destroy' | '') || '';
-                      (e.target as HTMLSelectElement).value = '';
-                      if (!v) return;
-                      setBulkConfirm({ action: v });
+                    className="min-w-[160px]"
+                    onChange={(val) => {
+                      if (!val) return;
+                      setBulkConfirm({ action: val as any });
                     }}
                     disabled={loading}
-                  >
-                    <option value="">{t.common.bulkActions}</option>
-                    <option value="ban">{t.mailboxes.ban}</option>
-                    <option value="unban">{t.mailboxes.unban}</option>
-                    <option value="destroy">{t.common.delete}</option>
-                  </Select>
-                </>
+                    options={[
+                      { label: t.common.bulkActions, value: '' },
+                      { label: t.mailboxes.ban, value: 'ban' },
+                      { label: t.mailboxes.unban, value: 'unban' },
+                      { label: t.common.delete, value: 'destroy' },
+                    ]}
+                  />
+                </div>
               ) : null}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => loadMailboxes(Math.max(1, page - 1))}
-                disabled={loading || !pagination || page <= 1}
-              >
-                {t.common.prev}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => loadMailboxes(page + 1)}
-                disabled={loading || !pagination || !pagination.hasMore}
-              >
-                {t.common.next}
-              </Button>
+              <div className="flex items-center gap-2 bg-[color:var(--heroui-default-100)] p-1 rounded-xl">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => loadMailboxes(Math.max(1, page - 1))}
+                  disabled={loading || !pagination || page <= 1}
+                  className="h-8 w-8 rounded-lg p-0 bg-transparent shadow-none"
+                >
+                  <Icon icon="lucide:chevron-left" className="h-5 w-5" />
+                </Button>
+                <span className="px-2 text-xs font-black text-[color:var(--heroui-default-500)]">{page}</span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => loadMailboxes(page + 1)}
+                  disabled={loading || !pagination || !pagination.hasMore}
+                  className="h-8 w-8 rounded-lg p-0 bg-transparent shadow-none"
+                >
+                  <Icon icon="lucide:chevron-right" className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <Table>
+        <CardContent className="p-0">
+          <Table className="border-none shadow-none rounded-none">
             <THead>
               <TR>
-                <TH className="w-10">
-                  <input
-                    type="checkbox"
-                    checked={allSelected}
-                    aria-label={t.common.bulkActions}
-                    onChange={(e) => setAll(e.target.checked)}
-                    disabled={loading || items.length === 0}
-                    className="h-4 w-4 rounded border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]"
-                  />
+                <TH className="w-14">
+                  <div className="flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      aria-label={t.common.bulkActions}
+                      onChange={(e) => setAll(e.target.checked)}
+                      disabled={loading || items.length === 0}
+                      className="h-5 w-5 rounded-lg border-2 border-[color:var(--heroui-divider)] bg-[color:var(--heroui-background)] checked:bg-[color:var(--heroui-primary-500)] transition-all cursor-pointer"
+                    />
+                  </div>
                 </TH>
                 <TH>{t.mailboxes.email}</TH>
                 <TH>{t.mailboxes.status}</TH>
                 <TH>{t.mailboxes.creationType}</TH>
-                <TH>{t.mailboxes.keyHashPrefix}</TH>
                 <TH>{t.mailboxes.keyExpiresAt}</TH>
                 <TH>{t.mailboxes.createdAt}</TH>
-                <TH>{t.mailboxes.claimedAt}</TH>
-                <TH>{t.mailboxes.lastLoginAt}</TH>
                 <TH>{t.mailboxes.lastMailAt}</TH>
                 <TH>{t.mailboxes.messageCount}</TH>
-                <TH>{t.mailboxes.unreadCount}</TH>
-                <TH>{t.mailboxes.actions}</TH>
+                <TH className="text-right">{t.mailboxes.actions}</TH>
               </TR>
             </THead>
             <TBody>
               {items.map((m) => (
                 <TR key={m.id}>
                   <TD>
-                    <input
-                      type="checkbox"
-                      checked={selected.has(m.id)}
-                      aria-label={m.email}
-                      onChange={(e) => toggleSelected(m.id, e.target.checked)}
-                      disabled={loading}
-                      className="h-4 w-4 rounded border border-[color:var(--admin-border)] bg-[color:var(--admin-surface)]"
-                    />
+                    <div className="flex items-center justify-center">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(m.id)}
+                        aria-label={m.email}
+                        onChange={(e) => toggleSelected(m.id, e.target.checked)}
+                        disabled={loading}
+                        className="h-5 w-5 rounded-lg border-2 border-[color:var(--heroui-divider)] bg-[color:var(--heroui-background)] checked:bg-[color:var(--heroui-primary-500)] transition-all cursor-pointer"
+                      />
+                    </div>
                   </TD>
-                  <TD className="font-medium">
-                    <AdminLink href={`/admin/mailboxes/${m.id}`} className="hover:underline">
+                  <TD className="font-black text-sm">
+                    <AdminLink href={`/admin/mailboxes/${m.id}`} className="text-[color:var(--heroui-primary-500)] hover:underline decoration-2 underline-offset-4">
                       {m.email}
                     </AdminLink>
                   </TD>
-                  <TD className="text-[color:var(--admin-muted)]">{m.status}</TD>
-                  <TD className="text-[color:var(--admin-muted)]">{m.creationType}</TD>
-                  <TD className="font-mono text-xs text-[color:var(--admin-muted)]">{m.keyHashPrefix || '-'}</TD>
-                  <TD className="text-[color:var(--admin-muted)]">{formatTs(m.keyExpiresAt)}</TD>
-                  <TD className="text-[color:var(--admin-muted)]">{formatTs(m.createdAt)}</TD>
-                  <TD className="text-[color:var(--admin-muted)]">{formatTs(m.claimedAt)}</TD>
-                  <TD className="text-[color:var(--admin-muted)]">{formatTs(m.lastLoginAt)}</TD>
-                  <TD className="text-[color:var(--admin-muted)]">{formatTs(m.lastMailAt)}</TD>
-                  <TD className="text-[color:var(--admin-muted)]">{m.messageCount}</TD>
-                  <TD className="text-[color:var(--admin-muted)]">{m.unreadCount}</TD>
                   <TD>
+                     <span className={cn(
+                        "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest",
+                        m.status === 'claimed' ? "bg-green-500/10 text-green-600" :
+                        m.status === 'unclaimed' ? "bg-blue-500/10 text-blue-600" :
+                        m.status === 'banned' ? "bg-red-500/10 text-red-600" :
+                        "bg-[color:var(--heroui-default-200)] text-[color:var(--heroui-default-500)]"
+                     )}>
+                        {m.status}
+                     </span>
+                  </TD>
+                  <TD className="text-[color:var(--heroui-default-400)] font-bold text-xs uppercase tracking-tighter">{m.creationType}</TD>
+                  <TD className="text-[color:var(--heroui-default-400)] font-medium text-xs">{formatTs(m.keyExpiresAt)}</TD>
+                  <TD className="text-[color:var(--heroui-default-400)] font-medium text-xs">{formatTs(m.createdAt)}</TD>
+                  <TD className="text-[color:var(--heroui-default-400)] font-medium text-xs">{formatTs(m.lastMailAt)}</TD>
+                  <TD>
+                     <span className="px-3 py-1 rounded-full bg-[color:var(--heroui-default-100)] font-black text-xs">
+                        {m.messageCount}
+                     </span>
+                  </TD>
+                  <TD className="text-right">
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="secondary"
                       onClick={() => router.push(withAdminTracking(`/admin/mailboxes/${m.id}`))}
                       disabled={loading}
+                      className="h-9 rounded-lg font-bold bg-[color:var(--heroui-default-100)]"
                     >
-                      <Icon icon="lucide:search" className="h-4 w-4" />
-                      {t.mailboxes.view}
+                      <Icon icon="lucide:arrow-right" className="h-4 w-4" />
                     </Button>
                   </TD>
                 </TR>
               ))}
               {items.length === 0 && !loading ? (
                 <TR>
-                  <TD colSpan={13} className="py-6 text-center text-[color:var(--admin-muted)]">
-                    {t.mailboxes.noMailboxes}
+                  <TD colSpan={13} className="py-20 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                       <Icon icon="lucide:ghost" className="h-12 w-12 text-[color:var(--heroui-default-200)]" />
+                       <span className="text-sm font-bold text-[color:var(--heroui-default-400)] uppercase tracking-widest">{t.mailboxes.noMailboxes}</span>
+                    </div>
                   </TD>
                 </TR>
               ) : null}
@@ -378,6 +417,7 @@ export default function AdminMailboxesPage() {
           </Table>
         </CardContent>
       </Card>
+...
 
       <Modal
         open={!!bulkConfirm}

@@ -52,60 +52,90 @@ export default function AdminSettingsPage() {
   }, []);
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Icon icon="lucide:bar-chart-2" className="h-5 w-5" />
+    <div className="space-y-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-bold tracking-tight text-[color:var(--admin-text)]">{t.nav.settings}</h1>
+        <p className="text-sm text-[color:var(--admin-muted)]">{t.settings.umamiDescription}</p>
+      </div>
+
+      <Card className="max-w-2xl">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-lg font-bold">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500">
+              <Icon icon="lucide:bar-chart-2" className="h-5 w-5" />
+            </div>
             {t.settings.umami}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-[color:var(--admin-muted)]">{t.settings.umamiDescription}</p>
-
+        <CardContent className="space-y-6 pt-4">
           {loading ? (
-            <div className="text-sm text-[color:var(--admin-muted)]">{t.common.loading}</div>
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <Icon icon="lucide:loader-2" className="h-8 w-8 animate-spin text-[color:var(--admin-primary)]" />
+              <div className="text-sm text-[color:var(--admin-muted)]">{t.common.loading}</div>
+            </div>
           ) : (
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-[color:var(--admin-text)]">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-[color:var(--admin-muted)] ml-1">
                   {t.settings.scriptUrl}
                 </label>
                 <Input
                   value={scriptUrl}
                   onChange={(e) => setScriptUrl(e.target.value)}
                   placeholder={t.settings.scriptUrlPlaceholder}
+                  className="rounded-xl h-11"
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-[color:var(--admin-text)]">
-                  {t.settings.websiteId}
-                </label>
-                <Input
-                  value={websiteId}
-                  onChange={(e) => setWebsiteId(e.target.value)}
-                  placeholder={t.settings.websiteIdPlaceholder}
-                />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[color:var(--admin-muted)] ml-1">
+                    {t.settings.websiteId}
+                  </label>
+                  <Input
+                    value={websiteId}
+                    onChange={(e) => setWebsiteId(e.target.value)}
+                    placeholder={t.settings.websiteIdPlaceholder}
+                    className="rounded-xl h-11"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[color:var(--admin-muted)] ml-1">
+                    {t.settings.adminWebsiteId}
+                  </label>
+                  <Input
+                    value={adminWebsiteId}
+                    onChange={(e) => setAdminWebsiteId(e.target.value)}
+                    placeholder={t.settings.adminWebsiteIdPlaceholder}
+                    className="rounded-xl h-11"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-[color:var(--admin-text)]">
-                  {t.settings.adminWebsiteId}
-                </label>
-                <Input
-                  value={adminWebsiteId}
-                  onChange={(e) => setAdminWebsiteId(e.target.value)}
-                  placeholder={t.settings.adminWebsiteIdPlaceholder}
-                />
+              <div className="rounded-2xl bg-blue-50/50 p-4 border border-blue-100 flex gap-3">
+                <Icon icon="lucide:info" className="h-5 w-5 text-blue-500 shrink-0" />
+                <p className="text-xs text-blue-700 leading-relaxed font-medium">{t.settings.note}</p>
               </div>
 
-              <div className="rounded-md bg-[color:var(--admin-hover)] p-3 text-xs text-[color:var(--admin-muted)]">
-                <Icon icon="lucide:info" className="mb-1 inline-block h-4 w-4" /> {t.settings.note}
-              </div>
+              {errorText && (
+                <div className="rounded-xl bg-red-50 p-4 text-sm text-red-700 border border-red-100 flex items-center gap-2">
+                   <Icon icon="lucide:alert-circle" className="h-4 w-4" />
+                   {errorText}
+                </div>
+              )}
+              {successText && (
+                <div className="rounded-xl bg-green-50 p-4 text-sm text-green-700 border border-green-100 flex items-center gap-2">
+                   <Icon icon="lucide:check-circle" className="h-4 w-4" />
+                   {successText}
+                </div>
+              )}
 
-              {errorText && <div className="text-sm text-red-700">{errorText}</div>}
-              {successText && <div className="text-sm text-green-700">{successText}</div>}
+              <div className="flex justify-end pt-2">
+                <Button className="rounded-full px-8 shadow-lg shadow-[color:var(--admin-primary)]/20 font-bold">
+                  {t.common.save}
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
