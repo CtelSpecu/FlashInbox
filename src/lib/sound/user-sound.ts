@@ -11,6 +11,7 @@ const SOUND_POPOVER_PADDING = 16;
 export type SoundKind = 'click' | 'notice' | 'message';
 export type SoundSliderStyle = {
   background: string;
+  '--slider-progress': string;
   '--fi-sound-accent': string;
   '--fi-sound-track': string;
 };
@@ -53,6 +54,7 @@ export function getSoundSliderStyle(
 ): SoundSliderStyle {
   return {
     background: getSoundSliderBackground(percent, orientation),
+    '--slider-progress': `${percent}%`,
     '--fi-sound-accent': SOUND_ACCENT_COLOR,
     '--fi-sound-track': SOUND_TRACK_COLOR,
   };

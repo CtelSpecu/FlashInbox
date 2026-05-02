@@ -49,11 +49,13 @@ describe('user sound helpers', () => {
   test('builds shared slider styles for both home and inbox controls', () => {
     expect(getSoundSliderStyle(45)).toEqual({
       background: 'linear-gradient(to right, #6750A4 0%, #6750A4 45%, #F7F2FA 45%, #F7F2FA 100%)',
+      '--slider-progress': '45%',
       '--fi-sound-accent': '#6750A4',
       '--fi-sound-track': '#F7F2FA',
     });
     expect(getSoundSliderStyle(45, 'vertical')).toEqual({
       background: 'linear-gradient(to top, #6750A4 0%, #6750A4 45%, #F7F2FA 45%, #F7F2FA 100%)',
+      '--slider-progress': '45%',
       '--fi-sound-accent': '#6750A4',
       '--fi-sound-track': '#F7F2FA',
     });
