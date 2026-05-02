@@ -393,7 +393,7 @@ export default function InboxPage() {
                 <div className="min-w-0">
                   <div className="text-xs opacity-70">{t.inbox.title}</div>
                   <div className="mt-1 rounded-2xl border px-3 py-2 text-sm font-semibold" style={{ borderColor: 'var(--secondary)', backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
-                    <span className="block break-all">{email || '...'}</span>
+                    <span className="block whitespace-nowrap overflow-hidden text-ellipsis">{email || '...'}</span>
                   </div>
                 </div>
                 {email ? (
