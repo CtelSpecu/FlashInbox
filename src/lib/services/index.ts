@@ -23,3 +23,13 @@ export type { VerifySessionResult } from './session';
 export { MessageService, createMessageService } from './message';
 export type { MessageListItem, MessageDetail } from './message';
 
+export { SendService } from './send';
+export type { SendEmailInput, SendEmailResult } from './send';
+
+export { DraftService } from './draft';
+export type { SaveDraftInput } from './draft';
+
+export { OutboundRuleService } from './outbound-rules';
+export type { OutboundRuleContext, OutboundRuleMatch } from './outbound-rules';
+
+export type { ComposeAttachmentUrl, EditorMeta, LinkCardInput } from './compose-sanitize';

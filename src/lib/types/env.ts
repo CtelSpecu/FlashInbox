@@ -12,6 +12,9 @@ declare global {
     // 静态资源绑定
     ASSETS?: Fetcher;
 
+    // Cloudflare Email Service 发送绑定
+    EMAIL?: SendEmail;
+
     // 配置变量
     DEFAULT_DOMAIN: string;
     KEY_EXPIRE_DAYS?: string;
@@ -20,6 +23,11 @@ declare global {
     ADMIN_SESSION_EXPIRE_HOURS?: string;
     MAX_BODY_TEXT?: string;
     MAX_BODY_HTML?: string;
+    SEND_MAX_RECIPIENTS?: string;
+    SEND_MAX_SUBJECT_CHARS?: string;
+    SEND_MAX_BODY_TEXT_CHARS?: string;
+    SEND_MAX_ATTACHMENT_URLS?: string;
+    SEND_ALLOWED_IFRAME_DOMAINS?: string;
 
     // 限流配置
     RATE_LIMIT_CREATE?: string;

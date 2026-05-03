@@ -3,7 +3,6 @@
  * 基于 IP+ASN+UA 的多维度限流，支持固定窗口和指数退避
  */
 
-import { NextRequest } from 'next/server';
 import { RateLimitRepository } from '@/lib/db/rate-limit-repo';
 import { hashUserAgent, hashRateLimitKey } from '@/lib/utils/crypto';
 import type { RateLimitAction } from '@/lib/types/entities';
@@ -33,7 +32,7 @@ export class RateLimitService {
   /**
    * 从请求中提取限流相关信息
    */
-  private async extractRequestInfo(request: NextRequest): Promise<{
+  private async extractRequestInfo(request: Request): Promise<{
     ip: string;
     asn: string;
     userAgentHash: string;
@@ -68,7 +67,7 @@ export class RateLimitService {
   /**
    * 检查请求是否被限流
    */
-  async check(request: NextRequest, options: RateLimitOptions): Promise<RateLimitResult> {
+  async check(request: Request, options: RateLimitOptions): Promise<RateLimitResult> {
     const { action, config } = options;
     const { ip, asn, userAgentHash } = await this.extractRequestInfo(request);
     const keyHash = await this.generateKey(ip, asn, userAgentHash, action);
@@ -130,7 +129,7 @@ export class RateLimitService {
    * 检查并应用指数退避（用于 Recover 等敏感操作）
    */
   async checkWithExponentialBackoff(
-    request: NextRequest,
+    request: Request,
     options: RateLimitOptions
   ): Promise<RateLimitResult> {
     const { action, config } = options;
@@ -167,7 +166,7 @@ export class RateLimitService {
   /**
    * 记录失败并应用指数退避
    */
-  async recordFailure(request: NextRequest, action: RateLimitAction): Promise<number> {
+  async recordFailure(request: Request, action: RateLimitAction): Promise<number> {
     const { ip, asn, userAgentHash } = await this.extractRequestInfo(request);
     const keyHash = await this.generateKey(ip, asn, userAgentHash, action);
 
@@ -190,7 +189,7 @@ export class RateLimitService {
   /**
    * 重置失败计数（成功后调用）
    */
-  async resetFailure(request: NextRequest, action: RateLimitAction): Promise<void> {
+  async resetFailure(request: Request, action: RateLimitAction): Promise<void> {
     const { ip, asn, userAgentHash } = await this.extractRequestInfo(request);
     const keyHash = await this.generateKey(ip, asn, userAgentHash, action);
     await this.repo.resetFailCount(keyHash, action);
@@ -211,4 +210,3 @@ export class RateLimitService {
 export function createRateLimitService(db: D1Database): RateLimitService {
   return new RateLimitService(db);
 }
-

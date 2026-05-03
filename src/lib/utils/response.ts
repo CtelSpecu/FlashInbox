@@ -42,6 +42,14 @@ export const ErrorCodes = {
 
   // 消息错误
   MESSAGE_NOT_FOUND: 'MESSAGE_NOT_FOUND',
+  // 发送错误
+  SEND_NOT_ENABLED: 'SEND_NOT_ENABLED',
+  SEND_FORBIDDEN: 'SEND_FORBIDDEN',
+  SEND_BLOCKED: 'SEND_BLOCKED',
+  SEND_FAILED: 'SEND_FAILED',
+  INVALID_RECIPIENT: 'INVALID_RECIPIENT',
+  INVALID_CONTENT: 'INVALID_CONTENT',
+  DRAFT_NOT_FOUND: 'DRAFT_NOT_FOUND',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
