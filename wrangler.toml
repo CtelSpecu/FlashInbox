@@ -15,6 +15,10 @@ binding = "DB"
 database_name = "flashinbox-db"
 database_id = "" # 部署时填写实际 ID
 
+[[send_email]]
+name = "EMAIL"
+remote = true
+
 # 环境变量（非敏感配置）
 [vars]
 DEFAULT_DOMAIN = "" # 部署时填写实际 ID
@@ -24,6 +28,13 @@ SESSION_EXPIRE_HOURS = "24"
 ADMIN_SESSION_EXPIRE_HOURS = "4"
 MAX_BODY_TEXT = "102400"
 MAX_BODY_HTML = "512000"
+SEND_RATE_LIMIT_HOUR = "20"
+SEND_RATE_LIMIT_DAY = "100"
+SEND_MAX_RECIPIENTS = "10"
+SEND_MAX_SUBJECT_CHARS = "180"
+SEND_MAX_BODY_TEXT_CHARS = "3000"
+SEND_MAX_ATTACHMENT_URLS = "10"
+SEND_ALLOWED_IFRAME_DOMAINS = "youtube.com,youtu.be,vimeo.com,bilibili.com,player.bilibili.com"
 
 # Secrets（通过 wrangler secret put 设置）
 # - ADMIN_TOKEN
@@ -40,6 +51,10 @@ name = "flashinbox-dev"
 binding = "DB"
 database_name = "flashinbox-db-dev"
 database_id = "" # 开发数据库 ID
+
+[[env.dev.send_email]]
+name = "EMAIL"
+remote = true
 
 # 生产环境配置
 [env.production]
@@ -60,9 +75,19 @@ MAX_BODY_HTML = "512000"
 UMAMI_SCRIPT_URL = "" # 部署时填写实际 ID
 UMAMI_WEBSITE_ID = "" # 部署时填写实际 ID
 UMAMI_ADMIN_WEBSITE_ID = "" # 部署时填写实际 ID
+SEND_RATE_LIMIT_HOUR = "20"
+SEND_RATE_LIMIT_DAY = "100"
+SEND_MAX_RECIPIENTS = "10"
+SEND_MAX_SUBJECT_CHARS = "180"
+SEND_MAX_BODY_TEXT_CHARS = "3000"
+SEND_MAX_ATTACHMENT_URLS = "10"
+SEND_ALLOWED_IFRAME_DOMAINS = "youtube.com,youtu.be,vimeo.com,bilibili.com,player.bilibili.com"
 
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "flashinbox-db"
 database_id = "" # 生产数据库 ID
 
+[[env.production.send_email]]
+name = "EMAIL"
+remote = true

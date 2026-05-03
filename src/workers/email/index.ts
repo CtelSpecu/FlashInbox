@@ -96,17 +96,17 @@ const emailWorker = {
       }
       console.log('[Email Worker] Domain found:', { id: domain.id, name: domain.name, status: domain.status });
 
-      if (domain.status === 'disabled') {
+      if (domain.status === 'disabled' || !domain.canReceive) {
         await auditLogRepo.create({
           action: 'email_rejected',
           actorType: 'system',
           targetType: 'domain',
           targetId: String(domain.id),
-          details: { reason: 'Domain is disabled' },
+          details: { reason: 'Domain cannot receive mail' },
           success: false,
           errorCode: 'DOMAIN_DISABLED',
         });
-        message.setReject('Domain is disabled');
+        message.setReject('Domain cannot receive mail');
         return;
       }
 
@@ -172,6 +172,18 @@ const emailWorker = {
           message.setReject('Mailbox is no longer active');
           return;
         }
+      }
+
+      if (!mailbox.canReceive) {
+        await auditLogRepo.create({
+          action: 'email_dropped',
+          actorType: 'system',
+          targetType: 'mailbox',
+          targetId: mailbox.id,
+          details: { reason: 'mailbox_receive_disabled', from: message.from, to: message.to },
+          success: true,
+        });
+        return;
       }
 
       if (mailbox.status === 'banned') {
