@@ -57,6 +57,7 @@ export interface UserTranslations {
 
   inbox: {
     title: string;
+    sent: string;
     unread: string;
     unreadCount: string; // uses {count}
     keyExpires: string;
@@ -81,6 +82,47 @@ export interface UserTranslations {
     renewedExpires: string; // uses {time}
     renewFailed: string;
     loadFailed: string;
+  };
+
+  compose: {
+    title: string;
+    subtitle: string;
+    newMessage: string;
+    reply: string;
+    replyAll: string;
+    forward: string;
+    mailbox: string;
+    mode: string;
+    thread: string;
+    recipients: string;
+    to: string;
+    cc: string;
+    bcc: string;
+    subject: string;
+    fromName: string;
+    attachments: string;
+    attachmentUrl: string;
+    fileName: string;
+    mimeType: string;
+    sizeHint: string;
+    urlOnly: string;
+    description: string;
+    imageUrl: string;
+    drafts: string;
+    emptyDrafts: string;
+    inspector: string;
+    formula: string;
+    markdown: string;
+    linkCard: string;
+    saveDraft: string;
+    send: string;
+    bodyTooLong: string;
+    draftSaved: string;
+    messageQueued: string;
+    messageSent: string;
+    loadFailed: string;
+    saveFailed: string;
+    sendFailed: string;
   };
 
   claim: {
