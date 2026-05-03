@@ -3,10 +3,11 @@
 import '@wangeditor/editor/dist/css/style.css';
 
 import { useEffect, useMemo, useState } from 'react';
+import { i18nChangeLanguage } from '@wangeditor/editor';
 import { Editor, Toolbar } from '@wangeditor/editor-for-react';
-import { snackbar } from 'mdui/functions/snackbar.js';
 
 import { buildFormulaHtml, safeComposeUrl } from '@/lib/client/compose';
+import type { Locale } from '@/lib/i18n';
 
 type EditorApi = {
   getHtml: () => string;
@@ -21,6 +22,7 @@ interface WangEditorClientProps {
   value: string;
   onChange: (value: string, meta: { textLength: number; markdown: string }) => void;
   placeholder: string;
+  locale: Locale;
   disabled?: boolean;
   messages: {
     imageUrl: string;
@@ -45,15 +47,25 @@ function htmlToMarkdown(html: string): string {
     .trim();
 }
 
+function getWangEditorLanguage(locale: Locale): 'zh-CN' | 'en' {
+  return locale === 'zh-CN' || locale === 'zh-TW' ? 'zh-CN' : 'en';
+}
+
 export function WangEditorClient({
   value,
   onChange,
   placeholder,
+  locale,
   disabled,
   messages,
   onReady,
 }: WangEditorClientProps) {
   const [editor, setEditor] = useState<EditorApi | null>(null);
+  const editorLanguage = getWangEditorLanguage(locale);
+
+  useEffect(() => {
+    i18nChangeLanguage(editorLanguage);
+  }, [editorLanguage]);
 
   const toolbarConfig = useMemo(
     () => ({
@@ -128,12 +140,8 @@ export function WangEditorClient({
         },
       },
     }),
-    [disabled, placeholder]
+    [disabled, messages.imageUrl, messages.linkUrl, messages.videoUrl, placeholder]
   );
-
-  useEffect(() => {
-    return;
-  }, []);
 
   useEffect(() => {
     if (!editor) return;

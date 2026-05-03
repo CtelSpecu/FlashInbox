@@ -12,7 +12,7 @@ import { clearAdminSession, getAdminSession } from '@/lib/admin/session-store';
 import { adminApiFetch } from '@/lib/admin/api';
 import { withAdminTracking } from '@/lib/admin/tracking';
 import { useAdminI18n } from '@/lib/admin-i18n/context';
-import { type AdminLocale } from '@/lib/admin-i18n';
+import { adminLocaleNames, adminLocales, type AdminLocale } from '@/lib/admin-i18n';
 import { useAdminTheme } from '@/lib/theme/admin-theme';
 import type { ThemeMode } from '@/lib/theme/types';
 
@@ -169,11 +169,7 @@ export function AdminShell({
                   value={locale}
                   onChange={(val) => setLocale(val as AdminLocale)}
                   size="sm"
-                  options={[
-                    { label: 'English', value: 'en-US' },
-                    { label: '简体中文', value: 'zh-CN' },
-                    { label: '繁體中文', value: 'zh-TW' },
-                  ]}
+                  options={adminLocales.map((loc) => ({ label: adminLocaleNames[loc], value: loc }))}
                 />
              </div>
 

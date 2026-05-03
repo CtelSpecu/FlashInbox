@@ -91,18 +91,8 @@ export function getTranslations(locale: Locale): UserTranslations {
   return translations[locale] || translations['en-US'];
 }
 
-export function getLocaleLabel(language: UserTranslations['language'], locale: Locale): string {
-  const labels: Record<Locale, string> = {
-    'en-US': language.enUS,
-    'zh-CN': language.zhCN,
-    'zh-TW': language.zhTW,
-    'fr-FR': language.frFR,
-    'de-DE': language.deDE,
-    'es-ES': language.esES,
-    'ja-JP': language.jaJP,
-  };
-
-  return labels[locale];
+export function getLocaleLabel(_language: UserTranslations['language'], locale: Locale): string {
+  return localeNames[locale];
 }
 
 /**

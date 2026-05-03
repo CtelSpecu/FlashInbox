@@ -193,7 +193,7 @@ function getModeLabel(mode: Mode, t: ReturnType<typeof useI18n>['t']): string {
 export function ComposeClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t, format } = useI18n();
+  const { t, locale, format } = useI18n();
 
   const [mailboxEmail, setMailboxEmail] = useState('');
   const [mailboxDomain, setMailboxDomain] = useState('');
@@ -651,6 +651,7 @@ export function ComposeClient() {
               <WangEditorClient
                 value={state.html}
                 placeholder={t.compose.subtitle}
+                locale={locale}
                 messages={{
                   imageUrl: t.compose.imageUrl,
                   linkUrl: t.compose.attachmentUrl,
