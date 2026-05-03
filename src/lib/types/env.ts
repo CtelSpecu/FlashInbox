@@ -28,6 +28,9 @@ declare global {
     SEND_MAX_BODY_TEXT_CHARS?: string;
     SEND_MAX_ATTACHMENT_URLS?: string;
     SEND_ALLOWED_IFRAME_DOMAINS?: string;
+    SEND_POLICY_MODE?: string;
+    SEND_RECIPIENT_WHITELIST?: string;
+    SEND_RECIPIENT_BLACKLIST?: string;
 
     // 限流配置
     RATE_LIMIT_CREATE?: string;
@@ -56,6 +59,14 @@ export interface RateLimitConfig {
   count: number;
   windowMinutes: number;
   cooldownMinutes: number;
+}
+
+export type SendPolicyMode = 'unrestricted' | 'whitelist' | 'blacklist';
+
+export interface SendPolicyConfig {
+  mode: SendPolicyMode;
+  whitelist: string[];
+  blacklist: string[];
 }
 
 /**
@@ -89,6 +100,9 @@ export interface AppConfig {
     secretKey: string;
   };
 
+  // 发送策略
+  sendPolicy: SendPolicyConfig;
+
   // Umami（可选）
   umami?: {
     scriptUrl: string;
@@ -111,6 +125,34 @@ function parseRateLimitConfig(config: string, defaultCooldown = 10): RateLimitCo
     windowMinutes: parseInt(match[2], 10),
     cooldownMinutes: defaultCooldown,
   };
+}
+
+function parseListConfig(value?: string): string[] {
+  return Array.from(
+    new Set(
+      (value || '')
+        .split(/[,\s]+/g)
+        .map((item) => item.trim().toLowerCase())
+        .filter(Boolean)
+    )
+  );
+}
+
+function parseSendPolicyMode(value?: string): SendPolicyMode {
+  const normalized = (value || 'unrestricted').trim().toLowerCase();
+  if (normalized === 'none' || normalized === 'off' || normalized === 'unlimited') {
+    return 'unrestricted';
+  }
+  if (normalized === 'allowlist') {
+    return 'whitelist';
+  }
+  if (normalized === 'denylist') {
+    return 'blacklist';
+  }
+  if (normalized === 'unrestricted' || normalized === 'whitelist' || normalized === 'blacklist') {
+    return normalized;
+  }
+  throw new Error(`Invalid send policy mode: ${value}`);
 }
 
 /**
@@ -156,6 +198,11 @@ export function getConfig(env: CloudflareEnv): AppConfig {
     turnstile: {
       siteKey: env.TURNSTILE_SITE_KEY || '',
       secretKey: env.TURNSTILE_SECRET_KEY || '',
+    },
+    sendPolicy: {
+      mode: parseSendPolicyMode(env.SEND_POLICY_MODE),
+      whitelist: parseListConfig(env.SEND_RECIPIENT_WHITELIST),
+      blacklist: parseListConfig(env.SEND_RECIPIENT_BLACKLIST),
     },
   };
 

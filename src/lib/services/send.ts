@@ -1,4 +1,4 @@
-import { getCloudflareEnv } from '@/lib/env';
+import { getCloudflareEnv, getConfig } from '@/lib/env';
 import { createRepositories } from '@/lib/db';
 import type { AuthContext } from '@/lib/middleware/auth';
 import { createRateLimitService } from './rate-limit';
@@ -17,6 +17,7 @@ import { OutboundRuleService } from './outbound-rules';
 import { ErrorCodes, error } from '@/lib/utils/response';
 import { hashKey } from '@/lib/utils/crypto';
 import type { Domain, Mailbox } from '@/lib/types/entities';
+import type { AppConfig, SendPolicyConfig } from '@/lib/types/env';
 import type { ErrorCode } from '@/lib/utils/response';
 
 export interface SendEmailInput {
@@ -91,17 +92,61 @@ function ensureSendPermissions(domain: Domain, mailbox: Mailbox): ErrorCode | nu
   return null;
 }
 
+function matchesRecipientPattern(recipient: string, pattern: string): boolean {
+  const normalizedRecipient = recipient.trim().toLowerCase();
+  const normalizedPattern = pattern.trim().toLowerCase();
+  if (!normalizedRecipient || !normalizedPattern) return false;
+  if (normalizedRecipient === normalizedPattern) return true;
+
+  const domain = normalizedRecipient.split('@')[1] || '';
+  if (!domain) return false;
+
+  if (normalizedPattern.startsWith('*.')) {
+    const suffix = normalizedPattern.slice(2);
+    return domain === suffix || domain.endsWith(`.${suffix}`);
+  }
+  if (normalizedPattern.startsWith('@')) {
+    return domain === normalizedPattern.slice(1);
+  }
+  if (!normalizedPattern.includes('@')) {
+    return domain === normalizedPattern;
+  }
+
+  return false;
+}
+
+export function checkSendPolicy(recipients: string[], policy: SendPolicyConfig): ErrorCode | null {
+  if (policy.mode === 'unrestricted') {
+    return null;
+  }
+
+  if (policy.mode === 'whitelist') {
+    const allowed = policy.whitelist.length > 0 && recipients.every((recipient) =>
+      policy.whitelist.some((pattern) => matchesRecipientPattern(recipient, pattern))
+    );
+    return allowed ? null : ErrorCodes.SEND_FORBIDDEN;
+  }
+
+  const blocked = recipients.some((recipient) =>
+    policy.blacklist.some((pattern) => matchesRecipientPattern(recipient, pattern))
+  );
+  return blocked ? ErrorCodes.SEND_BLOCKED : null;
+}
+
 export class SendService {
   private db: D1Database;
   private emailBinding: SendEmail | null;
+  private config: AppConfig | null;
 
-  constructor(db: D1Database, emailBinding: SendEmail | null) {
+  constructor(db: D1Database, emailBinding: SendEmail | null, config: AppConfig | null = null) {
     this.db = db;
     this.emailBinding = emailBinding;
+    this.config = config;
   }
 
   async send(input: SendEmailInput, context: SendMailboxContext): Promise<SendEmailResult> {
     const env = getCloudflareEnv();
+    const config = this.config || getConfig(env);
     const repos = createRepositories(this.db);
     const rateLimitService = createRateLimitService(this.db);
 
@@ -120,6 +165,11 @@ export class SendService {
     const bcc = normalizeRecipients(input.bcc);
     if (to.length === 0 || !validateRecipients([...to, ...cc, ...bcc])) {
       throw error(ErrorCodes.INVALID_RECIPIENT, 'Invalid recipient address', 400);
+    }
+
+    const policyError = checkSendPolicy([...to, ...cc, ...bcc], config.sendPolicy);
+    if (policyError) {
+      throw error(policyError, 'Sending blocked by policy', 403);
     }
 
     const maxRecipients = parseInt(env.SEND_MAX_RECIPIENTS || '10', 10);

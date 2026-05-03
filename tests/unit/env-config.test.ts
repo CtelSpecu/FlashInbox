@@ -28,4 +28,26 @@ describe('getConfig', () => {
       'Missing required environment variables: SESSION_SECRET'
     );
   });
+
+  test('parses send policy modes and recipient lists', () => {
+    const config = getConfig(
+      createEnv({
+        SEND_POLICY_MODE: 'allowlist',
+        SEND_RECIPIENT_WHITELIST: 'example.com, vip@example.net @team.example',
+        SEND_RECIPIENT_BLACKLIST: 'blocked.example',
+      })
+    );
+
+    expect(config.sendPolicy).toEqual({
+      mode: 'whitelist',
+      whitelist: ['example.com', 'vip@example.net', '@team.example'],
+      blacklist: ['blocked.example'],
+    });
+  });
+
+  test('rejects invalid send policy mode', () => {
+    expect(() => getConfig(createEnv({ SEND_POLICY_MODE: 'strict' }))).toThrow(
+      'Invalid send policy mode: strict'
+    );
+  });
 });

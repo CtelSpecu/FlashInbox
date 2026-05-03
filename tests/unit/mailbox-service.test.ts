@@ -23,6 +23,11 @@ function createConfig(overrides?: Partial<AppConfig>): AppConfig {
       siteKey: 'test-site-key',
       secretKey: 'test-secret-key',
     },
+    sendPolicy: {
+      mode: 'unrestricted',
+      whitelist: [],
+      blacklist: [],
+    },
     ...overrides,
   };
 }
