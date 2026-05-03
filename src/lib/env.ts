@@ -14,14 +14,22 @@ export { getConfig, calculateKeyExpiry, calculateSessionExpiry, calculateAdminSe
  * 获取当前请求的 Cloudflare 环境
  */
 export function getCloudflareEnv(): CloudflareEnv {
-  const env = getCloudflareContext().env;
+  let cloudflareEnv: Partial<CloudflareEnv> = {};
+  try {
+    cloudflareEnv = getCloudflareContext().env;
+  } catch (err) {
+    if (process.env.NODE_ENV !== 'development') {
+      throw err;
+    }
+  }
+
   const processEnv = typeof process !== 'undefined' ? process.env : undefined;
   if (!processEnv) {
-    return env;
+    return cloudflareEnv as CloudflareEnv;
   }
 
   const merged: Record<string, unknown> = { ...processEnv };
-  for (const [key, value] of Object.entries(env)) {
+  for (const [key, value] of Object.entries(cloudflareEnv)) {
     if (value !== undefined && value !== '') {
       merged[key] = value;
     } else if (!(key in merged)) {
@@ -29,9 +37,9 @@ export function getCloudflareEnv(): CloudflareEnv {
     }
   }
 
-  merged.EMAIL = env.EMAIL;
-  merged.ASSETS = env.ASSETS;
-  merged.DB = env.DB;
+  merged.EMAIL = cloudflareEnv.EMAIL;
+  merged.ASSETS = cloudflareEnv.ASSETS;
+  merged.DB = cloudflareEnv.DB;
 
   return merged as unknown as CloudflareEnv;
 }
