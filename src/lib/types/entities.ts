@@ -100,6 +100,24 @@ export interface Message {
   readAt: number | null;
 }
 
+export interface OutboundAttachment {
+  id: string;
+  messageId: string;
+  url: string;
+  filename: string | null;
+  mimeType: string | null;
+  sizeHint: number | null;
+  createdAt: number;
+}
+
+export interface SendEvent {
+  id: string;
+  messageId: string;
+  event: SendStatus;
+  details: string | null;
+  createdAt: number;
+}
+
 export interface AttachmentMeta {
   filename: string;
   mimeType: string;

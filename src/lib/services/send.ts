@@ -1,4 +1,3 @@
-import { EmailMessage as CloudflareEmailMessage } from 'cloudflare:email';
 import { getCloudflareEnv } from '@/lib/env';
 import { createRepositories } from '@/lib/db';
 import type { AuthContext } from '@/lib/middleware/auth';
@@ -266,9 +265,27 @@ export class SendService {
       messageId: message.id,
     });
 
+    const { EmailMessage } = await import('cloudflare:email');
     const allRecipients = [...to, ...cc, ...bcc];
     const sendResults = await Promise.allSettled(
-      allRecipients.map((recipient) => binding.send(new CloudflareEmailMessage(fromAddr, recipient, mimeMessage)))
+      allRecipients.map((recipient) =>
+        binding.send(
+          new EmailMessage(
+            fromAddr,
+            recipient,
+            buildMimeMessage({
+              from: fromHeader,
+              to: [recipient],
+              cc: [],
+              subject,
+              html,
+              text,
+              replyTo: input.replyToMessageId || null,
+              messageId: message.id,
+            })
+          )
+        )
+      )
     );
     const failed = sendResults.find((result) => result.status === 'rejected');
     if (failed) {
