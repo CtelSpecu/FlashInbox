@@ -5,15 +5,29 @@ export interface CreateDomainInput {
   name: string;
   status?: DomainStatus;
   note?: string;
+  canReceive?: boolean;
+  canSend?: boolean;
+  sendAllowedFromNames?: string | null;
 }
 
 export interface UpdateDomainInput {
   status?: DomainStatus;
   note?: string;
+  canReceive?: boolean;
+  canSend?: boolean;
+  sendAllowedFromNames?: string | null;
 }
 
 export interface DomainWithCount extends Domain {
   mailboxCount: number;
+}
+
+function defaultCanReceive(status: DomainStatus): boolean {
+  return status !== 'disabled';
+}
+
+function defaultCanSend(status: DomainStatus): boolean {
+  return status === 'enabled';
 }
 
 export class DomainRepository extends BaseRepository<Domain, DomainRow> {
@@ -71,11 +85,22 @@ export class DomainRepository extends BaseRepository<Domain, DomainRow> {
     const timestamp = now();
     const result = await this.db
       .prepare(
-        `INSERT INTO domains (name, status, note, created_at, updated_at) 
-         VALUES (?, ?, ?, ?, ?) 
+        `INSERT INTO domains (
+           name, status, note, can_receive, can_send, send_allowed_from_names, created_at, updated_at
+         )
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
          RETURNING *`
       )
-      .bind(input.name, input.status || 'enabled', input.note || null, timestamp, timestamp)
+      .bind(
+        input.name,
+        input.status || 'enabled',
+        input.note || null,
+        (input.canReceive ?? defaultCanReceive(input.status || 'enabled')) ? 1 : 0,
+        (input.canSend ?? defaultCanSend(input.status || 'enabled')) ? 1 : 0,
+        input.sendAllowedFromNames || null,
+        timestamp,
+        timestamp
+      )
       .first<DomainRow>();
 
     if (!result) {
@@ -95,10 +120,30 @@ export class DomainRepository extends BaseRepository<Domain, DomainRow> {
     if (input.status !== undefined) {
       updates.push('status = ?');
       values.push(input.status);
+      if (input.canReceive === undefined) {
+        updates.push('can_receive = ?');
+        values.push(defaultCanReceive(input.status) ? 1 : 0);
+      }
+      if (input.canSend === undefined) {
+        updates.push('can_send = ?');
+        values.push(defaultCanSend(input.status) ? 1 : 0);
+      }
     }
     if (input.note !== undefined) {
       updates.push('note = ?');
       values.push(input.note);
+    }
+    if (input.canReceive !== undefined) {
+      updates.push('can_receive = ?');
+      values.push(input.canReceive ? 1 : 0);
+    }
+    if (input.canSend !== undefined) {
+      updates.push('can_send = ?');
+      values.push(input.canSend ? 1 : 0);
+    }
+    if (input.sendAllowedFromNames !== undefined) {
+      updates.push('send_allowed_from_names = ?');
+      values.push(input.sendAllowedFromNames);
     }
 
     if (updates.length === 0) {
@@ -117,4 +162,3 @@ export class DomainRepository extends BaseRepository<Domain, DomainRow> {
     return result ? this.mapRow(result) : null;
   }
 }
-

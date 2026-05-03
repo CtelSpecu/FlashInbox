@@ -6,6 +6,8 @@ export interface CreateMailboxInput {
   username: string;
   canonicalName: string;
   creationType: MailboxCreationType;
+  canReceive?: boolean;
+  canSend?: boolean;
 }
 
 export interface ClaimMailboxInput {
@@ -56,11 +58,22 @@ export class MailboxRepository extends BaseRepository<Mailbox, MailboxRow> {
 
     const result = await this.db
       .prepare(
-        `INSERT INTO mailboxes (id, domain_id, username, canonical_name, status, creation_type, created_at) 
-         VALUES (?, ?, ?, ?, 'unclaimed', ?, ?) 
+        `INSERT INTO mailboxes (
+           id, domain_id, username, canonical_name, status, can_receive, can_send, creation_type, created_at
+         )
+         VALUES (?, ?, ?, ?, 'unclaimed', ?, ?, ?, ?)
          RETURNING *`
       )
-      .bind(id, input.domainId, input.username, input.canonicalName, input.creationType, timestamp)
+      .bind(
+        id,
+        input.domainId,
+        input.username,
+        input.canonicalName,
+        input.canReceive === false ? 0 : 1,
+        input.canSend ? 1 : 0,
+        input.creationType,
+        timestamp
+      )
       .first<MailboxRow>();
 
     if (!result) {
@@ -78,7 +91,12 @@ export class MailboxRepository extends BaseRepository<Mailbox, MailboxRow> {
     const result = await this.db
       .prepare(
         `UPDATE mailboxes 
-         SET status = 'claimed', key_hash = ?, key_created_at = ?, key_expires_at = ?, claimed_at = ? 
+         SET status = 'claimed',
+             can_send = 1,
+             key_hash = ?,
+             key_created_at = ?,
+             key_expires_at = ?,
+             claimed_at = ?
          WHERE id = ? AND status = 'unclaimed' 
          RETURNING *`
       )
@@ -132,7 +150,7 @@ export class MailboxRepository extends BaseRepository<Mailbox, MailboxRow> {
     const result = await this.db
       .prepare(
         `UPDATE mailboxes
-         SET status = 'banned'
+         SET status = 'banned', can_receive = 0, can_send = 0
          WHERE id = ? AND status != 'destroyed'
          RETURNING *`
       )
@@ -151,7 +169,9 @@ export class MailboxRepository extends BaseRepository<Mailbox, MailboxRow> {
     const result = await this.db
       .prepare(
         `UPDATE mailboxes
-         SET status = CASE WHEN key_hash IS NULL THEN 'unclaimed' ELSE 'claimed' END
+         SET status = CASE WHEN key_hash IS NULL THEN 'unclaimed' ELSE 'claimed' END,
+             can_receive = 1,
+             can_send = CASE WHEN key_hash IS NULL THEN 0 ELSE 1 END
          WHERE id = ? AND status = 'banned'
          RETURNING *`
       )
@@ -170,6 +190,8 @@ export class MailboxRepository extends BaseRepository<Mailbox, MailboxRow> {
       .prepare(
         `UPDATE mailboxes
          SET status = 'unclaimed',
+             can_receive = 1,
+             can_send = 0,
              key_hash = NULL,
              key_created_at = NULL,
              key_expires_at = NULL,

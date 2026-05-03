@@ -23,13 +23,17 @@ export function camelToSnake(str: string): string {
 export function mapRowToEntity<TRow extends object, TEntity>(row: TRow): TEntity {
   const entity = {} as Record<string, unknown>;
   for (const [key, value] of Object.entries(row)) {
-    const camelKey = snakeToCamel(key);
+    const camelKey = key === 'references_' ? 'references' : snakeToCamel(key);
     // 处理布尔值（SQLite 使用 0/1）
-    if (typeof value === 'number' && (key.startsWith('is_') || key.endsWith('_truncated'))) {
+    if (
+      typeof value === 'number' &&
+      (key.startsWith('is_') ||
+        key.startsWith('can_') ||
+        key.endsWith('_truncated') ||
+        key === 'has_attachments')
+    ) {
       entity[camelKey] = value === 1;
     } else if (key === 'success' && typeof value === 'number') {
-      entity[camelKey] = value === 1;
-    } else if (key === 'has_attachments' && typeof value === 'number') {
       entity[camelKey] = value === 1;
     } else {
       entity[camelKey] = value;
@@ -139,4 +143,3 @@ export abstract class BaseRepository<TEntity, TRow extends object> {
     return result?.count ?? 0;
   }
 }
-

@@ -16,6 +16,8 @@ import { AuditLogRepository } from './audit-log-repo';
 import { RateLimitRepository } from './rate-limit-repo';
 import { StatsRepository } from './stats-repo';
 import { AdminSessionRepository } from './admin-session-repo';
+import { OutboundAttachmentRepository } from './outbound-attachment-repo';
+import { SendEventRepository } from './send-event-repo';
 
 export { DomainRepository } from './domain-repo';
 export type { CreateDomainInput, UpdateDomainInput, DomainWithCount } from './domain-repo';
@@ -59,6 +61,12 @@ export type { IncrementStatInput } from './stats-repo';
 export { AdminSessionRepository } from './admin-session-repo';
 export type { CreateAdminSessionInput } from './admin-session-repo';
 
+export { OutboundAttachmentRepository } from './outbound-attachment-repo';
+export type { CreateOutboundAttachmentInput } from './outbound-attachment-repo';
+
+export { SendEventRepository } from './send-event-repo';
+export type { CreateSendEventInput } from './send-event-repo';
+
 /**
  * 创建所有 Repository 的工厂函数
  */
@@ -74,6 +82,8 @@ export function createRepositories(db: D1Database) {
     rateLimits: new RateLimitRepository(db),
     stats: new StatsRepository(db),
     adminSessions: new AdminSessionRepository(db),
+    outboundAttachments: new OutboundAttachmentRepository(db),
+    sendEvents: new SendEventRepository(db),
   };
 }
 

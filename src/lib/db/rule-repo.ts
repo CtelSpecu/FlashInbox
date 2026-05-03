@@ -1,10 +1,11 @@
 import { BaseRepository, now } from './repository';
-import type { Rule, RuleRow, RuleType, RuleAction } from '@/lib/types/entities';
+import type { Rule, RuleAction, RuleDirection, RuleRow, RuleType } from '@/lib/types/entities';
 
 export interface CreateRuleInput {
   type: RuleType;
   pattern: string;
   action: RuleAction;
+  direction?: RuleDirection;
   priority?: number;
   description?: string;
   domainId?: number;
@@ -15,6 +16,7 @@ export interface UpdateRuleInput {
   type?: RuleType;
   pattern?: string;
   action?: RuleAction;
+  direction?: RuleDirection;
   priority?: number;
   isActive?: boolean;
   description?: string;
@@ -29,9 +31,12 @@ export class RuleRepository extends BaseRepository<Rule, RuleRow> {
   /**
    * 获取所有启用的规则（按优先级排序）
    */
-  async findActiveRules(domainId?: number): Promise<Rule[]> {
+  async findActiveRules(domainId?: number, direction: RuleDirection = 'inbound'): Promise<Rule[]> {
     let query = 'SELECT * FROM rules WHERE is_active = 1';
-    const params: (number | null)[] = [];
+    const params: (number | string | null)[] = [];
+
+    query += " AND (direction = 'both' OR direction = ?)";
+    params.push(direction);
 
     if (domainId !== undefined) {
       query += ' AND (domain_id IS NULL OR domain_id = ?)';
@@ -53,14 +58,18 @@ export class RuleRepository extends BaseRepository<Rule, RuleRow> {
 
     const result = await this.db
       .prepare(
-        `INSERT INTO rules (type, pattern, action, priority, is_active, description, domain_id, hit_count, created_at, created_by, updated_at) 
-         VALUES (?, ?, ?, ?, 1, ?, ?, 0, ?, ?, ?) 
+        `INSERT INTO rules (
+           type, pattern, action, direction, priority, is_active, description,
+           domain_id, hit_count, created_at, created_by, updated_at
+         )
+         VALUES (?, ?, ?, ?, ?, 1, ?, ?, 0, ?, ?, ?)
          RETURNING *`
       )
       .bind(
         input.type,
         input.pattern,
         input.action,
+        input.direction || 'inbound',
         input.priority ?? 100,
         input.description || null,
         input.domainId || null,
@@ -95,6 +104,10 @@ export class RuleRepository extends BaseRepository<Rule, RuleRow> {
     if (input.action !== undefined) {
       updates.push('action = ?');
       values.push(input.action);
+    }
+    if (input.direction !== undefined) {
+      updates.push('direction = ?');
+      values.push(input.direction);
     }
     if (input.priority !== undefined) {
       updates.push('priority = ?');
@@ -147,4 +160,3 @@ export class RuleRepository extends BaseRepository<Rule, RuleRow> {
     return this.mapRows(result.results);
   }
 }
-
