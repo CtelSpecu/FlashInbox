@@ -35,6 +35,10 @@ SEND_MAX_SUBJECT_CHARS = "180"
 SEND_MAX_BODY_TEXT_CHARS = "3000"
 SEND_MAX_ATTACHMENT_URLS = "10"
 SEND_ALLOWED_IFRAME_DOMAINS = "youtube.com,youtu.be,vimeo.com,bilibili.com,player.bilibili.com"
+SEND_POLICY_MODE = "unrestricted" # unrestricted / whitelist / blacklist
+SEND_RECIPIENT_WHITELIST = "" # example.com,@team.example,vip@example.net
+SEND_RECIPIENT_BLACKLIST = "" # spam.example,blocked@example.net
+ADMIN_TOKEN = "" # 仅用于本地/测试；生产环境建议使用 wrangler secret put
 
 # Secrets（通过 wrangler secret put 设置）
 # - ADMIN_TOKEN
@@ -62,6 +66,10 @@ SEND_MAX_SUBJECT_CHARS = "180"
 SEND_MAX_BODY_TEXT_CHARS = "3000"
 SEND_MAX_ATTACHMENT_URLS = "10"
 SEND_ALLOWED_IFRAME_DOMAINS = "youtube.com,youtu.be,vimeo.com,bilibili.com,player.bilibili.com"
+SEND_POLICY_MODE = "unrestricted" # unrestricted / whitelist / blacklist
+SEND_RECIPIENT_WHITELIST = "" # example.com,@team.example,vip@example.net
+SEND_RECIPIENT_BLACKLIST = "" # spam.example,blocked@example.net
+ADMIN_TOKEN = "flashinbox-local-admin"
 # Cloudflare Turnstile 官方测试 key：始终通过，便于 wrangler dev 本地验证流程。
 TURNSTILE_SITE_KEY = "1x00000000000000000000AA"
 TURNSTILE_SECRET_KEY = "1x0000000000000000000000000000000AA"
@@ -101,6 +109,9 @@ SEND_MAX_SUBJECT_CHARS = "180"
 SEND_MAX_BODY_TEXT_CHARS = "3000"
 SEND_MAX_ATTACHMENT_URLS = "10"
 SEND_ALLOWED_IFRAME_DOMAINS = "youtube.com,youtu.be,vimeo.com,bilibili.com,player.bilibili.com"
+SEND_POLICY_MODE = "unrestricted" # unrestricted / whitelist / blacklist
+SEND_RECIPIENT_WHITELIST = "" # example.com,@team.example,vip@example.net
+SEND_RECIPIENT_BLACKLIST = "" # spam.example,blocked@example.net
 
 [[env.production.d1_databases]]
 binding = "DB"
