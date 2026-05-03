@@ -14,7 +14,26 @@ export { getConfig, calculateKeyExpiry, calculateSessionExpiry, calculateAdminSe
  * 获取当前请求的 Cloudflare 环境
  */
 export function getCloudflareEnv(): CloudflareEnv {
-  return getCloudflareContext().env;
+  const env = getCloudflareContext().env;
+  const processEnv = typeof process !== 'undefined' ? process.env : undefined;
+  if (!processEnv) {
+    return env;
+  }
+
+  const merged: Record<string, unknown> = { ...processEnv };
+  for (const [key, value] of Object.entries(env)) {
+    if (value !== undefined && value !== '') {
+      merged[key] = value;
+    } else if (!(key in merged)) {
+      merged[key] = value;
+    }
+  }
+
+  merged.EMAIL = env.EMAIL;
+  merged.ASSETS = env.ASSETS;
+  merged.DB = env.DB;
+
+  return merged as unknown as CloudflareEnv;
 }
 
 /**
