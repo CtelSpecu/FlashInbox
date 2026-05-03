@@ -47,6 +47,25 @@ SEND_ALLOWED_IFRAME_DOMAINS = "youtube.com,youtu.be,vimeo.com,bilibili.com,playe
 [env.dev]
 name = "flashinbox-dev"
 
+[env.dev.vars]
+DEFAULT_DOMAIN = "" # 本地测试时填写可用收信域名
+KEY_EXPIRE_DAYS = "15"
+UNCLAIMED_EXPIRE_DAYS = "7"
+SESSION_EXPIRE_HOURS = "24"
+ADMIN_SESSION_EXPIRE_HOURS = "4"
+MAX_BODY_TEXT = "102400"
+MAX_BODY_HTML = "512000"
+SEND_RATE_LIMIT_HOUR = "20"
+SEND_RATE_LIMIT_DAY = "100"
+SEND_MAX_RECIPIENTS = "10"
+SEND_MAX_SUBJECT_CHARS = "180"
+SEND_MAX_BODY_TEXT_CHARS = "3000"
+SEND_MAX_ATTACHMENT_URLS = "10"
+SEND_ALLOWED_IFRAME_DOMAINS = "youtube.com,youtu.be,vimeo.com,bilibili.com,player.bilibili.com"
+# Cloudflare Turnstile 官方测试 key：始终通过，便于 wrangler dev 本地验证流程。
+TURNSTILE_SITE_KEY = "1x00000000000000000000AA"
+TURNSTILE_SECRET_KEY = "1x0000000000000000000000000000000AA"
+
 [[env.dev.d1_databases]]
 binding = "DB"
 database_name = "flashinbox-db-dev"

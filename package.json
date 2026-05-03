@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build:webpack": "next build --webpack",
     "build:worker": "bun run build:webpack && bunx opennextjs-cloudflare build --skipNextBuild",
-    "dev:wrangler": "bun run build:worker && wrangler dev",
+    "dev:wrangler": "bun run build:worker && wrangler dev --env dev",
     "dev:all": "concurrently \"bun run dev\" \"bun run dev:wrangler\"",
     "build": "next build",
     "start": "next start",
