@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "mdui/mdui.css";
+@import "@wangeditor/editor/dist/css/style.css";
 
 /* Tailwind v4: make `dark:` respond to `.dark` class (manual theme toggle). */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -1255,4 +1256,183 @@ mdui-button-icon[disabled]::part(button) {
 /* Remove gradient backgrounds from homepage */
 .home-gradient-bg {
   display: none;
+}
+
+.fi-compose-shell {
+  background:
+    radial-gradient(circle at top left, rgba(96, 82, 154, 0.08), transparent 35%),
+    radial-gradient(circle at top right, rgba(96, 82, 154, 0.06), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.4), transparent 24%),
+    var(--background);
+}
+
+.fi-compose-panel {
+  background-color: #FFFDFF;
+  border: 1px solid #E8DEF8;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(96, 82, 154, 0.08);
+}
+
+.dark .fi-compose-panel,
+.mdui-theme-dark .fi-compose-panel {
+  background-color: #1D192B;
+  border-color: #353348;
+}
+
+.fi-compose-sidebar {
+  min-width: 0;
+}
+
+.fi-compose-editor {
+  min-height: 480px;
+}
+
+.fi-compose-editor .w-e-toolbar,
+.fi-compose-editor .w-e-bar {
+  background-color: var(--mdui-color-surface-container-low);
+  border: 1px solid var(--mdui-color-outline);
+  border-radius: 0.75rem 0.75rem 0 0;
+  box-shadow: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.fi-compose-editor .w-e-bar-divider {
+  background-color: var(--mdui-color-outline);
+  opacity: 0.3;
+}
+
+.fi-compose-editor .w-e-bar-item button,
+.fi-compose-editor .w-e-bar-item .w-e-drop-down__button,
+.fi-compose-editor .w-e-bar-item .w-e-select-list {
+  color: var(--mdui-color-on-surface-variant);
+}
+
+.fi-compose-editor .w-e-bar-item button {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  border-radius: 0.5rem;
+}
+
+.fi-compose-editor .w-e-bar-item button:hover {
+  background-color: var(--mdui-color-surface-container-high);
+}
+
+.fi-compose-editor .w-e-bar-item button.active,
+.fi-compose-editor .w-e-bar-item button[data-selected="true"] {
+  background-color: var(--mdui-color-secondary-container);
+  color: var(--mdui-color-on-secondary-container);
+}
+
+.fi-compose-editor .w-e-text-container {
+  background-color: var(--mdui-color-surface);
+  border: 1px solid var(--mdui-color-outline);
+  border-top: 0;
+  border-radius: 0 0 0.75rem 0.75rem;
+  min-height: 480px;
+  font-family: inherit;
+  color: var(--mdui-color-on-surface);
+}
+
+.fi-compose-editor .w-e-text-container:focus-within {
+  border-color: var(--mdui-color-primary);
+  box-shadow: 0 0 0 1px var(--mdui-color-primary);
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] {
+  min-height: 480px;
+  padding: 1rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+.fi-compose-editor .w-e-modal,
+.fi-compose-editor .w-e-panel {
+  border-radius: 0.5rem;
+  border: 1px solid var(--mdui-color-outline);
+  background-color: var(--mdui-color-surface);
+  color: var(--mdui-color-on-surface);
+  box-shadow: 0 12px 36px rgba(29, 25, 43, 0.18);
+}
+
+.fi-compose-editor .w-e-hover-bar {
+  border-radius: 0.5rem;
+  background-color: var(--mdui-color-surface);
+  border: 1px solid var(--mdui-color-outline);
+}
+
+.fi-compose-editor .w-e-full-screen-container {
+  z-index: 60;
+}
+
+.fi-compose-editor .w-e-text-container p,
+.fi-compose-editor .w-e-text-container li {
+  margin: 0 0 0.75rem;
+}
+
+.fi-compose-editor .w-e-text-container a {
+  color: var(--mdui-color-primary);
+}
+
+.fi-link-card {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--mdui-color-outline);
+  border-radius: 0.5rem;
+  background: var(--mdui-color-surface);
+  color: inherit;
+  text-decoration: none;
+}
+
+.fi-link-card__image {
+  width: 88px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 0.375rem;
+}
+
+.fi-link-card__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fi-link-card__body strong,
+.fi-link-card__body span {
+  overflow-wrap: anywhere;
+}
+
+.fi-link-card__url {
+  font-size: 0.75rem;
+  color: var(--mdui-color-on-surface-variant);
+}
+
+.fi-formula {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.35rem;
+  border-radius: 0.35rem;
+  background: var(--mdui-color-secondary-container);
+  color: var(--mdui-color-on-secondary-container);
+}
+
+.fi-compose-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: 999px;
+  background: var(--mdui-color-secondary-container);
+  color: var(--mdui-color-on-secondary-container);
+  font-size: 0.8125rem;
+}
+
+.fi-compose-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--mdui-color-outline) transparent;
 }

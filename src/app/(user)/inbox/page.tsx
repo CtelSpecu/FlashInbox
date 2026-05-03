@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Icon } from '@iconify/react';
 
 import { apiFetch, type ApiError } from '@/lib/client/api';
@@ -29,10 +29,14 @@ interface InboxResponse {
       id: string;
       fromAddr: string;
       fromName: string | null;
+      toAddr?: string;
       subject: string | null;
       receivedAt: number;
       readAt: number | null;
       hasAttachments: boolean;
+      sentAt?: number | null;
+      queuedAt?: number | null;
+      sendStatus?: string | null;
     }>;
     total: number;
     page: number;
@@ -49,15 +53,35 @@ interface MessageDetailResponse {
       fromAddr: string;
       fromName: string | null;
       toAddr: string;
+      ccAddr?: string | null;
+      bccAddr?: string | null;
       subject: string | null;
       mailDate: number | null;
       textBody: string | null;
       htmlBody: string | null;
       receivedAt: number;
       readAt: number | null;
+      sentAt?: number | null;
+      queuedAt?: number | null;
+      sendStatus?: string | null;
     };
   };
 }
+
+interface SentResponse {
+  success: true;
+  data: {
+    messages: InboxResponse['data']['messages'];
+    pagination: {
+      total: number;
+      page: number;
+      pageSize: number;
+      hasMore: boolean;
+    };
+  };
+}
+
+type MailTab = 'inbox' | 'sent';
 
 function formatTime(ms: number) {
   return new Date(ms).toLocaleString();
@@ -83,6 +107,7 @@ function enableExternalImages(html: string): string {
 
 export default function InboxPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t, format, locale, setLocale } = useI18n();
   const { theme, setTheme } = useUserTheme();
   const { volume, setVolume, previewNotice, playMessage } = useUserSound();
@@ -104,6 +129,7 @@ export default function InboxPage() {
   const [pageSize] = useState(20);
   const [search, setSearch] = useState('');
   const [unreadOnly, setUnreadOnly] = useState(false);
+  const [mailTab, setMailTab] = useState<MailTab>('inbox');
 
   const [loadingList, setLoadingList] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
@@ -158,10 +184,10 @@ export default function InboxPage() {
     const params = new URLSearchParams();
     params.set('page', String(page));
     params.set('pageSize', String(pageSize));
-    if (unreadOnly) params.set('unreadOnly', 'true');
+    if (mailTab === 'inbox' && unreadOnly) params.set('unreadOnly', 'true');
     if (search.trim()) params.set('search', search.trim());
     return params.toString();
-  }, [page, pageSize, unreadOnly, search]);
+  }, [mailTab, page, pageSize, unreadOnly, search]);
 
   async function loadMailboxInfo() {
     const res = await apiFetch<MailboxInfoResponse>('/api/mailbox/info', { auth: true });
@@ -174,11 +200,17 @@ export default function InboxPage() {
     setLoadingList(true);
     setListError(null);
     try {
-      const res = await apiFetch<InboxResponse>(`/api/mailbox/inbox?${queryString}`, { auth: true });
-      const nextIds = new Set(res.data.messages.map((message) => message.id));
+      const res =
+        mailTab === 'sent'
+          ? await apiFetch<SentResponse>(`/api/mailbox/sent?${queryString}`, { auth: true })
+          : await apiFetch<InboxResponse>(`/api/mailbox/inbox?${queryString}`, { auth: true });
+      const list = mailTab === 'sent' ? res.data.messages : res.data.messages;
+      const hasMoreNext = mailTab === 'sent' ? (res as SentResponse).data.pagination.hasMore : (res as InboxResponse).data.hasMore;
+      const nextIds = new Set(list.map((message) => message.id));
       const hasNewMessage =
+        mailTab === 'inbox' &&
         hasLoadedMessagesRef.current &&
-        res.data.messages.some((message) => !seenMessageIdsRef.current.has(message.id));
+        list.some((message) => !seenMessageIdsRef.current.has(message.id));
 
       seenMessageIdsRef.current = nextIds;
       hasLoadedMessagesRef.current = true;
@@ -187,10 +219,12 @@ export default function InboxPage() {
         playMessage();
       }
 
-      setMessages(res.data.messages);
-      setHasMore(res.data.hasMore);
-      if (!selectedId && res.data.messages.length > 0) {
-        setSelectedId(res.data.messages[0].id);
+      setMessages(list);
+      setHasMore(hasMoreNext);
+      if (list.length === 0) {
+        setSelectedId(null);
+      } else if (!selectedId || !list.some((message) => message.id === selectedId)) {
+        setSelectedId(list[0].id);
       }
     } catch (e: unknown) {
       const err = e as ApiError;
@@ -209,12 +243,17 @@ export default function InboxPage() {
     setLoadingDetail(true);
     setDetail(null);
     try {
-      const res = await apiFetch<MessageDetailResponse>(`/api/mailbox/message/${id}`, { auth: true });
-      setDetail(res.data.message);
-      setMessages((prev) =>
-        prev.map((m) => (m.id === id ? { ...m, readAt: res.data.message.readAt ?? Date.now() } : m))
+      const res = await apiFetch<MessageDetailResponse>(
+        mailTab === 'sent' ? `/api/mailbox/sent/${id}` : `/api/mailbox/message/${id}`,
+        { auth: true }
       );
-      await loadMailboxInfo();
+      setDetail(res.data.message);
+      if (mailTab === 'inbox') {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === id ? { ...m, readAt: res.data.message.readAt ?? Date.now() } : m))
+        );
+        await loadMailboxInfo();
+      }
     } catch (e: unknown) {
       const err = e as { status?: unknown };
       if (err.status === 401) {
@@ -237,14 +276,24 @@ export default function InboxPage() {
   }, []);
 
   useEffect(() => {
+    const tab = searchParams.get('tab');
+    const nextTab = tab === 'sent' ? 'sent' : 'inbox';
+    setMailTab(nextTab);
+    setSelectedId(null);
+    setDetail(null);
+    setPage(1);
+  }, [searchParams]);
+
+  useEffect(() => {
     loadList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queryString]);
+  }, [queryString, mailTab]);
 
   // reset to first page when filters change
   useEffect(() => {
     setPage(1);
-  }, [search, unreadOnly]);
+    setSelectedId(null);
+  }, [mailTab, search, unreadOnly]);
 
   useEffect(() => {
     if (selectedId) {
@@ -388,6 +437,15 @@ export default function InboxPage() {
           <div className="flex flex-wrap items-center gap-2">
             {renewNotice && <span className="text-xs opacity-70 animate-in fade-in slide-in-from-right-2">{renewNotice}</span>}
             <mdui-button
+              variant="filled"
+              className="fi-btn-filled"
+              data-sound="notice"
+              onClick={() => router.push('/compose')}
+            >
+              <Icon icon="mdi:pencil" slot="icon" />
+              {t.compose.title}
+            </mdui-button>
+            <mdui-button
               variant="tonal"
               className="fi-btn-tonal"
               data-sound="notice"
@@ -429,6 +487,23 @@ export default function InboxPage() {
         >
           {/* Email List Column */}
           <div className="min-w-0 space-y-3">
+            <div className="fi-tabs-list w-fit">
+              <button
+                onClick={() => router.replace('/inbox')}
+                className={['fi-tab-item', mailTab === 'inbox' ? 'active' : ''].join(' ')}
+              >
+                <Icon icon="mdi:inbox" className="h-4 w-4" />
+                {t.inbox.title}
+              </button>
+              <button
+                onClick={() => router.replace('/inbox?tab=sent')}
+                className={['fi-tab-item', mailTab === 'sent' ? 'active' : ''].join(' ')}
+              >
+                <Icon icon="mdi:send" className="h-4 w-4" />
+                {t.inbox.sent}
+              </button>
+            </div>
+
             <div className="flex items-center gap-2">
               <mdui-text-field
                 label={t.common.search}
@@ -440,6 +515,7 @@ export default function InboxPage() {
                 <Icon icon="mdi:magnify" slot="icon" />
               </mdui-text-field>
 
+              {mailTab === 'inbox' ? (
               <mdui-dropdown placement="bottom-end">
                 <mdui-button-icon
                   slot="trigger"
@@ -464,6 +540,7 @@ export default function InboxPage() {
                   </mdui-menu-item>
                 </mdui-menu>
               </mdui-dropdown>
+              ) : null}
             </div>
 
             {listError && <div className="text-sm text-red-600 dark:text-red-400">{listError}</div>}
@@ -477,8 +554,9 @@ export default function InboxPage() {
                 ) : (
                   messages.map((m) => {
                     const active = m.id === selectedId;
-                    const unread = !m.readAt;
-                    const label = m.fromName || m.fromAddr;
+                    const unread = mailTab === 'inbox' && !m.readAt;
+                    const label = mailTab === 'sent' ? m.toAddr || t.common.na : m.fromName || m.fromAddr;
+                    const displayTime = mailTab === 'sent' ? m.sentAt || m.queuedAt || m.receivedAt : m.receivedAt;
                     return (
                       <button
                         key={m.id}
@@ -508,7 +586,7 @@ export default function InboxPage() {
                               {m.subject || t.inbox.noSubject}
                             </div>
                           </div>
-                          <div className="shrink-0 text-[10px] opacity-70">{new Date(m.receivedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                          <div className="shrink-0 text-[10px] opacity-70">{new Date(displayTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                         </div>
                       </button>
                     );
@@ -590,6 +668,44 @@ export default function InboxPage() {
               </div>
 
               <mdui-button
+                variant="filled"
+                className="fi-btn-filled"
+                onClick={() => router.push('/compose')}
+              >
+                <Icon icon="mdi:pencil" slot="icon" />
+                {t.compose.title}
+              </mdui-button>
+
+              {detail && mailTab === 'inbox' ? (
+                <>
+                  <mdui-button
+                    variant="tonal"
+                    className="fi-btn-tonal"
+                    onClick={() => router.push(`/compose?replyTo=${detail.id}`)}
+                  >
+                    <Icon icon="mdi:reply" slot="icon" />
+                    {t.compose.reply}
+                  </mdui-button>
+                  <mdui-button
+                    variant="tonal"
+                    className="fi-btn-tonal"
+                    onClick={() => router.push(`/compose?replyAllTo=${detail.id}`)}
+                  >
+                    <Icon icon="mdi:reply-all" slot="icon" />
+                    {t.compose.replyAll}
+                  </mdui-button>
+                  <mdui-button
+                    variant="tonal"
+                    className="fi-btn-tonal"
+                    onClick={() => router.push(`/compose?forward=${detail.id}`)}
+                  >
+                    <Icon icon="mdi:forward" slot="icon" />
+                    {t.compose.forward}
+                  </mdui-button>
+                </>
+              ) : null}
+
+              <mdui-button
                 variant={loadExternal ? 'filled' : 'tonal'}
                 className={loadExternal ? 'fi-btn-filled' : 'fi-btn-tonal'}
                 onClick={() => setLoadExternal((v) => !v)}
@@ -618,13 +734,15 @@ export default function InboxPage() {
                       </div>
                       <div className="min-w-0">
                         <div className="truncate text-sm font-semibold">
-                          {detail.fromName || detail.fromAddr.split('@')[0]}
+                          {mailTab === 'sent' ? t.compose.to : detail.fromName || detail.fromAddr.split('@')[0]}
                         </div>
-                        <div className="truncate text-xs opacity-60">{detail.fromAddr}</div>
+                        <div className="truncate text-xs opacity-60">
+                          {mailTab === 'sent' ? detail.toAddr : detail.fromAddr}
+                        </div>
                       </div>
                     </div>
                     <div className="text-xs opacity-60">
-                      {formatTime(detail.receivedAt)}
+                      {formatTime(mailTab === 'sent' ? detail.sentAt || detail.queuedAt || detail.receivedAt : detail.receivedAt)}
                     </div>
                   </div>
                 </div>
