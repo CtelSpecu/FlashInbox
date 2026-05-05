@@ -155,7 +155,7 @@ flashinbox/
 │   ├── unit/
 │   └── integration/
 │
-├── wrangler.toml               # Cloudflare 配置
+├── wrangler.toml               # Cloudflare 主应用部署模板
 ├── next.config.js              # Next.js 配置
 ├── tailwind.config.js          # Tailwind 配置
 ├── tsconfig.json               # TypeScript 配置
@@ -230,11 +230,8 @@ bun run dev:all
 ### 3.3 数据库
 
 ```bash
-# 创建本地 D1 数据库
-wrangler d1 create flashinbox-db
-
-# 执行迁移（本地）
-wrangler d1 execute flashinbox-db --local --file=migrations/0001_init.sql
+# 从远程 D1 同步到本地 SQLite
+bun run d1:sync-local
 
 # 执行迁移（远程）
 wrangler d1 execute flashinbox-db --remote --file=migrations/0001_init.sql
@@ -266,7 +263,7 @@ bun run build
 bun run deploy
 
 # 部署 Email Worker
-wrangler deploy --config wrangler.email.toml
+wrangler deploy --config .tmp/wrangler.email.toml
 
 # 设置 Secrets
 wrangler secret put ADMIN_TOKEN
