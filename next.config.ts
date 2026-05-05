@@ -1,7 +1,11 @@
 import type { NextConfig } from 'next';
 import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
 
-initOpenNextCloudflareForDev();
+delete process.env.NEXT_DEV_WRANGLER_ENV;
+
+initOpenNextCloudflareForDev({
+  persist: { path: '.wrangler/state' },
+});
 
 const nextConfig: NextConfig = {
   // 实验性功能

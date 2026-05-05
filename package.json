@@ -3,11 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "prepare:wrangler:main": "bun scripts/prepare-wrangler-config.ts main",
+    "prepare:wrangler:email": "bun scripts/prepare-wrangler-config.ts email",
+    "prepare:wrangler:scheduled": "bun scripts/prepare-wrangler-config.ts scheduled",
+    "prepare:wrangler:production": "bun run prepare:wrangler:main",
+    "prepare:next-dev": "bun scripts/prepare-next-dev.ts",
+    "prepare:local-db": "bun scripts/prepare-local-sqlite.ts",
+    "dev": "bun run prepare:local-db && bun run prepare:next-dev && next dev",
     "build:webpack": "next build --webpack",
-    "build:worker": "bun run build:webpack && bunx opennextjs-cloudflare build --skipNextBuild",
-    "dev:wrangler": "bun run build:worker && wrangler dev --env dev",
+    "build:worker": "bun run prepare:wrangler:main && bun run build:webpack && bunx opennextjs-cloudflare build --skipNextBuild",
+    "dev:wrangler": "wrangler dev --config wrangler.toml",
     "dev:all": "concurrently \"bun run dev\" \"bun run dev:wrangler\"",
+    "d1:sync-local": "bun scripts/sync-d1-to-local.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx",
@@ -16,7 +23,7 @@
     "test": "bun test",
     "test:unit": "bun test tests/unit",
     "test:integration": "bun test tests/integration",
-    "deploy": "bun run build:worker && wrangler deploy"
+    "deploy": "bun run prepare:wrangler:main && bun run prepare:wrangler:email && bun run prepare:wrangler:scheduled && bun run build:worker && wrangler deploy --config .tmp/wrangler.main.toml --env production && wrangler deploy --config .tmp/wrangler.email.toml && wrangler deploy --config .tmp/wrangler.scheduled.toml"
   },
   "dependencies": {
     "@cloudflare/next-on-pages": "^1.13.16",

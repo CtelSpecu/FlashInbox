@@ -9,7 +9,7 @@ main = "src/workers/email/index.ts"
 [[d1_databases]]
 binding = "DB"
 database_name = "flashinbox-db"
-database_id = "" # 部署时填写实际 ID
+database_id = "local-flashinbox-db"
 
 # 环境变量
 [vars]
@@ -18,4 +18,3 @@ MAX_BODY_HTML = "512000"
 
 # Email Routing 配置
 # 需要在 Cloudflare Dashboard 中配置 Email Routing 指向此 Worker
-
