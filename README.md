@@ -227,11 +227,16 @@ bun run dev:wrangler
 bun run dev:all
 ```
 
-本地 SQLite 数据库默认路径为 `.tmp/flashinbox-local.sqlite`，第一次启动会由测试/开发代码自动按迁移初始化。
+本地 SQLite 数据库默认路径为 `.tmp/flashinbox-local.sqlite`，启动时会按完整迁移重建。
 `bun run dev` 还会把它复制到 OpenNext/Wrangler 的本地 D1 状态目录 `.wrangler/state/v3/d1/miniflare-D1DatabaseObject/*.sqlite`，Next.js API 实际通过这个 D1 binding 读写数据。
 如果上一次 `next dev` 异常退出留下 `.next/dev/lock`，启动前会在确认 `PORT`（默认 `3000`）不可达时自动移除残留锁。
 如果当前环境禁止 Wrangler 启动本地运行时，可用 `PREPARE_WRANGLER_D1=0 bun run prepare:local-db` 只初始化导出的 SQLite 文件。
-`.env` 里还要保留 `CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_API_TOKEN`、`D1_DATABASE_ID`，用于远程 D1 同步和生成部署配置。
+`.env` 里保留 `CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_API_TOKEN`、`D1_DATABASE_ID`，用于远程 D1 同步和生成部署配置。
+
+SQLite 文件实际位置：
+
+- 主文件：`.tmp/flashinbox-local.sqlite`
+- OpenNext/Wrangler 运行时副本：`.wrangler/state/v3/d1/miniflare-D1DatabaseObject/*.sqlite`
 
 ### 5) 从远程 D1 同步到本地 SQLite
 
