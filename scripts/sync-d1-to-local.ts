@@ -9,6 +9,7 @@ const localDbPath = process.env.LOCAL_SQLITE_PATH?.trim() || '.tmp/flashinbox-lo
 const wranglerPersistPath = process.env.WRANGLER_LOCAL_STATE_PATH?.trim() || '.wrangler/state';
 const d1Binding = process.env.LOCAL_D1_BINDING?.trim() || 'DB';
 const exportPath = join(process.cwd(), '.tmp/remote-d1-export.sql');
+const wranglerD1StatePath = join(wranglerPersistPath, 'v3', 'd1', 'miniflare-D1DatabaseObject');
 const migrations = [
   'migrations/0001_init.sql',
   'migrations/0002_mailboxes_banned.sql',
@@ -48,7 +49,6 @@ function createLocalDatabase(): Database {
     const sql = readFileSync(join(process.cwd(), migrationPath), 'utf8');
     sqlite.exec(sql);
   }
-
   return sqlite;
 }
 
@@ -77,14 +77,13 @@ async function initializeWranglerD1(): Promise<void> {
 }
 
 function copyLocalSqliteIntoWranglerD1(): void {
-  const d1Dir = join(wranglerPersistPath, 'v3', 'd1', 'miniflare-D1DatabaseObject');
-  if (!existsSync(d1Dir)) {
+  if (!existsSync(wranglerD1StatePath)) {
     return;
   }
 
-  for (const entry of readdirSync(d1Dir)) {
+  for (const entry of readdirSync(wranglerD1StatePath)) {
     if (entry.endsWith('.sqlite')) {
-      copyFileSync(localDbPath, join(d1Dir, entry));
+      copyFileSync(localDbPath, join(wranglerD1StatePath, entry));
     }
   }
 }

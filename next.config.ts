@@ -4,7 +4,7 @@ import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
 delete process.env.NEXT_DEV_WRANGLER_ENV;
 
 initOpenNextCloudflareForDev({
-  persist: { path: '.wrangler/state' },
+  persist: { path: '.wrangler/state/v3' },
 });
 
 const nextConfig: NextConfig = {
