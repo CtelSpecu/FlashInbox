@@ -51,7 +51,11 @@ export async function POST(request: NextRequest) {
 
   // Turnstile 验证
   const turnstileService = createTurnstileService(env.TURNSTILE_SECRET_KEY);
-  const turnstileResult = await turnstileService.verify(body.turnstileToken, ipAddress);
+  const turnstileResult = await turnstileService.verify(
+    body.turnstileToken,
+    ipAddress,
+    request.headers.get('host') || undefined
+  );
 
   if (!turnstileResult.success) {
     await repos.auditLogs.create({

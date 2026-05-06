@@ -2,6 +2,8 @@
  * Cloudflare Turnstile 验证服务
  */
 
+import { TURNSTILE_LOCAL_DEV_SECRET_KEY, isLocalTurnstileHost } from '@/lib/turnstile/local-dev';
+
 const TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
 export interface TurnstileVerifyResult {
@@ -30,16 +32,18 @@ export class TurnstileService {
   /**
    * 验证 Turnstile token
    */
-  async verify(token: string, remoteIP?: string): Promise<TurnstileVerifyResult> {
+  async verify(token: string, remoteIP?: string, host?: string): Promise<TurnstileVerifyResult> {
     // 如果没有配置 secret key，跳过验证（开发环境）
-    if (!this.secretKey) {
+    const secretKey = isLocalTurnstileHost(host) ? TURNSTILE_LOCAL_DEV_SECRET_KEY : this.secretKey;
+
+    if (!secretKey) {
       console.warn('Turnstile secret key not configured, skipping verification');
       return { success: true };
     }
 
     try {
       const formData = new FormData();
-      formData.append('secret', this.secretKey);
+      formData.append('secret', secretKey);
       formData.append('response', token);
       if (remoteIP) {
         formData.append('remoteip', remoteIP);
@@ -78,8 +82,8 @@ export class TurnstileService {
   /**
    * 验证并返回布尔值
    */
-  async isValid(token: string, remoteIP?: string): Promise<boolean> {
-    const result = await this.verify(token, remoteIP);
+  async isValid(token: string, remoteIP?: string, host?: string): Promise<boolean> {
+    const result = await this.verify(token, remoteIP, host);
     return result.success;
   }
 }
@@ -90,4 +94,3 @@ export class TurnstileService {
 export function createTurnstileService(secretKey: string): TurnstileService {
   return new TurnstileService(secretKey);
 }
-

@@ -54,7 +54,11 @@ export async function POST(request: NextRequest) {
   // Turnstile 验证
   const turnstileService = createTurnstileService(env.TURNSTILE_SECRET_KEY);
   const remoteIP = request.headers.get('cf-connecting-ip') || undefined;
-  const turnstileResult = await turnstileService.verify(body.turnstileToken, remoteIP);
+  const turnstileResult = await turnstileService.verify(
+    body.turnstileToken,
+    remoteIP,
+    request.headers.get('host') || undefined
+  );
 
   if (!turnstileResult.success) {
     await repos.auditLogs.create({
@@ -169,4 +173,3 @@ export async function POST(request: NextRequest) {
     return error(ErrorCodes.INTERNAL_ERROR, 'Failed to claim mailbox', 500);
   }
 }
-
