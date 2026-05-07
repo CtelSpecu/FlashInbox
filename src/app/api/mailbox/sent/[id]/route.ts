@@ -18,9 +18,8 @@ async function getSent(_request: NextRequest, context: AuthContext, id: string):
     return error(ErrorCodes.MESSAGE_NOT_FOUND, 'Message not found', 404);
   }
 
-  const attachments = await repos.outboundAttachments.findByMessageId(id);
   const events = await repos.sendEvents.findByMessageId(id);
-  return success({ message, attachments, events });
+  return success({ message, events });
 }
 
 async function deleteSent(_request: NextRequest, context: AuthContext, id: string): Promise<Response> {

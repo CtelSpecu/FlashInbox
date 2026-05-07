@@ -1,13 +1,6 @@
 import MarkdownIt from 'markdown-it';
 import TurndownService from 'turndown';
 
-export interface ComposeAttachmentUrl {
-  url: string;
-  filename?: string;
-  mimeType?: string;
-  sizeHint?: number;
-}
-
 export interface LinkCardInput {
   url: string;
   title: string;
@@ -32,7 +25,6 @@ export interface ComposePreset {
   forwardMessageId?: string;
   threadId?: string;
   editorMeta?: EditorMeta;
-  attachments?: ComposeAttachmentUrl[];
   fromName?: string;
 }
 

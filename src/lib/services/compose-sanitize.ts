@@ -1,12 +1,5 @@
 import DOMPurify from 'isomorphic-dompurify';
 
-export interface ComposeAttachmentUrl {
-  url: string;
-  filename?: string;
-  mimeType?: string;
-  sizeHint?: number;
-}
-
 export interface LinkCardInput {
   url: string;
   title: string;
@@ -57,21 +50,6 @@ export function sanitizeEmailAddress(value: string): string {
 
 export function validateRecipientAddress(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
-}
-
-export function sanitizeAttachmentUrls(
-  items: ComposeAttachmentUrl[] | undefined
-): ComposeAttachmentUrl[] {
-  if (!items) return [];
-  return items
-    .filter((item) => isHttpUrl(item.url))
-    .slice(0, 10)
-    .map((item) => ({
-      url: item.url.trim(),
-      filename: item.filename?.trim() || undefined,
-      mimeType: item.mimeType?.trim() || undefined,
-      sizeHint: typeof item.sizeHint === 'number' ? item.sizeHint : undefined,
-    }));
 }
 
 export function sanitizeEditorMeta(meta: EditorMeta | undefined): EditorMeta | null {

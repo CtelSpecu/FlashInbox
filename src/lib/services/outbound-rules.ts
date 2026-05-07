@@ -1,5 +1,5 @@
 import { RuleRepository } from '@/lib/db/rule-repo';
-import type { Message, Rule, RuleAction, RuleDirection } from '@/lib/types/entities';
+import type { Rule, RuleAction } from '@/lib/types/entities';
 import { buildTextPreviewFromHtml } from './compose-sanitize';
 
 export interface OutboundRuleContext {
@@ -10,7 +10,6 @@ export interface OutboundRuleContext {
   subject: string;
   html: string;
   text: string;
-  attachmentUrls: string[];
   linkUrls: string[];
 }
 
@@ -46,15 +45,6 @@ export class OutboundRuleService {
 
   private matches(rule: Rule, context: OutboundRuleContext): boolean {
     const recipientList = [context.to, context.cc, context.bcc].flat().map((item) => item.toLowerCase());
-    const attachmentHosts = context.attachmentUrls
-      .map((item) => {
-        try {
-          return new URL(item).hostname.toLowerCase();
-        } catch {
-          return '';
-        }
-      })
-      .filter(Boolean);
     const linkHosts = context.linkUrls
       .map((item) => {
         try {
@@ -78,10 +68,9 @@ export class OutboundRuleService {
           context.text.toLowerCase().includes(rule.pattern.toLowerCase()) ||
           textPreview.toLowerCase().includes(rule.pattern.toLowerCase())
         );
-      case 'attachment_url_domain':
-        return attachmentHosts.some((host) => host === rule.pattern.toLowerCase());
       case 'link_domain':
         return linkHosts.some((host) => host === rule.pattern.toLowerCase());
+      case 'attachment_url_domain':
       case 'sender_domain':
       case 'sender_addr':
       case 'keyword':

@@ -528,7 +528,7 @@ export default function InboxPage() {
                 <mdui-menu
                   selects="single"
                   value={unreadOnly ? 'unread' : 'all'}
-                  onChange={(e) => setUnreadOnly((e.target as any).value === 'unread')}
+                  onChange={(e) => setUnreadOnly((e.target as HTMLInputElement).value === 'unread')}
                 >
                   <mdui-menu-item value="all">
                     <Icon icon="mdi:inbox" slot="icon" />
@@ -666,15 +666,6 @@ export default function InboxPage() {
                   {t.inbox.textView}
                 </button>
               </div>
-
-              <mdui-button
-                variant="filled"
-                className="fi-btn-filled"
-                onClick={() => router.push('/compose')}
-              >
-                <Icon icon="mdi:pencil" slot="icon" />
-                {t.compose.title}
-              </mdui-button>
 
               {detail && mailTab === 'inbox' ? (
                 <>

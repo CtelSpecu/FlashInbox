@@ -4,12 +4,10 @@ import type { AuthContext } from '@/lib/middleware/auth';
 import { createRateLimitService } from './rate-limit';
 import {
   buildTextPreviewFromHtml,
-  sanitizeAttachmentUrls,
   sanitizeEditorMeta,
   sanitizeFromName,
   sanitizeOutboundHtml,
   validateRecipientAddress,
-  type ComposeAttachmentUrl,
   type EditorMeta,
   type LinkCardInput,
 } from './compose-sanitize';
@@ -30,8 +28,6 @@ export interface SendEmailInput {
   fromName?: string;
   replyToMessageId?: string;
   forwardMessageId?: string;
-  draftId?: string;
-  attachments?: ComposeAttachmentUrl[];
   linkCards?: LinkCardInput[];
   editorMeta?: EditorMeta;
 }
@@ -179,8 +175,6 @@ export class SendService {
 
     const maxSubjectChars = parseInt(env.SEND_MAX_SUBJECT_CHARS || '180', 10);
     const maxTextChars = parseInt(env.SEND_MAX_BODY_TEXT_CHARS || '3000', 10);
-    const maxAttachmentUrls = parseInt(env.SEND_MAX_ATTACHMENT_URLS || '10', 10);
-
     const subject = input.subject.trim().slice(0, maxSubjectChars);
     if (!subject) {
       throw error(ErrorCodes.INVALID_CONTENT, 'Subject is required', 400);
@@ -189,7 +183,6 @@ export class SendService {
     const html = sanitizeOutboundHtml(input.html);
     const text = (input.text || buildTextPreviewFromHtml(html)).trim().slice(0, maxTextChars);
     const fromName = sanitizeFromName(input.fromName);
-    const attachments = sanitizeAttachmentUrls(input.attachments).slice(0, maxAttachmentUrls);
     const editorMeta = sanitizeEditorMeta(input.editorMeta);
 
     const rateResult = await rateLimitService.check(context.request, {
@@ -209,7 +202,6 @@ export class SendService {
       subject,
       html,
       text,
-      attachmentUrls: attachments.map((item) => item.url),
       linkUrls: editorMeta?.linkCards?.map((item) => item.url) || [],
     });
 
@@ -230,25 +222,13 @@ export class SendService {
       subject,
       textBody: text,
       htmlBody: html,
-      hasAttachments: attachments.length > 0,
-      attachmentInfo: attachments.length ? JSON.stringify(attachments) : undefined,
+      hasAttachments: false,
+      attachmentInfo: undefined,
       editorMeta: editorMeta ? JSON.stringify(editorMeta) : undefined,
       queuedAt: Date.now(),
       status: 'normal',
       id: crypto.randomUUID(),
     });
-
-    if (attachments.length) {
-      await repos.outboundAttachments.createMany(
-        attachments.map((item) => ({
-          messageId: message.id,
-          url: item.url,
-          filename: item.filename,
-          mimeType: item.mimeType,
-          sizeHint: item.sizeHint,
-        }))
-      );
-    }
 
     await repos.sendEvents.create({
       messageId: message.id,
@@ -303,17 +283,6 @@ export class SendService {
       });
       throw error(ErrorCodes.SEND_FAILED, 'Send binding is not configured', 500);
     }
-
-    const mimeMessage = buildMimeMessage({
-      from: fromHeader,
-      to,
-      cc,
-      subject,
-      html,
-      text,
-      replyTo: input.replyToMessageId || null,
-      messageId: message.id,
-    });
 
     const { EmailMessage } = await import('cloudflare:email');
     const allRecipients = [...to, ...cc, ...bcc];
