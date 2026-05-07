@@ -37,6 +37,7 @@ interface DomainDto {
 type MailboxStatus = 'unclaimed' | 'claimed' | 'banned' | 'destroyed';
 type MailboxStatusFilter = 'all' | MailboxStatus;
 type MailboxCreationType = 'random' | 'manual' | 'inbound';
+type MailboxBulkAction = 'ban' | 'unban' | 'destroy';
 
 interface MailboxDto {
   id: string;
@@ -66,7 +67,7 @@ export default function AdminMailboxesPage() {
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [bulkConfirm, setBulkConfirm] = useState<{ action: 'ban' | 'unban' | 'destroy' } | null>(null);
+  const [bulkConfirm, setBulkConfirm] = useState<{ action: MailboxBulkAction } | null>(null);
 
   const [domains, setDomains] = useState<DomainDto[]>([]);
   const [domain, setDomain] = useState('');
@@ -173,7 +174,7 @@ export default function AdminMailboxesPage() {
     setSelected(next ? new Set(items.map((m) => m.id)) : new Set());
   }
 
-  async function applyBulk(action: 'ban' | 'unban' | 'destroy') {
+  async function applyBulk(action: MailboxBulkAction) {
     if (selected.size === 0) return;
     setLoading(true);
     setErrorText(null);
@@ -288,7 +289,7 @@ export default function AdminMailboxesPage() {
                     className="min-w-[160px]"
                     onChange={(val) => {
                       if (!val) return;
-                      setBulkConfirm({ action: val as any });
+                      setBulkConfirm({ action: val as MailboxBulkAction });
                     }}
                     disabled={loading}
                     options={[

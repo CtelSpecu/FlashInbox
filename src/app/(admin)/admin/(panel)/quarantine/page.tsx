@@ -21,6 +21,7 @@ interface SuccessResponse<T> {
 }
 
 type QStatus = 'pending' | 'released' | 'deleted';
+type QuarantineBulkAction = 'release' | 'delete';
 
 interface QuarantineItem {
   id: string;
@@ -52,7 +53,7 @@ export default function AdminQuarantinePage() {
   const [errorText, setErrorText] = useState<string | null>(null);
   const [data, setData] = useState<QuarantineList | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [bulkConfirm, setBulkConfirm] = useState<{ action: 'release' | 'delete' } | null>(null);
+  const [bulkConfirm, setBulkConfirm] = useState<{ action: QuarantineBulkAction } | null>(null);
 
   const [confirm, setConfirm] = useState<{ id: string; action: 'release' | 'delete' } | null>(null);
 
@@ -141,7 +142,7 @@ export default function AdminQuarantinePage() {
     setSelected(next ? new Set(items.map((q) => q.id)) : new Set());
   }
 
-  async function applyBulk(action: 'release' | 'delete') {
+  async function applyBulk(action: QuarantineBulkAction) {
     if (selected.size === 0) return;
     setLoading(true);
     setErrorText(null);
@@ -209,7 +210,7 @@ export default function AdminQuarantinePage() {
                     className="min-w-[160px]"
                     onChange={(val) => {
                       if (!val) return;
-                      setBulkConfirm({ action: val as any });
+                      setBulkConfirm({ action: val as QuarantineBulkAction });
                     }}
                     disabled={loading}
                     options={[

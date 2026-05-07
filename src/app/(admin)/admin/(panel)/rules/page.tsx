@@ -23,6 +23,7 @@ interface SuccessResponse<T> {
 
 type RuleType = 'sender_domain' | 'sender_addr' | 'keyword' | 'ip';
 type RuleAction = 'drop' | 'quarantine' | 'allow';
+type RuleBulkAction = 'activate' | 'deactivate' | 'delete';
 
 interface RuleDto {
   id: number;
@@ -56,7 +57,7 @@ export default function AdminRulesPage() {
   const [rules, setRules] = useState<RuleDto[]>([]);
   const [domains, setDomains] = useState<DomainDto[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [bulkConfirm, setBulkConfirm] = useState<{ action: 'activate' | 'deactivate' | 'delete' } | null>(null);
+  const [bulkConfirm, setBulkConfirm] = useState<{ action: RuleBulkAction } | null>(null);
 
   const [newType, setNewType] = useState<RuleType>('sender_domain');
   const [newPattern, setNewPattern] = useState('');
@@ -229,7 +230,7 @@ export default function AdminRulesPage() {
     setSelected(next ? new Set(rules.map((r) => r.id)) : new Set());
   }
 
-  async function applyBulk(action: 'activate' | 'deactivate' | 'delete') {
+  async function applyBulk(action: RuleBulkAction) {
     if (selected.size === 0) return;
     setLoading(true);
     setErrorText(null);
@@ -368,7 +369,7 @@ export default function AdminRulesPage() {
                     className="min-w-[160px]"
                     onChange={(val) => {
                       if (!val) return;
-                      setBulkConfirm({ action: val as any });
+                      setBulkConfirm({ action: val as RuleBulkAction });
                     }}
                     disabled={loading}
                     options={[
