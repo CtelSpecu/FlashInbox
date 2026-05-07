@@ -68,14 +68,18 @@ export function UserSoundProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const storedVolume = getStoredSoundVolume(window.localStorage.getItem(USER_SOUND_STORAGE_KEY));
     const nextVolume = storedVolume ?? DEFAULT_SOUND_VOLUME;
+    const frame = window.requestAnimationFrame(() => {
+      setVolumeState(nextVolume);
+    });
 
-    setVolumeState(nextVolume);
     volumeRef.current = nextVolume;
 
     audioMapRef.current['/click.ogg'] = createAudio('/click.ogg');
     audioMapRef.current['/notice.ogg'] = createAudio('/notice.ogg');
     audioMapRef.current['/message1.ogg'] = createAudio('/message1.ogg');
     audioMapRef.current['/message2.ogg'] = createAudio('/message2.ogg');
+
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {

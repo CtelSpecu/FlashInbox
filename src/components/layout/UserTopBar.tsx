@@ -10,7 +10,11 @@ import { useUserTheme } from '@/lib/theme/user-theme';
 import { getSoundIcon, getSoundSliderStyle, SOUND_ACCENT_COLOR } from '@/lib/sound/user-sound';
 import type { ThemeMode } from '@/lib/theme/types';
 import { type Locale, localeNames, locales } from '@/lib/i18n';
-import { useRef, useState, useEffect } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+
+function subscribeToClientSnapshot() {
+  return () => {};
+}
 
 export function UserTopBar() {
   const router = useRouter();
@@ -18,13 +22,13 @@ export function UserTopBar() {
   const { theme, setTheme } = useUserTheme();
   const { volume, setVolume, previewNotice } = useUserSound();
   const [soundPanelOpen, setSoundPanelOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    subscribeToClientSnapshot,
+    () => true,
+    () => false
+  );
   const soundPanelRef = useRef<HTMLDivElement | null>(null);
   const soundControlRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (!soundPanelOpen) return;
