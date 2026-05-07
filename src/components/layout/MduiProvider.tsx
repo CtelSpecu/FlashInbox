@@ -1,6 +1,7 @@
 'use client';
 
-import 'mdui';
+import { useEffect } from 'react';
+
 import { I18nProvider } from '@/lib/i18n/context';
 import type { Locale } from '@/lib/i18n';
 import { UserSoundProvider } from '@/lib/sound/user-sound-provider';
@@ -14,6 +15,10 @@ export function MduiProvider({
   children: React.ReactNode;
   initialLocale?: Locale;
 }) {
+  useEffect(() => {
+    void import('mdui');
+  }, []);
+
   return (
     <I18nProvider initialLocale={initialLocale}>
       <UserThemeProvider>

@@ -1285,16 +1285,35 @@ mdui-button-icon[disabled]::part(button) {
 
 .fi-compose-editor {
   min-height: 480px;
+  --w-e-toolbar-color: var(--mdui-color-on-surface-variant);
+  --w-e-toolbar-bg-color: var(--mdui-color-surface-container-low);
+  --w-e-toolbar-active-color: var(--mdui-color-on-secondary-container);
+  --w-e-toolbar-active-bg-color: var(--mdui-color-secondary-container);
+  --w-e-toolbar-disabled-color: color-mix(in srgb, var(--mdui-color-on-surface) 38%, transparent);
+  --w-e-toolbar-border-color: var(--mdui-color-outline);
+  --w-e-modal-button-bg-color: var(--mdui-color-surface-container-high);
+  --w-e-modal-button-border-color: var(--mdui-color-outline);
+  --w-e-textarea-bg-color: var(--mdui-color-surface);
+  --w-e-textarea-color: var(--mdui-color-on-surface);
+  --w-e-textarea-border-color: var(--mdui-color-outline);
+  --w-e-textarea-slight-bg-color: var(--mdui-color-surface-container);
+  --w-e-textarea-slight-border-color: var(--mdui-color-outline);
+  --w-e-textarea-slight-color: var(--mdui-color-on-surface-variant);
+  --w-e-textarea-selected-border-color: var(--mdui-color-primary);
+  --w-e-textarea-handler-bg-color: var(--mdui-color-primary);
+  position: relative;
+  border-radius: 0.75rem;
+  background: var(--mdui-color-surface);
+  box-shadow: 0 8px 24px rgba(29, 25, 43, 0.08);
 }
 
 .fi-compose-editor .w-e-toolbar,
 .fi-compose-editor .w-e-bar {
-  background-color: var(--mdui-color-surface-container-low);
-  border: 1px solid var(--mdui-color-outline);
+  background-color: var(--w-e-toolbar-bg-color);
+  border: 0;
   border-radius: 0.75rem 0.75rem 0 0;
   box-shadow: none;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
+  overflow: visible;
 }
 
 .fi-compose-editor .w-e-bar-divider {
@@ -1315,8 +1334,25 @@ mdui-button-icon[disabled]::part(button) {
   border-radius: 0.5rem;
 }
 
+.fi-compose-editor .w-e-bar-item button [data-fi-compose-menu-icon] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  color: currentColor;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
 .fi-compose-editor .w-e-bar-item button:hover {
-  background-color: var(--mdui-color-surface-container-high);
+  background-color: var(--w-e-toolbar-active-bg-color);
+  color: var(--w-e-toolbar-active-color);
 }
 
 .fi-compose-editor .w-e-bar-item button.active,
@@ -1327,8 +1363,8 @@ mdui-button-icon[disabled]::part(button) {
 
 .fi-compose-editor .w-e-text-container {
   background-color: var(--mdui-color-surface);
-  border: 1px solid var(--mdui-color-outline);
-  border-top: 0;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--mdui-color-outline) 36%, transparent);
   border-radius: 0 0 0.75rem 0.75rem;
   min-height: 480px;
   font-family: inherit;
@@ -1336,8 +1372,7 @@ mdui-button-icon[disabled]::part(button) {
 }
 
 .fi-compose-editor .w-e-text-container:focus-within {
-  border-color: var(--mdui-color-primary);
-  box-shadow: 0 0 0 1px var(--mdui-color-primary);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mdui-color-primary) 55%, transparent);
 }
 
 .fi-compose-editor .w-e-text-container [data-slate-editor] {
@@ -1349,12 +1384,70 @@ mdui-button-icon[disabled]::part(button) {
 }
 
 .fi-compose-editor .w-e-modal,
-.fi-compose-editor .w-e-panel {
+.fi-compose-editor .w-e-panel,
+.fi-compose-editor .w-e-drop-panel,
+.fi-compose-editor .w-e-select-list,
+.fi-compose-editor .w-e-bar-item-menus-container {
   border-radius: 0.5rem;
   border: 1px solid var(--mdui-color-outline);
-  background-color: var(--mdui-color-surface);
+  background-color: var(--w-e-toolbar-bg-color);
   color: var(--mdui-color-on-surface);
   box-shadow: 0 12px 36px rgba(29, 25, 43, 0.18);
+  z-index: 180;
+}
+
+.fi-compose-editor .w-e-drop-panel,
+.fi-compose-editor .w-e-select-list {
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+}
+
+body > .w-e-modal {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: min(420px, calc(100vw - 32px)) !important;
+  max-height: calc(100dvh - 48px);
+  overflow: auto;
+  transform: translate(-50%, -50%) !important;
+  border-radius: 0.75rem;
+  border: 1px solid var(--mdui-color-outline);
+  background-color: var(--mdui-color-surface-container-low);
+  color: var(--mdui-color-on-surface);
+  box-shadow: 0 24px 80px rgba(29, 25, 43, 0.28);
+  z-index: 190;
+}
+
+body > .w-e-modal input[type="number"],
+body > .w-e-modal input[type="text"],
+body > .w-e-modal textarea {
+  background-color: var(--mdui-color-surface);
+  border-color: var(--mdui-color-outline);
+  color: var(--mdui-color-on-surface);
+}
+
+body > .w-e-modal button {
+  background-color: var(--mdui-color-secondary-container);
+  border-color: var(--mdui-color-outline);
+  color: var(--mdui-color-on-secondary-container);
+}
+
+.fi-compose-editor .w-e-panel-content-color,
+.fi-compose-editor .w-e-panel-content-table {
+  background-color: var(--w-e-toolbar-bg-color);
+  color: var(--mdui-color-on-surface);
+}
+
+.fi-compose-editor .w-e-panel-content-color li {
+  border-color: transparent;
+}
+
+.fi-compose-editor .w-e-panel-content-color li:hover,
+.fi-compose-editor .w-e-panel-content-color .active {
+  border-color: var(--mdui-color-primary);
 }
 
 .fi-compose-editor .w-e-hover-bar {
@@ -1435,4 +1528,57 @@ mdui-button-icon[disabled]::part(button) {
 .fi-compose-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: var(--mdui-color-outline) transparent;
+}
+
+.fi-editor-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  background: rgba(29, 25, 43, 0.24);
+  padding: 1rem;
+}
+
+.fi-editor-dialog {
+  width: min(520px, 100%);
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  border: 1px solid var(--mdui-color-outline);
+  border-radius: 0.75rem;
+  background: var(--mdui-color-surface-container-low);
+  color: var(--mdui-color-on-surface);
+  box-shadow: 0 24px 80px rgba(29, 25, 43, 0.28);
+  padding: 1rem;
+}
+
+.fi-editor-dialog-input {
+  width: 100%;
+  border: 1px solid var(--mdui-color-outline);
+  border-radius: 0.5rem;
+  background: var(--mdui-color-surface);
+  color: var(--mdui-color-on-surface);
+  padding: 0.65rem 0.75rem;
+  font: inherit;
+  outline: none;
+}
+
+.fi-editor-dialog-input:focus {
+  border-color: var(--mdui-color-primary);
+  box-shadow: 0 0 0 1px var(--mdui-color-primary);
+}
+
+.fi-editor-dialog-button {
+  min-height: 36px;
+  border: 1px solid var(--mdui-color-outline);
+  border-radius: 0.5rem;
+  background: var(--mdui-color-surface-container-high);
+  color: var(--mdui-color-on-surface);
+  padding: 0.45rem 0.85rem;
+  font: inherit;
+}
+
+.fi-editor-dialog-button.primary {
+  background: var(--mdui-color-primary);
+  color: var(--mdui-color-on-primary);
 }
