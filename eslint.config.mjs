@@ -18,6 +18,8 @@ const eslintConfig = defineConfig([
     // Agent skills and local tooling
     ".agents/**",
     ".codex/**",
+    // Nested external workspace
+    "agentic-inbox/**",
   ]),
 ]);
 
