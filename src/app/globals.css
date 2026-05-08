@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "mdui/mdui.css";
 @import "@wangeditor/editor/dist/css/style.css";
-@import "katex/dist/katex.css";
 
 /* Tailwind v4: make `dark:` respond to `.dark` class (manual theme toggle). */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -1497,10 +1496,6 @@ body > .w-e-modal button {
   flex-direction: column !important;
 }
 
-.fi-compose-editor.w-e-full-screen-container .fi-compose-actionbar {
-  flex: 0 0 auto;
-}
-
 .fi-compose-editor.w-e-full-screen-container [data-w-e-toolbar='true'],
 .fi-compose-editor.w-e-full-screen-container [data-w-e-textarea='true'],
 .fi-compose-editor .w-e-full-screen-container [data-w-e-toolbar='true'],
@@ -1525,6 +1520,34 @@ body > .w-e-modal button {
 
 .fi-compose-editor .w-e-text-container [data-slate-editor] {
   padding: 0.75rem 1rem 1rem;
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] h1,
+.fi-compose-editor .w-e-text-container [data-slate-editor] h2,
+.fi-compose-editor .w-e-text-container [data-slate-editor] h3,
+.fi-compose-editor .w-e-text-container [data-slate-editor] h4,
+.fi-compose-editor .w-e-text-container [data-slate-editor] h5 {
+  margin: 0.75rem 0 0.65rem;
+  color: var(--mdui-color-on-surface);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] h1 {
+  font-size: 1.8rem;
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] h2 {
+  font-size: 1.45rem;
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] h3 {
+  font-size: 1.22rem;
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] h4,
+.fi-compose-editor .w-e-text-container [data-slate-editor] h5 {
+  font-size: 1.05rem;
 }
 
 .fi-compose-editor .w-e-text-container [data-slate-editor] code {
@@ -1638,64 +1661,9 @@ body > .w-e-modal button {
   min-height: 36px;
 }
 
+body > .w-e-modal .babel-container:nth-of-type(3),
 .fi-compose-editor .w-e-modal .babel-container:nth-of-type(3) {
   display: none;
-}
-
-.fi-compose-actionbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  border-bottom: 1px solid var(--mdui-color-outline-variant);
-  background: var(--mdui-color-surface-container-low);
-  padding: 0.5rem;
-}
-
-.fi-compose-heading-group {
-  display: inline-flex;
-  min-height: 34px;
-  overflow: hidden;
-  border: 1px solid var(--mdui-color-outline-variant);
-  border-radius: 999px;
-  background: var(--mdui-color-surface-container);
-}
-
-.fi-compose-heading-action {
-  min-width: 42px;
-  border: 0;
-  border-right: 1px solid var(--mdui-color-outline-variant);
-  background: transparent;
-  color: var(--mdui-color-on-surface);
-  padding: 0.35rem 0.6rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-}
-
-.fi-compose-heading-action:last-child {
-  border-right: 0;
-}
-
-.fi-compose-heading-action:hover {
-  background: var(--mdui-color-secondary-container);
-  color: var(--mdui-color-on-secondary-container);
-}
-
-.fi-compose-action {
-  display: inline-flex;
-  min-height: 34px;
-  align-items: center;
-  gap: 0.35rem;
-  border: 1px solid var(--mdui-color-outline-variant);
-  border-radius: 999px;
-  background: var(--mdui-color-surface-container);
-  color: var(--mdui-color-on-surface);
-  padding: 0.35rem 0.7rem;
-  font-size: 0.8125rem;
-}
-
-.fi-compose-action:hover {
-  background: var(--mdui-color-secondary-container);
-  color: var(--mdui-color-on-secondary-container);
 }
 
 .fi-link-card {
@@ -1767,25 +1735,6 @@ body > .w-e-modal button {
 .fi-link-card__body span {
   color: var(--mdui-color-on-surface-variant);
   line-height: 1.45;
-}
-
-.fi-formula {
-  display: inline-flex;
-  align-items: center;
-  max-width: 100%;
-  overflow-x: auto;
-  vertical-align: middle;
-  padding: 0.08rem 0.35rem;
-  border-radius: 0.35rem;
-  border: 1px solid var(--mdui-color-outline-variant);
-  background: rgb(235, 233, 244);
-  color: var(--mdui-color-on-surface);
-  font-family: "Cambria Math", "Times New Roman", serif;
-  font-size: 0.95em;
-}
-
-.fi-formula .katex {
-  font-size: 1em;
 }
 
 .fi-compose-chip {

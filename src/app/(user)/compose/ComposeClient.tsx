@@ -115,9 +115,6 @@ export function ComposeClient() {
   const [sendError, setSendError] = useState<string | null>(null);
   const [preset, setPreset] = useState<ComposePreset | null>(null);
   const editorApiRef = useRef<{
-    insertFormula: (latex: string) => void;
-    insertLinkCard: (html: string) => void;
-    insertMarkdown: (html: string) => void;
     getHtml: () => string;
     setHtml: (value: string) => void;
   } | null>(null);
@@ -367,13 +364,9 @@ export function ComposeClient() {
                     ...prev,
                     editorMeta: {
                       ...prev.editorMeta,
-                      formulas: meta.formula
-                        ? Array.from(new Set([...(prev.editorMeta.formulas || []), meta.formula]))
-                        : prev.editorMeta.formulas,
                       linkCards: meta.linkCard
                         ? [...(prev.editorMeta.linkCards || []), meta.linkCard]
                         : prev.editorMeta.linkCards,
-                      markdown: meta.markdown ?? prev.editorMeta.markdown,
                     },
                   }));
                 }}
