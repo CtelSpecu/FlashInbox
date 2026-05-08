@@ -9,7 +9,7 @@
     "prepare:wrangler:production": "bun run prepare:wrangler:main",
     "prepare:next-dev": "bun scripts/prepare-next-dev.ts",
     "prepare:local-db": "bun scripts/prepare-local-sqlite.ts",
-    "dev": "bun run prepare:local-db && bun run prepare:next-dev && next dev",
+    "dev": "bun scripts/dev-next.ts",
     "build:webpack": "next build --webpack",
     "build:worker": "bun run prepare:wrangler:main && bun run build:webpack && bunx opennextjs-cloudflare build --skipNextBuild",
     "dev:wrangler": "wrangler dev --config wrangler.toml",
