@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "mdui/mdui.css";
 @import "@wangeditor/editor/dist/css/style.css";
+@import "katex/dist/katex.css";
 
 /* Tailwind v4: make `dark:` respond to `.dark` class (manual theme toggle). */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -1456,8 +1457,61 @@ body > .w-e-modal button {
   border: 1px solid var(--mdui-color-outline);
 }
 
+.fi-compose-editor,
+.fi-compose-editor .w-e-toolbar,
+.fi-compose-editor .w-e-text-container,
+.fi-compose-editor .w-e-select-list,
+.fi-compose-editor .w-e-drop-panel,
+.fi-compose-editor .w-e-modal {
+  --w-e-toolbar-bg-color: var(--mdui-color-surface-container-low);
+  --w-e-toolbar-color: var(--mdui-color-on-surface);
+  --w-e-toolbar-active-bg-color: var(--mdui-color-secondary-container);
+  --w-e-toolbar-active-color: var(--mdui-color-on-secondary-container);
+  --w-e-toolbar-disabled-color: color-mix(in srgb, var(--mdui-color-on-surface) 38%, transparent);
+  --w-e-toolbar-border-color: var(--mdui-color-outline-variant);
+  --w-e-textarea-bg-color: var(--mdui-color-surface);
+  --w-e-textarea-color: var(--mdui-color-on-surface);
+  --w-e-textarea-border-color: var(--mdui-color-outline-variant);
+  --w-e-textarea-slight-border-color: var(--mdui-color-outline-variant);
+  --w-e-textarea-slight-color: var(--mdui-color-on-surface-variant);
+  --w-e-textarea-slight-bg-color: var(--mdui-color-surface-container);
+  --w-e-textarea-selected-border-color: var(--mdui-color-primary);
+  --w-e-textarea-handler-bg-color: var(--mdui-color-primary);
+  --w-e-modal-button-bg-color: var(--mdui-color-surface-container-high);
+  --w-e-modal-button-border-color: var(--mdui-color-outline-variant);
+}
+
+.fi-compose-editor.w-e-full-screen-container,
 .fi-compose-editor .w-e-full-screen-container {
-  z-index: 60;
+  top: 56px !important;
+  bottom: 112px !important;
+  height: calc(100dvh - 168px) !important;
+  z-index: 35;
+  border-radius: 0;
+  background: var(--mdui-color-surface);
+  box-shadow: 0 -1px 0 var(--mdui-color-outline-variant);
+}
+
+.fi-compose-editor.w-e-full-screen-container {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.fi-compose-editor.w-e-full-screen-container .fi-compose-actionbar {
+  flex: 0 0 auto;
+}
+
+.fi-compose-editor.w-e-full-screen-container [data-w-e-toolbar='true'],
+.fi-compose-editor.w-e-full-screen-container [data-w-e-textarea='true'],
+.fi-compose-editor .w-e-full-screen-container [data-w-e-toolbar='true'],
+.fi-compose-editor .w-e-full-screen-container [data-w-e-textarea='true'] {
+  width: 100% !important;
+}
+
+.fi-compose-editor.w-e-full-screen-container [data-w-e-textarea='true'],
+.fi-compose-editor .w-e-full-screen-container [data-w-e-textarea='true'] {
+  flex: 1 1 auto !important;
+  min-height: 0;
 }
 
 .fi-compose-editor .w-e-text-container p,
@@ -1469,23 +1523,228 @@ body > .w-e-modal button {
   color: var(--mdui-color-primary);
 }
 
-.fi-link-card {
-  display: grid;
-  grid-template-columns: 88px minmax(0, 1fr);
-  gap: 0.75rem;
+.fi-compose-editor .w-e-text-container [data-slate-editor] {
+  padding: 0.75rem 1rem 1rem;
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] code {
+  border: 1px solid color-mix(in srgb, rgb(235, 233, 244) 70%, var(--mdui-color-outline));
+  border-radius: 0.35rem;
+  background: rgb(235, 233, 244);
+  color: var(--mdui-color-on-surface);
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  padding: 0.12rem 0.35rem;
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] pre > code {
+  display: block;
+  overflow-x: auto;
+  border-color: color-mix(in srgb, rgb(235, 233, 244) 70%, var(--mdui-color-outline));
+  background: rgb(235, 233, 244);
+  color: var(--mdui-color-on-surface);
+  font-family: var(--font-mono);
   padding: 0.75rem;
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] .table-container {
+  margin: 1rem 0;
+  border: 1px solid var(--mdui-color-outline-variant);
+  border-radius: 0.75rem;
+  background: var(--mdui-color-surface);
+  padding: 0.75rem;
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] table td,
+.fi-compose-editor .w-e-text-container [data-slate-editor] table th {
+  min-width: 5rem;
+  border: 1px solid var(--mdui-color-outline-variant);
+  padding: 0.55rem 0.65rem;
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] table th,
+.fi-compose-editor .w-e-text-container [data-slate-editor] table td[data-is-header="true"] {
+  background: rgb(235, 233, 244);
+  font-weight: 600;
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] .w-e-textarea-divider {
+  margin: 1rem 0;
+  padding: 0.75rem 0;
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] .w-e-textarea-divider hr,
+.fi-compose-editor .w-e-text-container [data-slate-editor] hr {
+  display: block;
+  height: 1px;
+  border: 0;
+  background: var(--mdui-color-outline);
+}
+
+.fi-compose-editor .w-e-toolbar {
+  border-bottom: 1px solid var(--mdui-color-outline-variant);
+}
+
+.fi-compose-editor .w-e-bar-item button {
+  border-radius: 999px;
+}
+
+.fi-compose-editor .w-e-bar-item-group .w-e-bar-item-menus-container,
+.fi-compose-editor .w-e-select-list,
+.fi-compose-editor .w-e-drop-panel,
+.fi-compose-editor .w-e-modal {
+  border: 1px solid var(--mdui-color-outline-variant);
+  border-radius: 0.75rem;
+  background: var(--mdui-color-surface-container-low);
+  color: var(--mdui-color-on-surface);
+  box-shadow: 0 18px 50px rgba(29, 25, 43, 0.18);
+}
+
+.fi-compose-editor .w-e-select-list ul li {
+  padding: 0.45rem 0.75rem 0.45rem 1.75rem;
+}
+
+.fi-compose-editor .w-e-select-list ul li:hover,
+.fi-compose-editor .w-e-select-list ul .selected {
+  background: var(--mdui-color-secondary-container);
+  color: var(--mdui-color-on-secondary-container);
+}
+
+.fi-compose-editor .w-e-modal input[type="text"],
+.fi-compose-editor .w-e-modal input[type="number"],
+.fi-compose-editor .w-e-modal textarea {
   border: 1px solid var(--mdui-color-outline);
   border-radius: 0.5rem;
   background: var(--mdui-color-surface);
+  color: var(--mdui-color-on-surface);
+  min-height: 38px;
+  padding: 0.55rem 0.7rem;
+}
+
+.fi-compose-editor .w-e-modal input[type="text"]:focus,
+.fi-compose-editor .w-e-modal input[type="number"]:focus,
+.fi-compose-editor .w-e-modal textarea:focus {
+  border-color: var(--mdui-color-primary);
+  box-shadow: 0 0 0 1px var(--mdui-color-primary);
+}
+
+.fi-compose-editor .w-e-modal button {
+  border-radius: 999px;
+  min-height: 36px;
+}
+
+.fi-compose-editor .w-e-modal .babel-container:nth-of-type(3) {
+  display: none;
+}
+
+.fi-compose-actionbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--mdui-color-outline-variant);
+  background: var(--mdui-color-surface-container-low);
+  padding: 0.5rem;
+}
+
+.fi-compose-heading-group {
+  display: inline-flex;
+  min-height: 34px;
+  overflow: hidden;
+  border: 1px solid var(--mdui-color-outline-variant);
+  border-radius: 999px;
+  background: var(--mdui-color-surface-container);
+}
+
+.fi-compose-heading-action {
+  min-width: 42px;
+  border: 0;
+  border-right: 1px solid var(--mdui-color-outline-variant);
+  background: transparent;
+  color: var(--mdui-color-on-surface);
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.fi-compose-heading-action:last-child {
+  border-right: 0;
+}
+
+.fi-compose-heading-action:hover {
+  background: var(--mdui-color-secondary-container);
+  color: var(--mdui-color-on-secondary-container);
+}
+
+.fi-compose-action {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--mdui-color-outline-variant);
+  border-radius: 999px;
+  background: var(--mdui-color-surface-container);
+  color: var(--mdui-color-on-surface);
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8125rem;
+}
+
+.fi-compose-action:hover {
+  background: var(--mdui-color-secondary-container);
+  color: var(--mdui-color-on-secondary-container);
+}
+
+.fi-link-card {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  width: min(640px, 100%);
+  margin: 0.75rem auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.875rem;
+  border: 1px solid var(--mdui-color-outline-variant);
+  border-radius: 0.75rem;
+  background: var(--mdui-color-surface-container-low);
   color: inherit;
   text-decoration: none;
+  box-shadow: 0 1px 2px rgba(29, 25, 43, 0.08);
 }
 
 .fi-link-card__image {
   width: 88px;
   height: 88px;
   object-fit: cover;
-  border-radius: 0.375rem;
+  border-radius: 0.625rem;
+  background: rgb(235, 233, 244);
+}
+
+.fi-link-card__icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.fi-link-card__icon::before,
+.fi-link-card__icon::after {
+  content: "";
+  position: absolute;
+  width: 34px;
+  height: 18px;
+  border: 3px solid var(--mdui-color-primary);
+  border-radius: 999px;
+  transform: rotate(-35deg);
+}
+
+.fi-link-card__icon::before {
+  margin-left: -13px;
+}
+
+.fi-link-card__icon::after {
+  margin-left: 13px;
 }
 
 .fi-link-card__body {
@@ -1500,18 +1759,33 @@ body > .w-e-modal button {
   overflow-wrap: anywhere;
 }
 
-.fi-link-card__url {
-  font-size: 0.75rem;
+.fi-link-card__body strong {
+  font-size: 0.98rem;
+  line-height: 1.35;
+}
+
+.fi-link-card__body span {
   color: var(--mdui-color-on-surface-variant);
+  line-height: 1.45;
 }
 
 .fi-formula {
   display: inline-flex;
   align-items: center;
-  padding: 0 0.35rem;
+  max-width: 100%;
+  overflow-x: auto;
+  vertical-align: middle;
+  padding: 0.08rem 0.35rem;
   border-radius: 0.35rem;
-  background: var(--mdui-color-secondary-container);
-  color: var(--mdui-color-on-secondary-container);
+  border: 1px solid var(--mdui-color-outline-variant);
+  background: rgb(235, 233, 244);
+  color: var(--mdui-color-on-surface);
+  font-family: "Cambria Math", "Times New Roman", serif;
+  font-size: 0.95em;
+}
+
+.fi-formula .katex {
+  font-size: 1em;
 }
 
 .fi-compose-chip {
