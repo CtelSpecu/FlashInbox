@@ -1,16 +1,24 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Icon } from '@iconify/react';
 import { snackbar } from 'mdui/functions/snackbar.js';
 
-import { WangEditorClient } from '@/components/mail/compose/WangEditorClient';
 import { apiFetch, type ApiError } from '@/lib/client/api';
 import { htmlToMarkdown, type ComposePreset, type EditorMeta } from '@/lib/client/compose';
 import { getUserErrorMessage } from '@/lib/client/error-i18n';
 import { clearSessionToken } from '@/lib/client/session-store';
 import { useI18n } from '@/lib/i18n/context';
+
+const WangEditorClient = dynamic(
+  () => import('@/components/mail/compose/WangEditorClient').then((mod) => mod.WangEditorClient),
+  {
+    ssr: false,
+    loading: () => <div className="min-h-[420px] p-4 text-sm text-[color:var(--mdui-color-on-surface-variant)]" />,
+  }
+);
 
 interface MailboxInfoResponse {
   success: true;
@@ -260,11 +268,11 @@ export function ComposeClient() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <mdui-button variant="filled" className="fi-btn-filled" loading={sending} onClick={sendMail}>
+            <mdui-button variant="filled" className="fi-btn-filled" loading={sending} name="" type="button" onClick={sendMail}>
               <Icon icon="mdi:send" slot="icon" />
               {t.compose.send}
             </mdui-button>
-            <mdui-button variant="text" className="fi-btn-tonal" onClick={() => router.push('/inbox')}>
+            <mdui-button variant="text" className="fi-btn-tonal" name="" type="button" onClick={() => router.push('/inbox')}>
               <Icon icon="mdi:arrow-left" slot="icon" />
               {t.common.back}
             </mdui-button>
@@ -345,6 +353,11 @@ export function ComposeClient() {
                   description: t.compose.description,
                   close: t.common.close,
                   insert: t.common.confirm,
+                  image: t.compose.imageUrl,
+                  video: t.compose.videoUrl,
+                  table: t.compose.table,
+                  rows: t.compose.rows,
+                  columns: t.compose.columns,
                 }}
                 onReady={(api) => {
                   editorApiRef.current = api;
