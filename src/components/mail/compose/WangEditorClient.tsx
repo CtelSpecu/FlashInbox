@@ -1,7 +1,18 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Boot, DomEditor, i18nChangeLanguage, type IButtonMenu, type IDomEditor } from '@wangeditor/editor';
+import {
+  Boot,
+  DomEditor,
+  SlateEditor,
+  SlateElement,
+  SlateTransforms,
+  i18nChangeLanguage,
+  t as wangEditorT,
+  type IButtonMenu,
+  type IDomEditor,
+  type ISelectMenu,
+} from '@wangeditor/editor';
 import { Editor, Toolbar } from '@wangeditor/editor-for-react';
 import { h } from 'snabbdom';
 
@@ -12,7 +23,6 @@ type EditorApi = {
   getHtml: () => string;
   setHtml: (value: string) => void;
   destroy?: () => void;
-  dangerouslyInsertHtml: (html: string) => void;
   insertNode: (node: unknown) => void;
   getText: () => string;
   restoreSelection?: () => void;
@@ -57,6 +67,7 @@ interface WangEditorClientProps {
 }
 
 type ComposeAction = 'linkCard';
+type HeaderType = 'header1' | 'header2' | 'header3' | 'header4' | 'header5' | 'paragraph';
 type LinkCardElement = {
   type: 'fi-link-card';
   url: string;
@@ -69,6 +80,84 @@ type LinkCardElement = {
 const actionListeners = new WeakMap<IDomEditor, (action: ComposeAction) => void>();
 let customEditorRegistered = false;
 let customMenuMessages: WangEditorClientProps['messages'] | null = null;
+
+const headerTypes: HeaderType[] = ['header1', 'header2', 'header3', 'header4', 'header5'];
+
+function isHeaderType(value: string): value is HeaderType {
+  return value === 'paragraph' || headerTypes.includes(value as HeaderType);
+}
+
+function isTextBlockElement(node: unknown): node is SlateElement & { type: HeaderType } {
+  if (!SlateElement.isElement(node)) return false;
+  const type = (node as { type?: unknown }).type;
+  return typeof type === 'string' && isHeaderType(type);
+}
+
+function editorLanguageText() {
+  return wangEditorT('header.text') || 'Text';
+}
+
+class HeaderSelectMenu implements ISelectMenu {
+  readonly tag = 'select';
+  readonly iconSvg =
+    '<svg viewBox="0 0 24 24"><path d="M5 4h2v6h10V4h2v16h-2v-8H7v8H5V4z"></path></svg>';
+  readonly width = 60;
+  readonly selectPanelWidth = 112;
+
+  get title() {
+    return wangEditorT('header.title') || 'Header';
+  }
+
+  getOptions(editor: IDomEditor) {
+    const current = this.getValue(editor).toString();
+    return [
+      { value: 'header1', text: 'H1', styleForRenderMenuList: { 'font-size': '32px', 'font-weight': '700' } },
+      { value: 'header2', text: 'H2', styleForRenderMenuList: { 'font-size': '24px', 'font-weight': '700' } },
+      { value: 'header3', text: 'H3', styleForRenderMenuList: { 'font-size': '18px', 'font-weight': '700' } },
+      { value: 'header4', text: 'H4', styleForRenderMenuList: { 'font-size': '16px', 'font-weight': '700' } },
+      { value: 'header5', text: 'H5', styleForRenderMenuList: { 'font-size': '13px', 'font-weight': '700' } },
+      { value: 'paragraph', text: editorLanguageText() },
+    ].map((option) => ({ ...option, selected: option.value === current || undefined }));
+  }
+
+  getValue(editor: IDomEditor) {
+    const entry = SlateEditor.nodes(editor, {
+      match: isTextBlockElement,
+      universal: true,
+      mode: 'highest',
+    }).next().value;
+    if (!entry) return 'paragraph';
+    const node = entry[0];
+    return isTextBlockElement(node) ? node.type : 'paragraph';
+  }
+
+  isActive() {
+    return false;
+  }
+
+  isDisabled(editor: IDomEditor) {
+    if (editor.isDisabled() || !editor.selection) return true;
+    const entry = SlateEditor.nodes(editor, {
+      match: isTextBlockElement,
+      universal: true,
+      mode: 'highest',
+    }).next().value;
+    return !entry;
+  }
+
+  exec(editor: IDomEditor, value: string | boolean) {
+    const type = typeof value === 'string' && isHeaderType(value) ? value : 'paragraph';
+    SlateTransforms.setNodes(
+      editor,
+      { type } as never,
+      {
+        match: isTextBlockElement,
+        mode: 'highest',
+      }
+    );
+    editor.focus();
+  }
+}
 
 class LinkCardToolbarButton implements IButtonMenu {
   readonly tag = 'button';
@@ -198,6 +287,10 @@ function registerCustomEditor(messages: WangEditorClientProps['messages']) {
   customEditorRegistered = true;
 
   Boot.registerMenu({
+    key: 'fiHeaderSelect',
+    factory: () => new HeaderSelectMenu(),
+  });
+  Boot.registerMenu({
     key: 'fiLinkCard',
     factory: () => new LinkCardToolbarButton(),
   });
@@ -322,7 +415,7 @@ export function WangEditorClient({
   const toolbarConfig = useMemo(
     () => ({
       toolbarKeys: [
-        'headerSelect',
+        'fiHeaderSelect',
         'blockquote',
         '|',
         'bold',
@@ -392,9 +485,8 @@ export function WangEditorClient({
           parseImageSrc(src: string) {
             return normalizeImageUrl(src);
           },
-          onInsertedImage(imageNode: { url?: string; href?: string } | null) {
+          onInsertedImage(imageNode: { href?: string } | null) {
             if (!imageNode) return;
-            imageNode.url = '';
             imageNode.href = '';
           },
         },
@@ -405,9 +497,8 @@ export function WangEditorClient({
           parseImageSrc(src: string) {
             return normalizeImageUrl(src);
           },
-          onUpdatedImage(imageNode: { url?: string; href?: string } | null) {
+          onUpdatedImage(imageNode: { href?: string } | null) {
             if (!imageNode) return;
-            imageNode.url = '';
             imageNode.href = '';
           },
         },
@@ -436,6 +527,7 @@ export function WangEditorClient({
     if (!editor) return;
     if (value !== lastEmittedHtmlRef.current && value !== editor.getHtml()) {
       editor.setHtml(value);
+      lastEmittedHtmlRef.current = value;
     }
   }, [editor, value]);
 
@@ -461,7 +553,7 @@ export function WangEditorClient({
       <Toolbar editor={editor as never} defaultConfig={toolbarConfig as never} mode="default" />
       <Editor
         defaultConfig={editorConfig as never}
-        defaultHtml={value}
+        value={value}
         onCreated={(instance) => {
           setEditor(instance as EditorApi);
           actionListeners.set(instance as unknown as IDomEditor, (action) => setPanelAction(action));
