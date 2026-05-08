@@ -1,5 +1,6 @@
 import MarkdownIt from 'markdown-it';
 import TurndownService from 'turndown';
+import katex from 'katex';
 
 export interface LinkCardInput {
   url: string;
@@ -80,8 +81,9 @@ turndown.addRule('linkCard', {
 });
 
 function safeUrl(value: string): string {
+  const normalized = value.trim().startsWith('//') ? `https:${value.trim()}` : value.trim();
   try {
-    const url = new URL(value.trim());
+    const url = new URL(normalized);
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {
       return '';
     }
@@ -240,11 +242,14 @@ export function buildLinkCardHtml(input: LinkCardInput): string {
 
   return `
     <a class="fi-link-card" href="${url}" target="_blank" rel="noopener noreferrer" data-fi-link-card="1">
-      ${imageUrl ? `<img class="fi-link-card__image" src="${imageUrl}" alt="" />` : ''}
+      ${
+        imageUrl
+          ? `<img class="fi-link-card__image" src="${imageUrl}" alt="" />`
+          : '<span class="fi-link-card__image fi-link-card__icon" aria-hidden="true"></span>'
+      }
       <span class="fi-link-card__body">
         <strong>${title}</strong>
         ${description ? `<span>${description}</span>` : ''}
-        <span class="fi-link-card__url">${escapeHtml(url)}</span>
       </span>
     </a>
   `;
@@ -253,7 +258,13 @@ export function buildLinkCardHtml(input: LinkCardInput): string {
 export function buildFormulaHtml(formula: string): string {
   const cleaned = formula.trim();
   if (!cleaned) return '';
-  return `<span class="fi-formula" data-fi-formula="${escapeHtml(cleaned)}">${escapeHtml(cleaned)}</span>`;
+  const rendered = katex.renderToString(cleaned, {
+    displayMode: false,
+    output: 'html',
+    throwOnError: false,
+    strict: 'ignore',
+  });
+  return `<span class="fi-formula" data-fi-formula="${escapeHtml(cleaned)}">${rendered}</span>`;
 }
 
 export function safeComposeUrl(value: string): string | null {

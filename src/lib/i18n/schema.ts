@@ -108,6 +108,9 @@ export interface UserTranslations {
     formula: string;
     markdown: string;
     linkCard: string;
+    table: string;
+    rows: string;
+    columns: string;
     send: string;
     bodyTooLong: string;
     messageQueued: string;
