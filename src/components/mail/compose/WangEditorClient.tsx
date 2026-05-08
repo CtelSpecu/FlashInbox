@@ -6,6 +6,7 @@ import {
   DomEditor,
   SlateEditor,
   SlateElement,
+  SlateRange,
   SlateTransforms,
   i18nChangeLanguage,
   t as wangEditorT,
@@ -23,11 +24,11 @@ type EditorApi = {
   getHtml: () => string;
   setHtml: (value: string) => void;
   destroy?: () => void;
-  insertNode: (node: unknown) => void;
   getText: () => string;
   restoreSelection?: () => void;
   focus?: () => void;
   updateView?: () => void;
+  hidePanelOrModal?: () => void;
   on?: (event: string, listener: (payload: unknown) => void) => void;
   off?: (event: string, listener: (payload: unknown) => void) => void;
 };
@@ -66,7 +67,7 @@ interface WangEditorClientProps {
   }) => void;
 }
 
-type ComposeAction = 'linkCard';
+type ComposeAction = 'linkCard' | 'table';
 type HeaderType = 'header1' | 'header2' | 'header3' | 'header4' | 'header5' | 'paragraph';
 type LinkCardElement = {
   type: 'fi-link-card';
@@ -75,6 +76,22 @@ type LinkCardElement = {
   description?: string;
   imageUrl?: string;
   children: [{ text: '' }];
+};
+type TableElement = {
+  type: 'table';
+  width: 'auto';
+  children: Array<{
+    type: 'table-row';
+    children: Array<{
+      type: 'table-cell';
+      isHeader?: boolean;
+      children: [{ text: '' }];
+    }>;
+  }>;
+};
+type SavedSelection = {
+  anchor: { path: number[]; offset: number };
+  focus: { path: number[]; offset: number };
 };
 
 const actionListeners = new WeakMap<IDomEditor, (action: ComposeAction) => void>();
@@ -185,6 +202,36 @@ class LinkCardToolbarButton implements IButtonMenu {
   }
 }
 
+class TableToolbarButton implements IButtonMenu {
+  readonly tag = 'button';
+  readonly iconSvg =
+    '<svg viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 5h14V5H5v3zm0 2v4h4v-4H5zm6 0v4h8v-4h-8zm-6 6v3h4v-3H5zm6 0v3h8v-3h-8z"></path></svg>';
+
+  get title() {
+    return customMenuMessages?.table || 'Table';
+  }
+
+  getValue() {
+    return '';
+  }
+
+  isActive() {
+    return false;
+  }
+
+  isDisabled(editor: IDomEditor) {
+    if (editor.isDisabled() || !editor.selection || !SlateRange.isCollapsed(editor.selection)) return true;
+    return DomEditor.getSelectedElems(editor).some((elem) => {
+      const nodeType = DomEditor.getNodeType(elem);
+      return nodeType === 'pre' || nodeType === 'table' || nodeType === 'list-item' || editor.isVoid(elem);
+    });
+  }
+
+  exec(editor: IDomEditor) {
+    actionListeners.get(editor)?.('table');
+  }
+}
+
 function htmlToMarkdown(html: string): string {
   return html
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
@@ -207,6 +254,27 @@ function normalizeImageUrl(value: string): string {
   return safeComposeUrl(value) || '';
 }
 
+function cloneSelection(selection: SlateRange | null | undefined): SavedSelection | null {
+  if (!selection) return null;
+  return {
+    anchor: { path: [...selection.anchor.path], offset: selection.anchor.offset },
+    focus: { path: [...selection.focus.path], offset: selection.focus.offset },
+  };
+}
+
+function restoreEditorSelection(editor: EditorApi, selection: SavedSelection | null) {
+  if (selection) {
+    try {
+      SlateTransforms.select(editor as unknown as IDomEditor, selection);
+      return;
+    } catch {
+      editor.restoreSelection?.();
+    }
+    return;
+  }
+  editor.restoreSelection?.();
+}
+
 function toLinkCardNode(input: {
   url: string;
   title: string;
@@ -220,6 +288,21 @@ function toLinkCardNode(input: {
     description: input.description,
     imageUrl: input.imageUrl,
     children: [{ text: '' }],
+  };
+}
+
+function toTableNode(rows: number, columns: number): TableElement {
+  return {
+    type: 'table',
+    width: 'auto',
+    children: Array.from({ length: rows }, (_, rowIndex) => ({
+      type: 'table-row',
+      children: Array.from({ length: columns }, () => ({
+        type: 'table-cell',
+        isHeader: rowIndex === 0,
+        children: [{ text: '' }],
+      })),
+    })),
   };
 }
 
@@ -293,6 +376,10 @@ function registerCustomEditor(messages: WangEditorClientProps['messages']) {
   Boot.registerMenu({
     key: 'fiLinkCard',
     factory: () => new LinkCardToolbarButton(),
+  });
+  Boot.registerMenu({
+    key: 'fiTableInput',
+    factory: () => new TableToolbarButton(),
   });
   Boot.registerRenderElem({
     type: 'fi-link-card',
@@ -374,7 +461,10 @@ export function WangEditorClient({
   const [linkTitle, setLinkTitle] = useState('');
   const [linkDescription, setLinkDescription] = useState('');
   const [linkImageUrl, setLinkImageUrl] = useState('');
+  const [tableRows, setTableRows] = useState('3');
+  const [tableColumns, setTableColumns] = useState('3');
   const lastEmittedHtmlRef = useRef(value);
+  const savedSelectionRef = useRef<SavedSelection | null>(null);
   const editorLanguage = getWangEditorLanguage(locale);
 
   useMemo(() => {
@@ -387,29 +477,63 @@ export function WangEditorClient({
     setPanelAction(null);
   }, []);
 
+  const openPanel = useCallback((action: ComposeAction, instance: IDomEditor) => {
+    savedSelectionRef.current = cloneSelection(instance.selection);
+    setPanelAction(action);
+    instance.hidePanelOrModal();
+  }, []);
+
+  const insertNodeAtSelection = useCallback(
+    (node: unknown) => {
+      if (!editor) return;
+      restoreEditorSelection(editor, savedSelectionRef.current);
+      editor.focus?.();
+      if (DomEditor.isSelectedEmptyParagraph(editor as unknown as IDomEditor)) {
+        SlateTransforms.removeNodes(editor as unknown as IDomEditor, { mode: 'highest' });
+      }
+      SlateTransforms.insertNodes(editor as unknown as IDomEditor, node as never, { mode: 'highest' });
+      SlateTransforms.insertNodes(
+        editor as unknown as IDomEditor,
+        { type: 'paragraph', children: [{ text: '' }] } as never,
+        { mode: 'highest' }
+      );
+      editor.updateView?.();
+    },
+    [editor]
+  );
+
   function submitPanel() {
-    if (!editor || panelAction !== 'linkCard') return;
+    if (!editor) return;
 
-    const url = safeComposeUrl(linkUrl);
-    if (!url || !linkTitle.trim()) return;
-    const linkCard = {
-      url,
-      title: linkTitle.trim(),
-      description: linkDescription.trim() || undefined,
-      imageUrl: normalizeImageUrl(linkImageUrl) || undefined,
-    };
+    if (panelAction === 'linkCard') {
+      const url = safeComposeUrl(linkUrl);
+      if (!url || !linkTitle.trim()) return;
+      const linkCard = {
+        url,
+        title: linkTitle.trim(),
+        description: linkDescription.trim() || undefined,
+        imageUrl: normalizeImageUrl(linkImageUrl) || undefined,
+      };
 
-    editor.restoreSelection?.();
-    editor.focus?.();
-    editor.insertNode(toLinkCardNode(linkCard));
-    editor.insertNode({ type: 'paragraph', children: [{ text: '' }] });
-    editor.updateView?.();
-    onEditorMetaChange?.({ linkCard });
-    setLinkUrl('');
-    setLinkTitle('');
-    setLinkDescription('');
-    setLinkImageUrl('');
-    closePanel();
+      insertNodeAtSelection(toLinkCardNode(linkCard));
+      onEditorMetaChange?.({ linkCard });
+      setLinkUrl('');
+      setLinkTitle('');
+      setLinkDescription('');
+      setLinkImageUrl('');
+      closePanel();
+      return;
+    }
+
+    if (panelAction === 'table') {
+      const rows = Math.min(Math.max(Number.parseInt(tableRows, 10) || 0, 1), 12);
+      const columns = Math.min(Math.max(Number.parseInt(tableColumns, 10) || 0, 1), 8);
+      if (!rows || !columns) return;
+      insertNodeAtSelection(toTableNode(rows, columns));
+      setTableRows(String(rows));
+      setTableColumns(String(columns));
+      closePanel();
+    }
   }
 
   const toolbarConfig = useMemo(
@@ -448,7 +572,7 @@ export function WangEditorClient({
         'emotion',
         'insertLink',
         'insertImage',
-        'insertTable',
+        'fiTableInput',
         'codeBlock',
         'divider',
         '|',
@@ -556,7 +680,7 @@ export function WangEditorClient({
         value={value}
         onCreated={(instance) => {
           setEditor(instance as EditorApi);
-          actionListeners.set(instance as unknown as IDomEditor, (action) => setPanelAction(action));
+          actionListeners.set(instance as unknown as IDomEditor, (action) => openPanel(action, instance));
           onReady?.({
             getHtml() {
               return (instance as unknown as EditorApi).getHtml();
@@ -578,34 +702,63 @@ export function WangEditorClient({
       {panelAction ? (
         <div className="fi-editor-dialog-backdrop" role="presentation" onMouseDown={closePanel}>
           <div className="fi-editor-dialog" role="dialog" aria-modal="true" onMouseDown={(e) => e.stopPropagation()}>
-            <div className="mb-3 text-sm font-semibold">{messages.linkCard}</div>
-
-            <div className="space-y-3">
-              <input
-                className="fi-editor-dialog-input"
-                value={linkUrl}
-                placeholder={messages.linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-              />
-              <input
-                className="fi-editor-dialog-input"
-                value={linkTitle}
-                placeholder={messages.linkTitlePlaceholder}
-                onChange={(e) => setLinkTitle(e.target.value)}
-              />
-              <input
-                className="fi-editor-dialog-input"
-                value={linkDescription}
-                placeholder={messages.description}
-                onChange={(e) => setLinkDescription(e.target.value)}
-              />
-              <input
-                className="fi-editor-dialog-input"
-                value={linkImageUrl}
-                placeholder={messages.imageUrl}
-                onChange={(e) => setLinkImageUrl(e.target.value)}
-              />
+            <div className="mb-3 text-sm font-semibold">
+              {panelAction === 'linkCard' ? messages.linkCard : messages.table}
             </div>
+
+            {panelAction === 'linkCard' ? (
+              <div className="space-y-3">
+                <input
+                  className="fi-editor-dialog-input"
+                  value={linkUrl}
+                  placeholder={messages.linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                />
+                <input
+                  className="fi-editor-dialog-input"
+                  value={linkTitle}
+                  placeholder={messages.linkTitlePlaceholder}
+                  onChange={(e) => setLinkTitle(e.target.value)}
+                />
+                <input
+                  className="fi-editor-dialog-input"
+                  value={linkDescription}
+                  placeholder={messages.description}
+                  onChange={(e) => setLinkDescription(e.target.value)}
+                />
+                <input
+                  className="fi-editor-dialog-input"
+                  value={linkImageUrl}
+                  placeholder={messages.imageUrl}
+                  onChange={(e) => setLinkImageUrl(e.target.value)}
+                />
+              </div>
+            ) : null}
+
+            {panelAction === 'table' ? (
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  className="fi-editor-dialog-input"
+                  inputMode="numeric"
+                  min={1}
+                  max={12}
+                  type="number"
+                  value={tableRows}
+                  placeholder={messages.rows}
+                  onChange={(e) => setTableRows(e.target.value)}
+                />
+                <input
+                  className="fi-editor-dialog-input"
+                  inputMode="numeric"
+                  min={1}
+                  max={8}
+                  type="number"
+                  value={tableColumns}
+                  placeholder={messages.columns}
+                  onChange={(e) => setTableColumns(e.target.value)}
+                />
+              </div>
+            ) : null}
 
             <div className="mt-4 flex justify-end gap-2">
               <button type="button" className="fi-editor-dialog-button" onClick={closePanel}>
