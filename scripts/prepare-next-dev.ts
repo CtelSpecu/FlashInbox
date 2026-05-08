@@ -1,8 +1,15 @@
 import { existsSync, readFileSync, readdirSync, readlinkSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+const devDir = '.next/dev';
 const lockPath = '.next/dev/lock';
+const appPathsManifestPath = '.next/dev/server/app-paths-manifest.json';
 const projectRoot = resolve(process.cwd());
+const requiredDevRoutes = [
+  '/(admin)/admin/(panel)/page',
+  '/(admin)/admin/(auth)/login/page',
+  '/api/user/domains/route',
+];
 
 function readProcText(path: string): string {
   try {
@@ -56,4 +63,19 @@ function hasCurrentProjectNextDevProcess(): boolean {
 if (existsSync(lockPath) && !hasCurrentProjectNextDevProcess()) {
   rmSync(lockPath);
   console.log(`Removed stale Next.js dev lock at ${lockPath}`);
+}
+
+if (existsSync(appPathsManifestPath) && !hasCurrentProjectNextDevProcess()) {
+  try {
+    const manifest = JSON.parse(readFileSync(appPathsManifestPath, 'utf8')) as Record<string, unknown>;
+    const missingRoutes = requiredDevRoutes.filter((route) => !(route in manifest));
+
+    if (missingRoutes.length > 0) {
+      rmSync(devDir, { recursive: true, force: true });
+      console.log(`Removed incomplete Next.js dev cache; missing routes: ${missingRoutes.join(', ')}`);
+    }
+  } catch {
+    rmSync(devDir, { recursive: true, force: true });
+    console.log(`Removed unreadable Next.js dev cache at ${devDir}`);
+  }
 }
