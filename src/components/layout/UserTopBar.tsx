@@ -81,6 +81,7 @@ export function UserTopBar() {
               <div className="relative">
                 <mdui-dropdown placement="bottom-end">
                   <mdui-button-icon
+                    key={`language-${locale}`}
                     slot="trigger"
                     variant="standard"
                     className="fi-btn-icon"
@@ -107,6 +108,7 @@ export function UserTopBar() {
               <div className="relative">
                 <mdui-dropdown placement="bottom-end">
                   <mdui-button-icon
+                    key={`theme-${locale}-${theme}`}
                     slot="trigger"
                     variant="standard"
                     className="fi-btn-icon"
@@ -136,6 +138,7 @@ export function UserTopBar() {
               {/* Sound Dropdown */}
               <div ref={soundControlRef} className="relative">
                 <mdui-button-icon
+                  key={`sound-${locale}-${soundPercent}`}
                   variant="standard"
                   className="fi-btn-icon"
                   aria-label={t.sound.label}
