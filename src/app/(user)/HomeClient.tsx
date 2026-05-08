@@ -31,12 +31,11 @@ interface CreateMailboxResponse {
 
 interface UserConfigResponse {
   success: true;
-  data: { defaultDomain: string; turnstileSiteKey: string };
-}
-
-interface UserDomainsResponse {
-  success: true;
-  data: { domains: Array<{ id: number; name: string }> };
+  data: {
+    defaultDomain: string;
+    domains?: Array<{ id: number; name: string }>;
+    turnstileSiteKey: string;
+  };
 }
 
 export default function HomeClient() {
@@ -64,17 +63,15 @@ export default function HomeClient() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([
-      apiFetch<UserConfigResponse>('/api/user/config'),
-      apiFetch<UserDomainsResponse>('/api/user/domains'),
-    ])
-      .then(([cfg, dom]) => {
+    apiFetch<UserConfigResponse>('/api/user/config')
+      .then((cfg) => {
         if (!active) return;
         const dd = cfg.data.defaultDomain || 'example.com';
+        const enabledDomains = cfg.data.domains || [];
         setDefaultDomain(dd);
         setTurnstileSiteKey(cfg.data.turnstileSiteKey || '');
-        setDomains(dom.data.domains || []);
-        const found = dom.data.domains?.find((d) => d.name === dd);
+        setDomains(enabledDomains);
+        const found = enabledDomains.find((d) => d.name === dd);
         if (found) setDomainId(found.id);
       })
       .catch(() => {
