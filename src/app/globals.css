@@ -1308,6 +1308,7 @@ mdui-button-icon[disabled]::part(button) {
   --w-e-textarea-slight-color: var(--mdui-color-on-surface-variant);
   --w-e-textarea-selected-border-color: var(--mdui-color-primary);
   --w-e-textarea-handler-bg-color: var(--mdui-color-primary);
+  --fi-editor-table-border-color: color-mix(in srgb, var(--mdui-color-outline) 72%, var(--mdui-color-on-surface));
   position: relative;
   border-radius: 0.75rem;
   background: var(--mdui-color-surface);
@@ -1582,7 +1583,7 @@ body > .w-e-modal button {
 
 .fi-compose-editor .w-e-text-container [data-slate-editor] .table-container {
   margin: 1rem 0;
-  border: 1px solid var(--mdui-color-outline-variant);
+  border: 1px solid var(--fi-editor-table-border-color) !important;
   border-radius: 0.75rem;
   background: var(--mdui-color-surface);
   padding: 0.75rem;
@@ -1594,7 +1595,13 @@ body > .w-e-modal button {
   width: 100%;
   border-collapse: collapse !important;
   border-spacing: 0;
+  border: 1px solid var(--fi-editor-table-border-color) !important;
   table-layout: fixed;
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] table col,
+.fi-compose-editor .w-e-text-container table col {
+  border-inline-end: 1px solid var(--fi-editor-table-border-color) !important;
 }
 
 .fi-compose-editor .w-e-text-container [data-slate-editor] table td,
@@ -1602,9 +1609,19 @@ body > .w-e-modal button {
 .fi-compose-editor .w-e-text-container table td,
 .fi-compose-editor .w-e-text-container table th {
   min-width: 5rem;
-  border: 1px solid var(--mdui-color-outline-variant) !important;
+  border: 1px solid var(--fi-editor-table-border-color) !important;
+  border-right-color: var(--fi-editor-table-border-color) !important;
+  border-right-style: solid !important;
+  border-right-width: 1px !important;
   padding: 0.55rem 0.65rem;
   vertical-align: top;
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] table td[style],
+.fi-compose-editor .w-e-text-container [data-slate-editor] table th[style],
+.fi-compose-editor .w-e-text-container table td[style],
+.fi-compose-editor .w-e-text-container table th[style] {
+  border-color: var(--fi-editor-table-border-color) !important;
 }
 
 .fi-compose-editor .w-e-text-container [data-slate-editor] table th,
