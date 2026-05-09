@@ -114,8 +114,9 @@ export function ComposeClient() {
   const [markdown, setMarkdown] = useState('');
   const [sendError, setSendError] = useState<string | null>(null);
   const [preset, setPreset] = useState<ComposePreset | null>(null);
-  const [sidebarHeight, setSidebarHeight] = useState<number | null>(null);
-  const sidebarRef = useRef<HTMLElement | null>(null);
+  const [sideCardsHeight, setSideCardsHeight] = useState<number | null>(null);
+  const recipientsPanelRef = useRef<HTMLElement | null>(null);
+  const inspectorPanelRef = useRef<HTMLElement | null>(null);
   const editorApiRef = useRef<{
     getHtml: () => string;
     setHtml: (value: string) => void;
@@ -124,19 +125,20 @@ export function ComposeClient() {
   const recipientCount = useMemo(() => state.to.length + state.cc.length + state.bcc.length, [state]);
   const editorPanelStyle = useMemo(
     () =>
-      sidebarHeight
-        ? ({ '--fi-compose-editor-height': `${Math.ceil(sidebarHeight)}px` } as React.CSSProperties)
+      sideCardsHeight
+        ? ({ '--fi-compose-editor-height': `${Math.ceil(sideCardsHeight)}px` } as React.CSSProperties)
         : undefined,
-    [sidebarHeight]
+    [sideCardsHeight]
   );
 
   useEffect(() => {
-    const sidebar = sidebarRef.current;
-    if (!sidebar) return;
-
     const updateHeight = () => {
-      const height = sidebar.getBoundingClientRect().height;
-      setSidebarHeight((prev) => {
+      const recipientsHeight = recipientsPanelRef.current?.getBoundingClientRect().height || 0;
+      const inspectorHeight = inspectorPanelRef.current?.getBoundingClientRect().height || 0;
+      const height = recipientsHeight + inspectorHeight;
+      if (!height) return;
+
+      setSideCardsHeight((prev) => {
         const next = Math.round(height);
         return prev === next ? prev : next;
       });
@@ -150,7 +152,8 @@ export function ComposeClient() {
     }
 
     const observer = new ResizeObserver(updateHeight);
-    observer.observe(sidebar);
+    if (recipientsPanelRef.current) observer.observe(recipientsPanelRef.current);
+    if (inspectorPanelRef.current) observer.observe(inspectorPanelRef.current);
     window.addEventListener('resize', updateHeight);
     return () => {
       observer.disconnect();
@@ -321,8 +324,8 @@ export function ComposeClient() {
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
-          <aside ref={sidebarRef} className="fi-compose-sidebar space-y-4">
-            <section className="fi-compose-panel space-y-3 p-4">
+          <aside className="fi-compose-sidebar space-y-4">
+            <section ref={recipientsPanelRef} className="fi-compose-panel space-y-3 p-4">
               <div className="text-sm font-semibold">{t.compose.recipients}</div>
               <mdui-text-field
                 label={t.compose.to}
@@ -354,7 +357,7 @@ export function ComposeClient() {
               </div>
             </section>
 
-            <section className="fi-compose-panel space-y-3 p-4">
+            <section ref={inspectorPanelRef} className="fi-compose-panel space-y-3 p-4">
               <div className="text-sm font-semibold">{t.compose.inspector}</div>
               <div className="space-y-2 text-sm">
                 <div className="rounded-lg border border-[color:var(--mdui-color-outline)] px-3 py-2">
