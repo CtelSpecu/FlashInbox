@@ -592,7 +592,6 @@ export function WangEditorClient({
     () => ({
       placeholder,
       readOnly: !!disabled,
-      maxLength: 3000,
       scroll: true,
       hoverbarKeys: {
         text: {
@@ -609,10 +608,6 @@ export function WangEditorClient({
           parseImageSrc(src: string) {
             return normalizeImageUrl(src);
           },
-          onInsertedImage(imageNode: { href?: string } | null) {
-            if (!imageNode) return;
-            imageNode.href = '';
-          },
         },
         editImage: {
           checkImage(src: string) {
@@ -620,10 +615,6 @@ export function WangEditorClient({
           },
           parseImageSrc(src: string) {
             return normalizeImageUrl(src);
-          },
-          onUpdatedImage(imageNode: { href?: string } | null) {
-            if (!imageNode) return;
-            imageNode.href = '';
           },
         },
         insertLink: {

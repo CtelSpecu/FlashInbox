@@ -80,8 +80,10 @@ turndown.addRule('linkCard', {
   },
 });
 
-function safeUrl(value: string): string {
-  const normalized = value.trim().startsWith('//') ? `https:${value.trim()}` : value.trim();
+function safeUrl(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  const normalized = trimmed.startsWith('//') ? `https:${trimmed}` : trimmed;
   try {
     const url = new URL(normalized);
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {
