@@ -189,7 +189,15 @@ export default function RecoverClient() {
         {notice && <div className="text-sm opacity-80">{notice}</div>}
         {errorText && <div className="text-sm" style={{ color: '#B3261E' }}>{errorText}</div>}
 
-        <mdui-button variant="filled" className="fi-btn-filled" full-width data-sound="notice" loading={loading} disabled={!canSubmit} onClick={submit}>
+        <mdui-button
+          variant="filled"
+          className="fi-btn-filled"
+          full-width
+          data-sound="notice"
+          {...(loading ? { loading: true } : {})}
+          disabled={!canSubmit}
+          onClick={submit}
+        >
           <Icon icon="mdi:login" slot="icon" />
           {t.recover.recoverButton}
         </mdui-button>

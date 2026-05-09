@@ -154,7 +154,15 @@ export default function ClaimClient() {
 
         {errorText && <div className="text-sm" style={{ color: '#B3261E' }}>{errorText}</div>}
 
-        <mdui-button variant="filled" className="fi-btn-filled" full-width data-sound="notice" loading={loading} disabled={!!key || !normalizedEmail || !turnstileToken} onClick={submit}>
+        <mdui-button
+          variant="filled"
+          className="fi-btn-filled"
+          full-width
+          data-sound="notice"
+          {...(loading ? { loading: true } : {})}
+          disabled={!!key || !normalizedEmail || !turnstileToken}
+          onClick={submit}
+        >
           <Icon icon="mdi:check-circle" slot="icon" />
           {t.claim.claimButton}
         </mdui-button>

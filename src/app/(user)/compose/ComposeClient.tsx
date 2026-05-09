@@ -265,7 +265,14 @@ export function ComposeClient() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <mdui-button variant="filled" className="fi-btn-filled" loading={sending} name="" type="button" onClick={sendMail}>
+            <mdui-button
+              variant="filled"
+              className="fi-btn-filled"
+              {...(sending ? { loading: true } : {})}
+              name=""
+              type="button"
+              onClick={sendMail}
+            >
               <Icon icon="mdi:send" slot="icon" />
               {t.compose.send}
             </mdui-button>

@@ -449,7 +449,7 @@ export default function InboxPage() {
               variant="tonal"
               className="fi-btn-tonal"
               data-sound="notice"
-              loading={loadingList}
+              {...(loadingList ? { loading: true } : {})}
               onClick={() => loadList()}
             >
               <Icon icon="mdi:refresh" slot="icon" />
@@ -459,7 +459,7 @@ export default function InboxPage() {
               variant="tonal"
               className="fi-btn-tonal"
               data-sound="notice"
-              loading={renewLoading}
+              {...(renewLoading ? { loading: true } : {})}
               disabled={renewLoading}
               onClick={renewKey}
             >

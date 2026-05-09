@@ -348,7 +348,7 @@ export default function HomeClient() {
                     className="fi-btn-filled col-span-2 w-full"
                     full-width
                     data-sound={mode === 'random' ? 'notice' : 'click'}
-                    loading={loading}
+                    {...(loading ? { loading: true } : {})}
                     disabled={!canSubmit}
                     onClick={submit}
                   >
