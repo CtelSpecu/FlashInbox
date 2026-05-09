@@ -1283,8 +1283,15 @@ mdui-button-icon[disabled]::part(button) {
   min-width: 0;
 }
 
+.fi-compose-editor-panel {
+  --fi-compose-editor-height: 480px;
+}
+
 .fi-compose-editor {
-  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+  height: var(--fi-compose-editor-height);
+  min-height: 0;
   --w-e-toolbar-color: var(--mdui-color-on-surface-variant);
   --w-e-toolbar-bg-color: var(--mdui-color-surface-container-low);
   --w-e-toolbar-active-color: var(--mdui-color-on-secondary-container);
@@ -1362,13 +1369,16 @@ mdui-button-icon[disabled]::part(button) {
 }
 
 .fi-compose-editor .w-e-text-container {
+  flex: 1 1 auto;
   background-color: var(--mdui-color-surface);
   border: 0;
   border-top: 1px solid color-mix(in srgb, var(--mdui-color-outline) 36%, transparent);
   border-radius: 0 0 0.75rem 0.75rem;
-  min-height: 480px;
+  min-height: 0;
+  height: auto !important;
   font-family: inherit;
   color: var(--mdui-color-on-surface);
+  overflow: auto;
 }
 
 .fi-compose-editor .w-e-text-container:focus-within {
@@ -1376,7 +1386,7 @@ mdui-button-icon[disabled]::part(button) {
 }
 
 .fi-compose-editor .w-e-text-container [data-slate-editor] {
-  min-height: 480px;
+  min-height: 100%;
   padding: 1rem;
   font-family: inherit;
   font-size: 0.95rem;

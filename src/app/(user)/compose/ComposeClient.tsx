@@ -114,12 +114,49 @@ export function ComposeClient() {
   const [markdown, setMarkdown] = useState('');
   const [sendError, setSendError] = useState<string | null>(null);
   const [preset, setPreset] = useState<ComposePreset | null>(null);
+  const [sidebarHeight, setSidebarHeight] = useState<number | null>(null);
+  const sidebarRef = useRef<HTMLElement | null>(null);
   const editorApiRef = useRef<{
     getHtml: () => string;
     setHtml: (value: string) => void;
   } | null>(null);
 
   const recipientCount = useMemo(() => state.to.length + state.cc.length + state.bcc.length, [state]);
+  const editorPanelStyle = useMemo(
+    () =>
+      sidebarHeight
+        ? ({ '--fi-compose-editor-height': `${Math.ceil(sidebarHeight)}px` } as React.CSSProperties)
+        : undefined,
+    [sidebarHeight]
+  );
+
+  useEffect(() => {
+    const sidebar = sidebarRef.current;
+    if (!sidebar) return;
+
+    const updateHeight = () => {
+      const height = sidebar.getBoundingClientRect().height;
+      setSidebarHeight((prev) => {
+        const next = Math.round(height);
+        return prev === next ? prev : next;
+      });
+    };
+
+    updateHeight();
+
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', updateHeight);
+      return () => window.removeEventListener('resize', updateHeight);
+    }
+
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(sidebar);
+    window.addEventListener('resize', updateHeight);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateHeight);
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -284,7 +321,7 @@ export function ComposeClient() {
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
-          <aside className="fi-compose-sidebar space-y-4">
+          <aside ref={sidebarRef} className="fi-compose-sidebar space-y-4">
             <section className="fi-compose-panel space-y-3 p-4">
               <div className="text-sm font-semibold">{t.compose.recipients}</div>
               <mdui-text-field
@@ -339,7 +376,7 @@ export function ComposeClient() {
           </aside>
 
           <main className="min-w-0 space-y-4">
-            <section className="fi-compose-panel overflow-hidden">
+            <section className="fi-compose-panel fi-compose-editor-panel overflow-hidden" style={editorPanelStyle}>
               <WangEditorClient
                 value={state.html}
                 placeholder={t.compose.subtitle}
