@@ -1576,22 +1576,31 @@ body > .w-e-modal button {
   border-radius: 0.75rem;
   background: var(--mdui-color-surface);
   padding: 0.75rem;
+  overflow-x: auto;
 }
 
-.fi-compose-editor .w-e-text-container [data-slate-editor] table {
+.fi-compose-editor .w-e-text-container [data-slate-editor] table,
+.fi-compose-editor .w-e-text-container table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: collapse !important;
+  border-spacing: 0;
+  table-layout: fixed;
 }
 
 .fi-compose-editor .w-e-text-container [data-slate-editor] table td,
-.fi-compose-editor .w-e-text-container [data-slate-editor] table th {
+.fi-compose-editor .w-e-text-container [data-slate-editor] table th,
+.fi-compose-editor .w-e-text-container table td,
+.fi-compose-editor .w-e-text-container table th {
   min-width: 5rem;
-  border: 1px solid var(--mdui-color-outline-variant);
+  border: 1px solid var(--mdui-color-outline-variant) !important;
   padding: 0.55rem 0.65rem;
+  vertical-align: top;
 }
 
 .fi-compose-editor .w-e-text-container [data-slate-editor] table th,
-.fi-compose-editor .w-e-text-container [data-slate-editor] table td[data-is-header="true"] {
+.fi-compose-editor .w-e-text-container [data-slate-editor] table td[data-is-header="true"],
+.fi-compose-editor .w-e-text-container table th,
+.fi-compose-editor .w-e-text-container table td[data-is-header="true"] {
   background: rgb(235, 233, 244);
   font-weight: 600;
 }
