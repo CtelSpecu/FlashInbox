@@ -1557,6 +1557,25 @@ body > .w-e-modal button {
   color: var(--mdui-color-primary);
 }
 
+.fi-compose-editor .w-e-text-container [data-slate-editor] .fi-compose-signature {
+  margin: 1rem 0 0.75rem;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid var(--mdui-color-outline-variant);
+  color: #000;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] .fi-compose-signature a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] .fi-compose-signature a:hover {
+  text-decoration: underline;
+}
+
 .fi-compose-editor .w-e-text-container [data-slate-editor] {
   padding: 0.75rem 1rem 1rem;
 }

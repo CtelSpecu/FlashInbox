@@ -257,6 +257,27 @@ export function buildLinkCardHtml(input: LinkCardInput): string {
   `;
 }
 
+export function buildComposeSignatureHtml(label: string, href = 'https://flashinbox.hxcn.top'): string {
+  const url = safeUrl(href) || 'https://flashinbox.hxcn.top/';
+  const text = escapeHtml(label.trim() || 'Sent by FlashInbox');
+
+  return `<p><br></p><p class="fi-compose-signature" data-fi-compose-signature="1" style="margin:16px 0 0;padding:12px 0 0;border-top:1px solid #CAC4D0;color:#000000;font-size:13px;line-height:1.5"><a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#000000;text-decoration:underline;text-underline-offset:2px">${text}</a></p>`;
+}
+
+export function ensureComposeSignatureHtml(html: string, label: string): string {
+  const source = html.trim() || '<p><br></p>';
+  if (source.includes('data-fi-compose-signature')) return source;
+
+  const signature = buildComposeSignatureHtml(label);
+  const firstParagraph = source.match(/<p(?:\s[^>]*)?>[\s\S]*?<\/p>/i);
+  if (!firstParagraph || firstParagraph.index === undefined) {
+    return `<p><br></p>${signature}${source}`;
+  }
+
+  const insertAt = firstParagraph.index + firstParagraph[0].length;
+  return `${source.slice(0, insertAt)}${signature}${source.slice(insertAt)}`;
+}
+
 export function buildFormulaHtml(formula: string): string {
   const cleaned = formula.trim();
   if (!cleaned) return '';

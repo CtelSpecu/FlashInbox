@@ -7,7 +7,13 @@ import { Icon } from '@iconify/react';
 import { snackbar } from 'mdui/functions/snackbar.js';
 
 import { apiFetch, type ApiError } from '@/lib/client/api';
-import { htmlToMarkdown, type ComposePreset, type EditorMeta } from '@/lib/client/compose';
+import {
+  buildComposeSignatureHtml,
+  ensureComposeSignatureHtml,
+  htmlToMarkdown,
+  type ComposePreset,
+  type EditorMeta,
+} from '@/lib/client/compose';
 import { getUserErrorMessage } from '@/lib/client/error-i18n';
 import { clearSessionToken } from '@/lib/client/session-store';
 import { useI18n } from '@/lib/i18n/context';
@@ -52,12 +58,11 @@ interface ComposeMessageResponse {
 
 type Mode = 'new' | 'reply' | 'replyAll' | 'forward';
 
-type AddressField = 'to' | 'cc' | 'bcc';
+type AddressField = 'to' | 'cc';
 
 interface ComposeState {
   to: string[];
   cc: string[];
-  bcc: string[];
   subject: string;
   html: string;
   text: string;
@@ -70,7 +75,6 @@ interface ComposeState {
 const emptyState: ComposeState = {
   to: [],
   cc: [],
-  bcc: [],
   subject: '',
   html: '<p><br></p>',
   text: '',
@@ -122,7 +126,11 @@ export function ComposeClient() {
     setHtml: (value: string) => void;
   } | null>(null);
 
-  const recipientCount = useMemo(() => state.to.length + state.cc.length + state.bcc.length, [state]);
+  const initialHtml = useMemo(
+    () => `<p><br></p>${buildComposeSignatureHtml(t.compose.sentByFlashInbox)}`,
+    [t.compose.sentByFlashInbox]
+  );
+  const recipientCount = useMemo(() => state.to.length + state.cc.length, [state.cc.length, state.to.length]);
   const editorPanelStyle = useMemo(
     () =>
       sideCardsHeight
@@ -205,7 +213,7 @@ export function ComposeClient() {
             to: res.data.to || [],
             cc: res.data.cc || [],
             subject: res.data.subject || '',
-            html: res.data.html || '<p><br></p>',
+            html: ensureComposeSignatureHtml(res.data.html || initialHtml, t.compose.sentByFlashInbox),
             text: res.data.text || '',
             fromName: res.data.fromName || '',
             replyToMessageId: res.data.replyToMessageId,
@@ -216,7 +224,7 @@ export function ComposeClient() {
         }
 
         if (active) {
-          setState(emptyState);
+          setState({ ...emptyState, html: initialHtml });
           setMode('new');
           setPreset(null);
         }
@@ -239,7 +247,7 @@ export function ComposeClient() {
     return () => {
       active = false;
     };
-  }, [router, searchParams, t]);
+  }, [initialHtml, router, searchParams, t]);
 
   function updateField(field: AddressField, value: string) {
     const next = splitValues(value);
@@ -257,7 +265,6 @@ export function ComposeClient() {
       const payload = {
         to: state.to,
         cc: state.cc,
-        bcc: state.bcc,
         subject: state.subject,
         html: state.html,
         text: state.text || htmlToMarkdown(state.html),
@@ -336,11 +343,6 @@ export function ComposeClient() {
                 label={t.compose.cc}
                 value={joinList(state.cc)}
                 onInput={(e) => updateField('cc', (e.target as HTMLInputElement).value)}
-              />
-              <mdui-text-field
-                label={t.compose.bcc}
-                value={joinList(state.bcc)}
-                onInput={(e) => updateField('bcc', (e.target as HTMLInputElement).value)}
               />
               <mdui-text-field
                 label={t.compose.subject}

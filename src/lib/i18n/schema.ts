@@ -97,9 +97,9 @@ export interface UserTranslations {
     recipients: string;
     to: string;
     cc: string;
-    bcc: string;
     subject: string;
     fromName: string;
+    sentByFlashInbox: string;
     description: string;
     linkUrl: string;
     videoUrl: string;

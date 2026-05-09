@@ -16,6 +16,8 @@ async function sendHandler(request: NextRequest, context: AuthContext): Promise<
     return error(ErrorCodes.INVALID_CONTENT, 'HTML body is required', 400);
   }
 
+  body.bcc = [];
+
   const env = getCloudflareEnv();
   const sendService = new SendService(env.DB, env.EMAIL || null);
 
