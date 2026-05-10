@@ -4,8 +4,6 @@ import { withAuth, AuthContext } from '@/lib/middleware/auth';
 import { SendService, type SendEmailInput } from '@/lib/services/send';
 import { ErrorCodes, error, parseJsonBody, success } from '@/lib/utils/response';
 
-export const runtime = 'edge';
-
 async function sendHandler(request: NextRequest, context: AuthContext): Promise<Response> {
   const body = await parseJsonBody<SendEmailInput>(request);
   if (!body || !Array.isArray(body.to) || typeof body.subject !== 'string') {

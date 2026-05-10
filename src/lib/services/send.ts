@@ -43,6 +43,25 @@ export interface SendMailboxContext {
   auth: AuthContext;
 }
 
+type CloudflareEmailModule = {
+  EmailMessage: {
+    new (from: string, to: string, raw: ReadableStream | string): EmailMessage;
+  };
+};
+
+async function loadCloudflareEmailModule(): Promise<CloudflareEmailModule> {
+  const runtimeGlobals = globalThis as typeof globalThis & {
+    __flashinboxCloudflareEmailModuleSpecifier?: string;
+  };
+  const moduleSpecifier =
+    runtimeGlobals.__flashinboxCloudflareEmailModuleSpecifier || 'cloudflare:email';
+
+  return import(
+    /* webpackIgnore: true */
+    moduleSpecifier
+  ) as Promise<CloudflareEmailModule>;
+}
+
 function normalizeRecipients(items: string[] | undefined): string[] {
   return Array.from(new Set((items || []).map((item) => item.trim().toLowerCase()).filter(Boolean)));
 }
@@ -284,7 +303,7 @@ export class SendService {
       throw error(ErrorCodes.SEND_FAILED, 'Send binding is not configured', 500);
     }
 
-    const { EmailMessage } = await import('cloudflare:email');
+    const { EmailMessage } = await loadCloudflareEmailModule();
     const allRecipients = [...to, ...cc, ...bcc];
     const sendResults = await Promise.allSettled(
       allRecipients.map((recipient) =>

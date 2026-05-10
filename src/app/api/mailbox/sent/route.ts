@@ -4,8 +4,6 @@ import { createRepositories } from '@/lib/db';
 import { withAuth, AuthContext } from '@/lib/middleware/auth';
 import { success } from '@/lib/utils/response';
 
-export const runtime = 'edge';
-
 async function getHandler(request: NextRequest, context: AuthContext): Promise<Response> {
   const env = getCloudflareEnv();
   const repos = createRepositories(env.DB);

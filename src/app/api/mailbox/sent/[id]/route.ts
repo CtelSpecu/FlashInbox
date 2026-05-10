@@ -4,8 +4,6 @@ import { createRepositories } from '@/lib/db';
 import { withAuth, AuthContext } from '@/lib/middleware/auth';
 import { ErrorCodes, error, success } from '@/lib/utils/response';
 
-export const runtime = 'edge';
-
 interface RouteParams {
   params: Promise<{ id: string }>;
 }

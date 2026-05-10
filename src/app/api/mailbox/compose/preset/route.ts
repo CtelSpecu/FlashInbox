@@ -14,8 +14,6 @@ import {
 } from '@/lib/client/compose';
 import { ErrorCodes, error, success } from '@/lib/utils/response';
 
-export const runtime = 'edge';
-
 function getBaseSubject(subject: string | null): string {
   return (subject || '').trim();
 }
