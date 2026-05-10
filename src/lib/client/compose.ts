@@ -265,7 +265,7 @@ export function buildComposeSignatureHtml(label: string, href = 'https://flashin
     ? `${escapeHtml(text.slice(0, text.indexOf(brand)))}<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#000000;text-decoration:underline;text-underline-offset:2px">${escapeHtml(brand)}</a>${escapeHtml(text.slice(text.indexOf(brand) + brand.length))}`
     : escapeHtml(text);
 
-  return `<p><br></p><p class="fi-compose-signature" data-fi-compose-signature="1" style="margin:16px 0 0;padding:12px 0 0;border-top:1px solid #CAC4D0;color:#000000;font-size:13px;line-height:1.5">${linkedText}</p>`;
+  return `<p><br></p><hr data-fi-compose-signature-divider="1" style="display:block;height:1px;border:0;background:#CAC4D0;margin:16px 0 12px" /><p class="fi-compose-signature" data-fi-compose-signature="1" style="margin:0 0 12px;color:#000000;font-size:13px;line-height:1.5">${linkedText}</p>`;
 }
 
 export function ensureComposeSignatureHtml(html: string, label: string): string {

@@ -1557,10 +1557,15 @@ body > .w-e-modal button {
   color: var(--mdui-color-primary);
 }
 
-.fi-compose-editor .w-e-text-container [data-slate-editor] .fi-compose-signature {
+.fi-compose-editor .w-e-text-container [data-slate-editor] [data-fi-compose-signature-divider] {
   margin: 1rem 0 0.75rem;
-  padding: 0.75rem 0 0;
-  border-top: 1px solid var(--mdui-color-outline-variant);
+  height: 1px;
+  border: 0;
+  background: var(--mdui-color-outline-variant);
+}
+
+.fi-compose-editor .w-e-text-container [data-slate-editor] .fi-compose-signature {
+  margin: 0 0 0.75rem;
   color: #000;
   font-size: 0.82rem;
   line-height: 1.5;

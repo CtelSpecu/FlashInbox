@@ -83,6 +83,7 @@ export function sanitizeOutboundHtml(html: string): string {
       'frameborder',
       'loading',
       'referrerpolicy',
+      'data-fi-compose-signature-divider',
       'data-fi-compose-signature',
       'data-fi-formula',
       'data-fi-link-card',
