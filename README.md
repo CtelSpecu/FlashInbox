@@ -110,6 +110,8 @@ bun run test:integration
 - Email Worker：`wrangler deploy --config .tmp/wrangler.email.toml`
 - Scheduled Worker：`wrangler deploy --config .tmp/wrangler.scheduled.toml`
 
+注意：根目录的 `wrangler.toml` / `wrangler.email.toml` / `wrangler.scheduled.toml` 是模板，保留本地占位 D1 ID。生产部署必须使用生成后的 `.tmp/wrangler.*.toml`，或者直接执行 `bun run deploy`。
+
 关键字段含义（同名字段在 3 个文件中含义一致）：
 - `compatibility_date`：Workers 兼容性日期，固定运行时行为，避免平台升级导致差异
 - `compatibility_flags = ["nodejs_compat"]`：开启 Node.js 兼容层（用于依赖/部分 Node API 适配）
@@ -434,6 +436,9 @@ wrangler d1 execute flashinbox-db --remote --command "INSERT INTO domains (name,
 | 从远程 D1 同步到本地 SQLite | `bun run d1:sync-local` |
 | 构建 Worker | `bun run build:worker` |
 | 生成主应用部署配置 | `bun run prepare:wrangler:main` |
+| 部署主应用 | `bun run deploy:main` |
+| 部署 Email Worker | `bun run deploy:email` |
+| 部署 Scheduled Worker | `bun run deploy:scheduled` |
 | 部署全部 Worker | `bun run deploy` |
 | 格式化 | `bun run format` |
 | Lint | `bun run lint` |
