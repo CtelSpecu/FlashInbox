@@ -228,7 +228,6 @@ export function prepareWranglerConfig(targetEnv: TargetEnv): string {
 
   let content = source.replace(/database_name = "[^"]*"/g, `database_name = "${mainDbName}"`);
   content = content.replace(/database_id = "[^"]*"/g, `database_id = "${dbId}"`);
-  content = content.replace(/remote = true\n/g, '');
   content = rewritePathsForTmpConfig(content);
   content = upsertVarsTable(content, 'vars', envVars);
   if (targetEnv === 'main') {

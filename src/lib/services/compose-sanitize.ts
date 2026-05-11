@@ -1,5 +1,3 @@
-import DOMPurify from 'isomorphic-dompurify';
-
 export interface LinkCardInput {
   url: string;
   title: string;
@@ -22,6 +20,8 @@ const ALLOWED_IFRAME_DOMAINS = [
   'player.bilibili.com',
 ];
 
+const DANGEROUS_SCHEMES = ['javascript:', 'vbscript:', 'data:text/html'];
+
 function isHttpUrl(value: string): boolean {
   try {
     const url = new URL(value);
@@ -29,6 +29,101 @@ function isHttpUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+function isDangerousUrl(value: string): boolean {
+  const normalized = value.trim().replace(/[\u0000-\u001F\u007F\s]+/g, '').toLowerCase();
+  return DANGEROUS_SCHEMES.some((scheme) => normalized.startsWith(scheme));
+}
+
+function stripDangerousElements(value: string): string {
+  return value
+    .replace(/<script\b[\s\S]*?<\/script>/gi, '')
+    .replace(/<object\b[\s\S]*?<\/object>/gi, '')
+    .replace(/<embed\b[\s\S]*?>/gi, '')
+    .replace(/<form\b[\s\S]*?<\/form>/gi, '')
+    .replace(/<(?:input|button|textarea|select|meta|base|link)\b[^>]*?>/gi, '');
+}
+
+function stripEventHandlers(value: string): string {
+  return value.replace(/\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+}
+
+function sanitizeCss(value: string): string {
+  return value
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/@import[^;]+;?/gi, '')
+    .replace(/@font-face\s*{[\s\S]*?}/gi, '')
+    .replace(/url\s*\(\s*([^)]+)\s*\)/gi, '')
+    .replace(/expression\s*\([^)]*\)/gi, '')
+    .replace(/-moz-binding\s*:\s*[^;]+;?/gi, '')
+    .replace(/\bbehavior\s*:\s*[^;]+;?/gi, '')
+    .trim();
+}
+
+function sanitizeStyleAttributes(value: string): string {
+  return value.replace(/\sstyle\s*=\s*(?:"([^"]*)"|'([^']*)')/gi, (_match, doubleQuoted, singleQuoted) => {
+    const cleaned = sanitizeCss(String(doubleQuoted ?? singleQuoted ?? ''));
+    if (!cleaned) return '';
+    return ` style="${cleaned.replace(/"/g, '&quot;')}"`;
+  });
+}
+
+function sanitizeStyleTags(value: string): string {
+  return value.replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gi, (_match, css) => {
+    const cleaned = sanitizeCss(String(css || ''));
+    return cleaned ? `<style>${cleaned}</style>` : '';
+  });
+}
+
+function sanitizeUrlAttributes(value: string): string {
+  return value.replace(
+    /\s(href|src|xlink:href|action|formaction)\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi,
+    (match, attrName, rawValue) => {
+      const valueText = String(rawValue || '').trim();
+      const unquoted = valueText.replace(/^['"]|['"]$/g, '');
+      if (isDangerousUrl(unquoted)) {
+        return '';
+      }
+      return ` ${attrName.toLowerCase()}=${valueText}`;
+    }
+  );
+}
+
+function sanitizeIframes(value: string): string {
+  return value.replace(/<iframe\b([^>]*)>(?:[\s\S]*?<\/iframe>)?/gi, (match, attrs) => {
+    const srcMatch = String(attrs).match(/\ssrc\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/i);
+    const src = srcMatch?.[2] ?? srcMatch?.[3] ?? srcMatch?.[4] ?? '';
+    if (!src || !isAllowedIframeSrc(src)) {
+      return '';
+    }
+
+    const allowedAttributes = new Set([
+      'src',
+      'width',
+      'height',
+      'allow',
+      'allowfullscreen',
+      'frameborder',
+      'loading',
+      'referrerpolicy',
+    ]);
+    const cleanedAttrs: string[] = [];
+    for (const attr of String(attrs).matchAll(/\s([a-z0-9:-]+)(?:\s*=\s*("[^"]*"|'[^']*'|[^\s>]+))?/gi)) {
+      const name = attr[1].toLowerCase();
+      if (!allowedAttributes.has(name)) continue;
+      const rawValue = attr[2];
+      if (!rawValue) {
+        cleanedAttrs.push(` ${name}`);
+        continue;
+      }
+      const unquoted = rawValue.replace(/^['"]|['"]$/g, '');
+      if ((name === 'src' || name === 'allow') && isDangerousUrl(unquoted)) continue;
+      cleanedAttrs.push(` ${name}="${unquoted.replace(/"/g, '&quot;')}"`);
+    }
+
+    return `<iframe${cleanedAttrs.join('')}></iframe>`;
+  });
 }
 
 function isAllowedIframeSrc(value: string): boolean {
@@ -74,30 +169,11 @@ export function sanitizeEditorMeta(meta: EditorMeta | undefined): EditorMeta | n
 }
 
 export function sanitizeOutboundHtml(html: string): string {
-  const clean = DOMPurify.sanitize(html, {
-    USE_PROFILES: { html: true },
-    ADD_TAGS: ['iframe', 'span'],
-    ADD_ATTR: [
-      'allow',
-      'allowfullscreen',
-      'frameborder',
-      'loading',
-      'referrerpolicy',
-      'data-fi-compose-signature-divider',
-      'data-fi-compose-signature',
-      'data-fi-formula',
-      'data-fi-link-card',
-      'style',
-    ],
-  }) as string;
-
-  const iframePattern = /<iframe\b([^>]*)src="([^"]+)"([^>]*)><\/iframe>/gi;
-  return clean.replace(iframePattern, (match, before, src, after) => {
-    if (!isAllowedIframeSrc(src)) {
-      return '';
-    }
-    return `<iframe${before}src="${src}"${after}></iframe>`;
-  });
+  return sanitizeIframes(
+    sanitizeUrlAttributes(
+      sanitizeStyleTags(sanitizeStyleAttributes(stripEventHandlers(stripDangerousElements(html))))
+    )
+  );
 }
 
 export function buildTextPreviewFromHtml(html: string): string {

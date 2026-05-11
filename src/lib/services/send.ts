@@ -41,25 +41,34 @@ export interface SendEmailResult {
 export interface SendMailboxContext {
   request: Request;
   auth: AuthContext;
+  waitUntil?: (promise: Promise<unknown>) => void;
+  requestId?: string;
 }
 
-type CloudflareEmailModule = {
-  EmailMessage: {
-    new (from: string, to: string, raw: ReadableStream | string): EmailMessage;
-  };
+type EmailAddress = string | { email: string; name?: string };
+
+interface EmailServiceMessage {
+  to: string | string[];
+  cc?: string[];
+  bcc?: string[];
+  from: EmailAddress;
+  replyTo?: string;
+  subject: string;
+  html?: string;
+  text?: string;
+  headers?: Record<string, string>;
+}
+
+type EmailServiceBinding = {
+  send(message: EmailServiceMessage): Promise<{ messageId?: string }>;
 };
 
-async function loadCloudflareEmailModule(): Promise<CloudflareEmailModule> {
-  const runtimeGlobals = globalThis as typeof globalThis & {
-    __flashinboxCloudflareEmailModuleSpecifier?: string;
-  };
-  const moduleSpecifier =
-    runtimeGlobals.__flashinboxCloudflareEmailModuleSpecifier || 'cloudflare:email';
-
-  return import(
-    /* webpackIgnore: true */
-    moduleSpecifier
-  ) as Promise<CloudflareEmailModule>;
+function logSendStage(
+  requestId: string | undefined,
+  stage: string,
+  details: Record<string, unknown> = {}
+): void {
+  console.info('[send]', { requestId, stage, ...details });
 }
 
 function normalizeRecipients(items: string[] | undefined): string[] {
@@ -72,32 +81,6 @@ function validateRecipients(recipients: string[]): boolean {
 
 function joinAddresses(items: string[]): string {
   return items.join(', ');
-}
-
-function buildMimeMessage(input: {
-  from: string;
-  to: string[];
-  cc: string[];
-  subject: string;
-  html: string;
-  text: string;
-  replyTo?: string | null;
-  messageId: string;
-}): string {
-  const headers = [
-    `From: ${input.from}`,
-    `To: ${joinAddresses(input.to)}`,
-    input.cc.length ? `Cc: ${joinAddresses(input.cc)}` : null,
-    `Subject: ${input.subject}`,
-    `Message-ID: <${input.messageId}>`,
-    input.replyTo ? `In-Reply-To: <${input.replyTo}>` : null,
-    'MIME-Version: 1.0',
-    'Content-Type: text/html; charset=UTF-8',
-    '',
-    input.html || input.text,
-  ].filter(Boolean);
-
-  return headers.join('\r\n');
 }
 
 function ensureSendPermissions(domain: Domain, mailbox: Mailbox): ErrorCode | null {
@@ -148,6 +131,121 @@ export function checkSendPolicy(recipients: string[], policy: SendPolicyConfig):
   return blocked ? ErrorCodes.SEND_BLOCKED : null;
 }
 
+function getErrorMessage(reason: unknown): string {
+  if (reason instanceof Error) {
+    return reason.message;
+  }
+  if (typeof reason === 'string') {
+    return reason;
+  }
+  return 'unknown send failure';
+}
+
+function getErrorCode(reason: unknown): string | null {
+  if (reason && typeof reason === 'object' && 'code' in reason) {
+    const code = (reason as { code?: unknown }).code;
+    return typeof code === 'string' ? code : null;
+  }
+  return null;
+}
+
+function serializeSendError(reason: unknown): Record<string, unknown> {
+  if (reason instanceof Error) {
+    const withCode = reason as Error & { code?: unknown; cause?: unknown };
+    return {
+      name: reason.name,
+      message: reason.message,
+      code: typeof withCode.code === 'string' ? withCode.code : null,
+      stack: reason.stack,
+      cause: withCode.cause instanceof Error ? withCode.cause.message : withCode.cause,
+    };
+  }
+  return { message: getErrorMessage(reason), code: getErrorCode(reason) };
+}
+
+function buildThreadingHeaders(replyToMessageId?: string): Record<string, string> | undefined {
+  if (replyToMessageId) {
+    return {
+      'In-Reply-To': `<${replyToMessageId}>`,
+      References: `<${replyToMessageId}>`,
+    };
+  }
+  return undefined;
+}
+
+async function recordSendFailure(input: {
+  db: D1Database;
+  messageId: string;
+  actorId: string;
+  fromAddr: string;
+  recipientCount: number;
+  reason: string;
+  providerCode?: string | null;
+}): Promise<void> {
+  const repos = createRepositories(input.db);
+  await repos.messages.markSendStatus(input.messageId, 'failed', { error: input.reason });
+  await repos.sendEvents.create({
+    messageId: input.messageId,
+    event: 'failed',
+    details: {
+      reason: input.reason,
+      providerCode: input.providerCode || null,
+      recipientCount: input.recipientCount,
+    },
+  });
+  await repos.auditLogs.create({
+    action: 'email_send_failed',
+    actorType: 'user',
+    actorId: input.actorId,
+    targetType: 'message',
+    targetId: input.messageId,
+    details: {
+      from: input.fromAddr,
+      recipientCount: input.recipientCount,
+      reason: input.reason,
+      providerCode: input.providerCode || null,
+    },
+    success: false,
+    errorCode: ErrorCodes.SEND_FAILED,
+  });
+}
+
+async function recordSendSuccess(input: {
+  db: D1Database;
+  messageId: string;
+  actorId: string;
+  providerMessageId?: string | null;
+  fromAddr: string;
+  toCount: number;
+  ccCount: number;
+  bccCount: number;
+}): Promise<void> {
+  const repos = createRepositories(input.db);
+  await repos.messages.markSendStatus(input.messageId, 'sent', { sentAt: Date.now() });
+  await repos.sendEvents.create({
+    messageId: input.messageId,
+    event: 'sent',
+    details: {
+      providerMessageId: input.providerMessageId || null,
+      recipientCount: input.toCount + input.ccCount + input.bccCount,
+    },
+  });
+  await repos.auditLogs.create({
+    action: 'email_send_sent',
+    actorType: 'user',
+    actorId: input.actorId,
+    targetType: 'message',
+    targetId: input.messageId,
+    details: {
+      from: input.fromAddr,
+      toCount: input.toCount,
+      ccCount: input.ccCount,
+      bccCount: input.bccCount,
+    },
+    success: true,
+  });
+}
+
 export class SendService {
   private db: D1Database;
   private emailBinding: SendEmail | null;
@@ -164,6 +262,18 @@ export class SendService {
     const config = this.config || getConfig(env);
     const repos = createRepositories(this.db);
     const rateLimitService = createRateLimitService(this.db);
+    const requestId = context.requestId;
+
+    logSendStage(requestId, 'start', {
+      mailboxId: context.auth.mailbox.id,
+      mailboxStatus: context.auth.mailbox.status,
+      hasEmailBinding: Boolean(this.emailBinding || env.EMAIL),
+      rawToCount: Array.isArray(input.to) ? input.to.length : 0,
+      rawCcCount: Array.isArray(input.cc) ? input.cc.length : 0,
+      rawBccCount: Array.isArray(input.bcc) ? input.bcc.length : 0,
+      subjectLength: typeof input.subject === 'string' ? input.subject.length : null,
+      htmlLength: typeof input.html === 'string' ? input.html.length : null,
+    });
 
     const domain = await repos.domains.findById(context.auth.mailbox.domainId);
     if (!domain) {
@@ -172,6 +282,13 @@ export class SendService {
 
     const forbiddenCode = ensureSendPermissions(domain, context.auth.mailbox);
     if (forbiddenCode) {
+      logSendStage(requestId, 'permission_denied', {
+        domainId: domain.id,
+        domainStatus: domain.status,
+        domainCanSend: domain.canSend,
+        mailboxCanSend: context.auth.mailbox.canSend,
+        code: forbiddenCode,
+      });
       throw error(forbiddenCode, 'Mailbox cannot send mail', 403);
     }
 
@@ -179,8 +296,18 @@ export class SendService {
     const cc = normalizeRecipients(input.cc);
     const bcc = normalizeRecipients(input.bcc);
     if (to.length === 0 || !validateRecipients([...to, ...cc, ...bcc])) {
+      logSendStage(requestId, 'invalid_recipients', {
+        toCount: to.length,
+        ccCount: cc.length,
+        bccCount: bcc.length,
+      });
       throw error(ErrorCodes.INVALID_RECIPIENT, 'Invalid recipient address', 400);
     }
+    logSendStage(requestId, 'recipients_validated', {
+      toCount: to.length,
+      ccCount: cc.length,
+      bccCount: bcc.length,
+    });
 
     const policyError = checkSendPolicy([...to, ...cc, ...bcc], config.sendPolicy);
     if (policyError) {
@@ -209,8 +336,18 @@ export class SendService {
       config: { count: 20, windowMinutes: 60, cooldownMinutes: 10 },
     });
     if (!rateResult.allowed) {
+      logSendStage(requestId, 'rate_limited', {
+        retryAfter: rateResult.retryAfter,
+        count: rateResult.count,
+        limit: rateResult.limit,
+      });
       throw error(ErrorCodes.RATE_LIMITED, 'Too many requests', 429, rateResult.retryAfter || 0);
     }
+    logSendStage(requestId, 'rate_limit_passed', {
+      count: rateResult.count,
+      limit: rateResult.limit,
+      remaining: rateResult.remaining,
+    });
 
     const outboundRuleService = new OutboundRuleService(this.db);
     const ruleCheck = await outboundRuleService.check(domain.id, {
@@ -223,9 +360,12 @@ export class SendService {
       text,
       linkUrls: editorMeta?.linkCards?.map((item) => item.url) || [],
     });
+    logSendStage(requestId, 'rules_checked', {
+      action: ruleCheck.action,
+      ruleId: ruleCheck.matchedRule?.id ?? null,
+    });
 
     const fromAddr = `${context.auth.mailbox.username}@${domain.name}`;
-    const fromHeader = `${fromName ? `${fromName} ` : ''}<${fromAddr}>`;
 
     const message = await repos.messages.create({
       mailboxId: context.auth.mailbox.id,
@@ -247,6 +387,10 @@ export class SendService {
       queuedAt: Date.now(),
       status: 'normal',
       id: crypto.randomUUID(),
+    });
+    logSendStage(requestId, 'message_created', {
+      messageId: message.id,
+      sendStatus: message.sendStatus,
     });
 
     await repos.sendEvents.create({
@@ -284,107 +428,125 @@ export class SendService {
 
     const binding = this.emailBinding || env.EMAIL;
     if (!binding) {
-      await repos.messages.markSendStatus(message.id, 'failed', { error: 'missing send_email binding' });
-      await repos.sendEvents.create({
+      logSendStage(requestId, 'missing_binding', { messageId: message.id });
+      await recordSendFailure({
+        db: this.db,
         messageId: message.id,
-        event: 'failed',
-        details: { reason: 'missing send_email binding' },
-      });
-      await repos.auditLogs.create({
-        action: 'email_send_failed',
-        actorType: 'user',
         actorId: context.auth.session.id,
-        targetType: 'message',
-        targetId: message.id,
-        details: { reason: 'missing send_email binding' },
-        success: false,
-        errorCode: ErrorCodes.SEND_FAILED,
+        fromAddr,
+        recipientCount: to.length + cc.length + bcc.length,
+        reason: 'missing send_email binding',
       });
       throw error(ErrorCodes.SEND_FAILED, 'Send binding is not configured', 500);
     }
 
-    const { EmailMessage } = await loadCloudflareEmailModule();
-    const allRecipients = [...to, ...cc, ...bcc];
-    const sendResults = await Promise.allSettled(
-      allRecipients.map((recipient) =>
-        binding.send(
-          new EmailMessage(
-            fromAddr,
-            recipient,
-            buildMimeMessage({
-              from: fromHeader,
-              to: [recipient],
-              cc: [],
-              subject,
-              html,
-              text,
-              replyTo: input.replyToMessageId || null,
-              messageId: message.id,
-            })
-          )
-        )
-      )
-    );
-    const failed = sendResults.find((result) => result.status === 'rejected');
-    if (failed) {
-      const reason =
-        failed.status === 'rejected' && failed.reason instanceof Error
-          ? failed.reason.message
-          : 'unknown send failure';
-      await repos.messages.markSendStatus(message.id, 'failed', { error: reason });
-      await repos.sendEvents.create({
-        messageId: message.id,
-        event: 'failed',
-        details: { reason, recipientCount: allRecipients.length },
-      });
-      await repos.auditLogs.create({
-        action: 'email_send_failed',
-        actorType: 'user',
-        actorId: context.auth.session.id,
-        targetType: 'message',
-        targetId: message.id,
-        details: {
-          from: fromAddr,
-          recipientCount: allRecipients.length,
-          reason,
-        },
-        success: false,
-        errorCode: ErrorCodes.SEND_FAILED,
-      });
-      throw error(ErrorCodes.SEND_FAILED, 'Send failed', 500);
-    }
-
-    const sendResult = sendResults.find(
-      (result): result is PromiseFulfilledResult<{ messageId: string }> => result.status === 'fulfilled'
-    );
-    await repos.messages.markSendStatus(message.id, 'sent', { sentAt: Date.now() });
-    await repos.sendEvents.create({
+    const delivery = this.deliverQueuedMessage({
+      binding: binding as unknown as EmailServiceBinding,
       messageId: message.id,
-      event: 'sent',
-      details: {
-        providerMessageId: sendResult?.value.messageId || null,
-        recipientCount: allRecipients.length,
-      },
-    });
-    await repos.auditLogs.create({
-      action: 'email_send_sent',
-      actorType: 'user',
       actorId: context.auth.session.id,
-      targetType: 'message',
-      targetId: message.id,
-      details: {
-        from: fromAddr,
-        toCount: to.length,
-        ccCount: cc.length,
-        bccCount: bcc.length,
-      },
-      success: true,
+      fromAddr,
+      fromName,
+      to,
+      cc,
+      bcc,
+      subject,
+      html,
+      text,
+      replyToMessageId: input.replyToMessageId,
+      requestId,
     });
+    if (context.waitUntil) {
+      context.waitUntil(delivery);
+      logSendStage(requestId, 'delivery_scheduled', { messageId: message.id, waitUntil: true });
+    } else {
+      await delivery;
+      logSendStage(requestId, 'delivery_completed_inline', { messageId: message.id });
+    }
 
     return {
       messageId: message.id,
       outboundMessageId: message.id,
-      status: 'sent',
+      status: 'queued',
     };
+  }
+
+  private async deliverQueuedMessage(input: {
+    binding: EmailServiceBinding;
+    messageId: string;
+    actorId: string;
+    fromAddr: string;
+    fromName: string | null;
+    to: string[];
+    cc: string[];
+    bcc: string[];
+    subject: string;
+    html: string;
+    text: string;
+    replyToMessageId?: string;
+    requestId?: string;
+  }): Promise<void> {
+    try {
+      logSendStage(input.requestId, 'delivery_start', {
+        messageId: input.messageId,
+        toCount: input.to.length,
+        ccCount: input.cc.length,
+        bccCount: input.bcc.length,
+      });
+      const message: EmailServiceMessage = {
+        to: input.to.length === 1 ? input.to[0] : input.to,
+        from: input.fromName ? { email: input.fromAddr, name: input.fromName } : input.fromAddr,
+        replyTo: input.fromAddr,
+        subject: input.subject,
+        html: input.html,
+        text: input.text,
+      };
+
+      if (input.cc.length) {
+        message.cc = input.cc;
+      }
+      if (input.bcc.length) {
+        message.bcc = input.bcc;
+      }
+      const headers = buildThreadingHeaders(input.replyToMessageId);
+      if (headers) {
+        message.headers = headers;
+      }
+
+      const result = await input.binding.send(message);
+      logSendStage(input.requestId, 'provider_send_resolved', {
+        messageId: input.messageId,
+        providerMessageId: result?.messageId || null,
+      });
+
+      await recordSendSuccess({
+        db: this.db,
+        messageId: input.messageId,
+        actorId: input.actorId,
+        providerMessageId: result?.messageId || null,
+        fromAddr: input.fromAddr,
+        toCount: input.to.length,
+        ccCount: input.cc.length,
+        bccCount: input.bcc.length,
+      });
+    } catch (reason) {
+      const message = getErrorMessage(reason);
+      const providerCode = getErrorCode(reason);
+      console.error('[send] deferred delivery failed', {
+        requestId: input.requestId,
+        messageId: input.messageId,
+        providerCode,
+        reason: message,
+        error: serializeSendError(reason),
+      });
+      await recordSendFailure({
+        db: this.db,
+        messageId: input.messageId,
+        actorId: input.actorId,
+        fromAddr: input.fromAddr,
+        recipientCount: input.to.length + input.cc.length + input.bcc.length,
+        reason: message,
+        providerCode,
+      });
+    }
   }
 }

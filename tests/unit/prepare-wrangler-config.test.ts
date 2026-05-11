@@ -91,6 +91,10 @@ describe('prepareWranglerConfig', () => {
         'database_name = "flashinbox-db"',
         'database_id = "local-flashinbox-db"',
         '',
+        '[[env.production.send_email]]',
+        'name = "EMAIL"',
+        'remote = true',
+        '',
       ].join('\n')
     );
     for (const key of envKeys) {
@@ -106,6 +110,7 @@ describe('prepareWranglerConfig', () => {
     expect(output).toContain('TURNSTILE_SITE_KEY = "site-key"');
     expect(output).toContain('[env.production.vars]');
     expect(output).toContain('database_id = "03935ee3-40a3-4cfd-a2a1-2081f39a47de"');
+    expect(output).toContain('[[env.production.send_email]]\nname = "EMAIL"\nremote = true');
     expect(output).not.toContain('ADMIN_TOKEN =');
     expect(output).not.toContain('KEY_PEPPER =');
     expect(output).not.toContain('SESSION_SECRET =');
