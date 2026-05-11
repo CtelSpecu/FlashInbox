@@ -50,12 +50,15 @@ export const POST = withAdminAuth(async (
       return error(ErrorCodes.INVALID_REQUEST, 'Invalid status', 400);
     }
 
+    const canReceive = status === 'disabled' ? 0 : 1;
+    const canSend = status === 'enabled' ? 1 : 0;
+
     await env.DB.prepare(
       `UPDATE domains
-       SET status = ?, updated_at = ?
+       SET status = ?, can_receive = ?, can_send = ?, updated_at = ?
        WHERE id IN (${placeholders})`
     )
-      .bind(status, now(), ...ids)
+      .bind(status, canReceive, canSend, now(), ...ids)
       .run();
 
     await repos.auditLogs.create({
@@ -65,7 +68,7 @@ export const POST = withAdminAuth(async (
       targetType: 'domain',
       targetId: 'bulk',
       success: true,
-      details: { ids, status },
+      details: { ids, status, canReceive: Boolean(canReceive), canSend: Boolean(canSend) },
       ipAddress: request.headers.get('cf-connecting-ip') || undefined,
       asn: request.headers.get('cf-ipcountry') || undefined,
       userAgent: request.headers.get('user-agent') || undefined,
@@ -119,4 +122,3 @@ export const POST = withAdminAuth(async (
     blocked: blocked.map((id) => ({ id, mailboxCount: countMap.get(id) ?? 0 })),
   });
 });
-

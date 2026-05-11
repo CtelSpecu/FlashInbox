@@ -92,6 +92,11 @@ export interface AdminTranslations {
     statusEnabled: string;
     statusDisabled: string;
     statusReadonly: string;
+    permission: string;
+    permissionReceiveSend: string;
+    permissionReceiveOnly: string;
+    permissionSendOnly: string;
+    permissionDisabled: string;
     id: string;
     domain: string;
     status: string;

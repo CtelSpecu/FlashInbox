@@ -7,6 +7,8 @@ import { success, error, ErrorCodes, parseJsonBody } from '@/lib/utils/response'
 interface UpdateDomainRequest {
   status?: 'enabled' | 'disabled' | 'readonly';
   note?: string;
+  canReceive?: boolean;
+  canSend?: boolean;
 }
 
 async function putHandler(
@@ -35,6 +37,8 @@ async function putHandler(
   const updated = await repos.domains.update(id, {
     status: body.status,
     note: body.note,
+    canReceive: body.canReceive,
+    canSend: body.canSend,
   });
 
   if (!updated) {
@@ -49,8 +53,18 @@ async function putHandler(
     targetId: String(id),
     success: true,
     details: {
-      before: { status: before.status, note: before.note },
-      after: { status: updated.status, note: updated.note },
+      before: {
+        status: before.status,
+        canReceive: before.canReceive,
+        canSend: before.canSend,
+        note: before.note,
+      },
+      after: {
+        status: updated.status,
+        canReceive: updated.canReceive,
+        canSend: updated.canSend,
+        note: updated.note,
+      },
     },
   });
 
@@ -64,6 +78,8 @@ async function putHandler(
       id: updated.id,
       name: updated.name,
       status: updated.status,
+      canReceive: updated.canReceive,
+      canSend: updated.canSend,
       note: updated.note,
       mailboxCount: countResult?.count ?? 0,
       createdAt: updated.createdAt,
@@ -136,5 +152,4 @@ export const DELETE = withAdminAuth<{ id: string }>(async (request, context, rou
   const params = await routeContext.params;
   return deleteHandler(request, context, { id: params.id });
 });
-
 

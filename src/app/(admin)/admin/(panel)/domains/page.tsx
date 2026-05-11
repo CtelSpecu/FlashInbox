@@ -22,11 +22,14 @@ interface SuccessResponse<T> {
 }
 
 type DomainStatus = 'enabled' | 'disabled' | 'readonly';
+type DomainPermissionMode = 'receive_send' | 'receive_only' | 'send_only' | 'disabled';
 
 interface DomainDto {
   id: number;
   name: string;
   status: DomainStatus;
+  canReceive: boolean;
+  canSend: boolean;
   note: string | null;
   mailboxCount: number;
   createdAt: number;
@@ -35,6 +38,20 @@ interface DomainDto {
 
 interface DomainsList {
   domains: DomainDto[];
+}
+
+function permissionToFlags(mode: DomainPermissionMode): { canReceive: boolean; canSend: boolean } {
+  return {
+    canReceive: mode === 'receive_send' || mode === 'receive_only',
+    canSend: mode === 'receive_send' || mode === 'send_only',
+  };
+}
+
+function flagsToPermission(domain: Pick<DomainDto, 'canReceive' | 'canSend'>): DomainPermissionMode {
+  if (domain.canReceive && domain.canSend) return 'receive_send';
+  if (domain.canReceive) return 'receive_only';
+  if (domain.canSend) return 'send_only';
+  return 'disabled';
 }
 
 export default function AdminDomainsPage() {
@@ -46,6 +63,7 @@ export default function AdminDomainsPage() {
 
   const [newName, setNewName] = useState('');
   const [newStatus, setNewStatus] = useState<DomainStatus>('enabled');
+  const [newPermission, setNewPermission] = useState<DomainPermissionMode>('receive_send');
   const [newNote, setNewNote] = useState('');
 
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -54,6 +72,20 @@ export default function AdminDomainsPage() {
   const deleteTarget = useMemo(() => domains.find((d) => d.id === deleteId) || null, [domains, deleteId]);
   const selectedCount = selected.size;
   const allSelected = domains.length > 0 && domains.every((d) => selected.has(d.id));
+  const permissionOptions = useMemo(
+    () => [
+      { label: t.domains.permissionReceiveSend, value: 'receive_send' },
+      { label: t.domains.permissionReceiveOnly, value: 'receive_only' },
+      { label: t.domains.permissionSendOnly, value: 'send_only' },
+      { label: t.domains.permissionDisabled, value: 'disabled' },
+    ],
+    [
+      t.domains.permissionDisabled,
+      t.domains.permissionReceiveOnly,
+      t.domains.permissionReceiveSend,
+      t.domains.permissionSendOnly,
+    ]
+  );
 
   async function load() {
     setLoading(true);
@@ -77,7 +109,6 @@ export default function AdminDomainsPage() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function addDomain() {
@@ -90,10 +121,12 @@ export default function AdminDomainsPage() {
           name: newName.trim(),
           status: newStatus,
           note: newNote.trim() || undefined,
+          ...permissionToFlags(newPermission),
         }),
       });
       setDomains((prev) => [res.data.domain, ...prev]);
       setNewName('');
+      setNewPermission('receive_send');
       setNewNote('');
     } catch (e) {
       const err = e as AdminApiError;
@@ -103,7 +136,10 @@ export default function AdminDomainsPage() {
     }
   }
 
-  async function updateDomain(domainId: number, patch: { status?: DomainStatus; note?: string | null }) {
+  async function updateDomain(
+    domainId: number,
+    patch: { status?: DomainStatus; note?: string | null; canReceive?: boolean; canSend?: boolean }
+  ) {
     setLoading(true);
     setErrorText(null);
     try {
@@ -118,6 +154,16 @@ export default function AdminDomainsPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function updateDomainStatus(domain: DomainDto, status: DomainStatus) {
+    const patch =
+      status === 'disabled'
+        ? { status, canReceive: false, canSend: false }
+        : flagsToPermission(domain) === 'disabled'
+          ? { status, canReceive: true, canSend: status === 'enabled' }
+          : { status, ...permissionToFlags(flagsToPermission(domain)) };
+    await updateDomain(domain.id, patch);
   }
 
   async function deleteDomain(domainId: number) {
@@ -206,7 +252,7 @@ export default function AdminDomainsPage() {
       ) : null}
 
       <Card className="border-none shadow-[color:var(--heroui-shadow-medium)] bg-[color:var(--heroui-content1)]">
-        <CardContent className="grid gap-4 md:grid-cols-4 pt-6">
+        <CardContent className="grid gap-4 md:grid-cols-5 pt-6">
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-[color:var(--heroui-default-400)] ml-1">{t.domains.domain}</label>
             <Input
@@ -228,6 +274,15 @@ export default function AdminDomainsPage() {
                 { label: t.domains.statusDisabled, value: 'disabled' },
                 { label: t.domains.statusReadonly, value: 'readonly' },
               ]}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-[color:var(--heroui-default-400)] ml-1">{t.domains.permission}</label>
+            <Select
+              value={newPermission}
+              onChange={(val) => setNewPermission(val as DomainPermissionMode)}
+              disabled={loading}
+              options={permissionOptions}
             />
           </div>
           <div className="space-y-2">
@@ -309,6 +364,7 @@ export default function AdminDomainsPage() {
                 <TH>{t.domains.id}</TH>
                 <TH>{t.domains.domain}</TH>
                 <TH>{t.domains.status}</TH>
+                <TH>{t.domains.permission}</TH>
                 <TH>{t.domains.mailboxes}</TH>
                 <TH>{t.domains.note}</TH>
                 <TH className="text-right">{t.domains.actions}</TH>
@@ -335,7 +391,7 @@ export default function AdminDomainsPage() {
                     <Select
                       value={d.status}
                       className="min-w-[140px]"
-                      onChange={(val) => updateDomain(d.id, { status: val as DomainStatus })}
+                      onChange={(val) => updateDomainStatus(d, val as DomainStatus)}
                       disabled={loading}
                       size="sm"
                       options={[
@@ -343,6 +399,16 @@ export default function AdminDomainsPage() {
                         { label: t.domains.statusDisabled, value: 'disabled' },
                         { label: t.domains.statusReadonly, value: 'readonly' },
                       ]}
+                    />
+                  </TD>
+                  <TD>
+                    <Select
+                      value={flagsToPermission(d)}
+                      className="min-w-[140px]"
+                      onChange={(val) => updateDomain(d.id, permissionToFlags(val as DomainPermissionMode))}
+                      disabled={loading}
+                      size="sm"
+                      options={permissionOptions}
                     />
                   </TD>
                   <TD>
@@ -379,7 +445,7 @@ export default function AdminDomainsPage() {
               ))}
               {domains.length === 0 && !loading ? (
                 <TR>
-                  <TD colSpan={7} className="py-20 text-center">
+                  <TD colSpan={8} className="py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
                        <Icon icon="lucide:ghost" className="h-12 w-12 text-[color:var(--heroui-default-200)]" />
                        <span className="text-sm font-bold text-[color:var(--heroui-default-400)] uppercase tracking-widest">{t.domains.noDomains}</span>

@@ -85,7 +85,7 @@ export function Select({
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-2 w-full min-w-[120px] origin-top rounded-2xl border border-[color:var(--heroui-divider)] bg-[color:var(--heroui-content1)] p-2 shadow-[color:var(--heroui-shadow-large)] animate-in fade-in zoom-in-95 duration-200">
+        <div className="absolute z-[120] mt-2 w-full min-w-[120px] origin-top rounded-2xl border border-[color:var(--heroui-divider)] bg-[color:var(--heroui-content1)] p-2 shadow-[color:var(--heroui-shadow-large)] animate-in fade-in zoom-in-95 duration-200">
           <div className="max-h-[300px] overflow-y-auto space-y-1">
             {options.map((option) => (
               <button

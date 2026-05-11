@@ -83,6 +83,7 @@ export class DomainRepository extends BaseRepository<Domain, DomainRow> {
    */
   async create(input: CreateDomainInput): Promise<Domain> {
     const timestamp = now();
+    const status = input.status || 'enabled';
     const result = await this.db
       .prepare(
         `INSERT INTO domains (
@@ -93,10 +94,10 @@ export class DomainRepository extends BaseRepository<Domain, DomainRow> {
       )
       .bind(
         input.name,
-        input.status || 'enabled',
+        status,
         input.note || null,
-        (input.canReceive ?? defaultCanReceive(input.status || 'enabled')) ? 1 : 0,
-        (input.canSend ?? defaultCanSend(input.status || 'enabled')) ? 1 : 0,
+        (input.canReceive ?? defaultCanReceive(status)) ? 1 : 0,
+        (input.canSend ?? defaultCanSend(status)) ? 1 : 0,
         input.sendAllowedFromNames || null,
         timestamp,
         timestamp

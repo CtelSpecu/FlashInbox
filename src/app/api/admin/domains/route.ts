@@ -8,6 +8,8 @@ interface AddDomainRequest {
   name: string;
   status?: 'enabled' | 'disabled' | 'readonly';
   note?: string;
+  canReceive?: boolean;
+  canSend?: boolean;
 }
 
 async function getHandler(
@@ -25,6 +27,8 @@ async function getHandler(
       id: d.id,
       name: d.name,
       status: d.status,
+      canReceive: d.canReceive,
+      canSend: d.canSend,
       note: d.note,
       mailboxCount: d.mailboxCount,
       createdAt: d.createdAt,
@@ -70,6 +74,8 @@ async function postHandler(
     name,
     status: body.status,
     note: body.note,
+    canReceive: body.canReceive,
+    canSend: body.canSend,
   });
 
   await repos.auditLogs.create({
@@ -88,6 +94,8 @@ async function postHandler(
         id: created.id,
         name: created.name,
         status: created.status,
+        canReceive: created.canReceive,
+        canSend: created.canSend,
         note: created.note,
         mailboxCount: 0,
         createdAt: created.createdAt,
@@ -100,4 +108,3 @@ async function postHandler(
 
 export const GET = withAdminAuth(getHandler);
 export const POST = withAdminAuth(postHandler);
-

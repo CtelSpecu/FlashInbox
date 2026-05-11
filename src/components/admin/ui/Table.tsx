@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils/cn';
 
 export function Table({ className, ...props }: React.HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="w-full overflow-hidden rounded-2xl border border-[color:var(--heroui-divider)] bg-[color:var(--heroui-content1)] shadow-[color:var(--heroui-shadow-small)]">
+    <div className="w-full overflow-visible rounded-2xl border border-[color:var(--heroui-divider)] bg-[color:var(--heroui-content1)] shadow-[color:var(--heroui-shadow-small)]">
       <table className={cn('w-full text-sm', className)} {...props} />
     </div>
   );
@@ -34,5 +34,4 @@ export function TH({ className, ...props }: React.ThHTMLAttributes<HTMLTableCell
 export function TD({ className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return <td className={cn('px-5 py-5 align-middle text-[color:var(--heroui-foreground)] font-medium', className)} {...props} />;
 }
-
 

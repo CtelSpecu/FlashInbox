@@ -28,6 +28,8 @@ interface DomainDto {
   id: number;
   name: string;
   status: DomainStatus;
+  canReceive?: boolean;
+  canSend?: boolean;
   note: string | null;
   mailboxCount: number;
   createdAt: number;
