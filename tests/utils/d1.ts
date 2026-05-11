@@ -1,3 +1,5 @@
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { Database, type SQLQueryBindings } from 'bun:sqlite';
 
 type D1AllResult<T> = { results: T[] };
@@ -46,10 +48,15 @@ export async function createTestDbFromMigrations(): Promise<{ sqlite: Database; 
   const sqlite = new Database(':memory:');
   sqlite.exec('PRAGMA foreign_keys = ON;');
 
-  const migrationText = await Bun.file(
-    new URL('../../migrations/0001_init.sql', import.meta.url)
-  ).text();
-  sqlite.exec(migrationText);
+  const migrationsDir = join(import.meta.dir, '../../migrations');
+  const migrationFiles = readdirSync(migrationsDir)
+    .filter((file) => /^\d+.*\.sql$/.test(file))
+    .sort();
+
+  for (const file of migrationFiles) {
+    const migrationText = await Bun.file(join(migrationsDir, file)).text();
+    sqlite.exec(migrationText);
+  }
 
   return { sqlite, d1: createTestD1(sqlite) };
 }
