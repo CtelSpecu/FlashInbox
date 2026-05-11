@@ -110,7 +110,7 @@ bun run test:integration
 - Email Worker：`wrangler deploy --config .tmp/wrangler.email.toml`
 - Scheduled Worker：`wrangler deploy --config .tmp/wrangler.scheduled.toml`
 
-注意：根目录的 `wrangler.toml` / `wrangler.email.toml` / `wrangler.scheduled.toml` 是模板，保留本地占位 D1 ID。生产部署必须使用生成后的 `.tmp/wrangler.*.toml`，或者直接执行 `bun run deploy`。
+注意：根目录的 `wrangler.toml` / `wrangler.email.toml` / `wrangler.scheduled.toml` 是模板，保留本地占位 D1 ID。生产部署必须使用生成后的 `.tmp/wrangler.*.toml`，或者直接执行 `bun run deploy`。生成脚本会把 `.env` 中的非敏感部署变量写入 `.tmp/wrangler.main.toml` 的 `[vars]` 与 `[env.production.vars]`；敏感项仍必须通过 `wrangler secret put --env production` 配置，不能进入 `[vars]`。
 
 关键字段含义（同名字段在 3 个文件中含义一致）：
 - `compatibility_date`：Workers 兼容性日期，固定运行时行为，避免平台升级导致差异
@@ -134,7 +134,6 @@ bun run test:integration
 | `KEY_PEPPER` | Key 哈希 pepper（`SHA-256(key + pepper)`） |
 | `SESSION_SECRET` | 会话签名密钥 |
 | `TURNSTILE_SECRET_KEY` | Turnstile 服务端密钥 |
-| `TURNSTILE_SITE_KEY` | Turnstile 前端 site key |
 
 **常用 Vars（见 `wrangler.toml`）**
 
@@ -147,6 +146,7 @@ bun run test:integration
 | `ADMIN_SESSION_EXPIRE_HOURS` | 管理会话有效期（小时） |
 | `MAX_BODY_TEXT` / `MAX_BODY_HTML` | 正文截断上限 |
 | `RATE_LIMIT_*` | 限流规则（如 `10/10m`） |
+| `TURNSTILE_SITE_KEY` | Turnstile 前端 site key |
 
 说明：配置解析与校验逻辑在 `src/lib/types/env.ts`。
 
@@ -299,21 +299,23 @@ bun run prepare:wrangler:scheduled
 ### 4) 执行迁移（远程）
 
 ```bash
-wrangler d1 execute flashinbox-db --remote --file=migrations/0001_init.sql
-wrangler d1 execute flashinbox-db --remote --file=migrations/0002_mailboxes_banned.sql
+bunx wrangler d1 execute flashinbox-db --remote --config .tmp/wrangler.main.toml --env production --file=migrations/0001_init.sql
+bunx wrangler d1 execute flashinbox-db --remote --config .tmp/wrangler.main.toml --env production --file=migrations/0002_mailboxes_banned.sql
+bunx wrangler d1 execute flashinbox-db --remote --config .tmp/wrangler.main.toml --env production --file=migrations/0003_send.sql
 ```
 
 说明：
 - 若你看到类似 “please use ... instead of the SQL BEGIN TRANSACTION or SAVEPOINT” 的报错，请确保迁移文件中没有 `BEGIN TRANSACTION` / `COMMIT` / `SAVEPOINT`（本仓库的 `migrations/0002_mailboxes_banned.sql` 已按该要求编写）
 
 说明：
-- `0002` 仅用于启用邮箱禁用（`banned`）状态；如果不执行该迁移，后台“禁用邮箱”会因 `CHECK` 约束失败而报错
+- `0002` 用于启用邮箱禁用（`banned`）状态；如果不执行该迁移，后台“禁用邮箱”会因 `CHECK` 约束失败而报错
+- `0003` 添加收发权限字段和发信相关表；当前创建邮箱流程会写入 `mailboxes.can_receive` / `mailboxes.can_send`，生产 D1 必须执行该迁移
 
 ### 5) 配置主应用路由与默认域名
 
 修改 `.env` 和 `wrangler.toml` 的生产环境模板：
 - `env.production.routes[0].pattern` 例如 `mail.flashinbox.de`
-- `DEFAULT_DOMAIN` 设置为你的收信域名（例如 `flashinbox.de`）
+- `.env` 中的 `DEFAULT_DOMAIN` 设置为你的收信域名（例如 `flashinbox.de`），然后执行 `bun run prepare:wrangler:main` 生成 `.tmp/wrangler.main.toml`
 
 说明：
 - Web 访问域名（例如 `mail.flashinbox.de`）与收信域名（例如 `flashinbox.de`）可以不同；Email Routing 的 Catch-all 只对主域生效，不适用于 `mail.<domain>` 这种子域
@@ -331,19 +333,21 @@ wrangler secret put ADMIN_TOKEN --env production
 wrangler secret put KEY_PEPPER --env production
 wrangler secret put SESSION_SECRET --env production
 wrangler secret put TURNSTILE_SECRET_KEY --env production
-wrangler secret put TURNSTILE_SITE_KEY --env production
 ```
 
 说明：
 - `KEY_PEPPER` 为关键安全配置，主应用用于 claim/recover 等需要写入 `mailboxes.key_hash` 的流程
+- `TURNSTILE_SITE_KEY` 是前端公开站点密钥，由 `bun run prepare:wrangler:main` 从 `.env` 写入 production vars，不需要用 secret 配置
 - Email Worker 与 Scheduled Worker 当前不需要 Secrets（仅需 D1 绑定与必要 Vars）
 
 ### 8) 部署主应用（Next.js -> Workers）
 
 ```bash
-bun run build:worker
-wrangler deploy --config .tmp/wrangler.main.toml --env production
+bun run deploy:main
 ```
+
+部署前确认 `.tmp/wrangler.main.toml` 的 `[env.production.vars]` 中包含正确的 `DEFAULT_DOMAIN` 和 `TURNSTILE_SITE_KEY`，并且不包含 `ADMIN_TOKEN`、`KEY_PEPPER`、`SESSION_SECRET`、`TURNSTILE_SECRET_KEY`。
+`deploy:main` 会先执行 `check:production-d1`，如果生产 D1 缺少 `0003_send.sql` 添加的列或表，会阻止部署并输出迁移命令。
 
 ### 9) 部署 Email Worker（入站收信）
 
@@ -371,7 +375,7 @@ Email Worker 会查询 D1 的 `domains` 表决定是否接收邮件；如果 `do
 2) 直接写入 D1（远程）：
 
 ```bash
-wrangler d1 execute flashinbox-db --remote --command "INSERT INTO domains (name, status, note, created_at, updated_at) VALUES ('flashinbox.de', 'enabled', 'prod', strftime('%s','now')*1000, strftime('%s','now')*1000);"
+bunx wrangler d1 execute flashinbox-db --remote --config .tmp/wrangler.main.toml --env production --command "INSERT INTO domains (name, status, note, created_at, updated_at) VALUES ('flashinbox.de', 'enabled', 'prod', strftime('%s','now')*1000, strftime('%s','now')*1000);"
 ```
 
 说明：
@@ -436,6 +440,7 @@ wrangler d1 execute flashinbox-db --remote --command "INSERT INTO domains (name,
 | 从远程 D1 同步到本地 SQLite | `bun run d1:sync-local` |
 | 构建 Worker | `bun run build:worker` |
 | 生成主应用部署配置 | `bun run prepare:wrangler:main` |
+| 检查生产 D1 schema | `bun run check:production-d1` |
 | 部署主应用 | `bun run deploy:main` |
 | 部署 Email Worker | `bun run deploy:email` |
 | 部署 Scheduled Worker | `bun run deploy:scheduled` |

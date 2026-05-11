@@ -12,7 +12,8 @@
     "dev": "bun scripts/dev-next.ts",
     "build:webpack": "next build --webpack",
     "build:worker": "bun run prepare:wrangler:main && bun run build:webpack && bunx opennextjs-cloudflare build --skipNextBuild",
-    "dev:wrangler": "wrangler dev --config wrangler.toml",
+    "check:production-d1": "bun run prepare:wrangler:main && bunx wrangler d1 execute flashinbox-db --remote --config .tmp/wrangler.main.toml --env production --command \"SELECT can_receive, can_send, send_allowed_from_names FROM domains LIMIT 0; SELECT can_receive, can_send FROM mailboxes LIMIT 0; SELECT direction, send_status, send_error, sent_at, queued_at, cc_addr, bcc_addr, reply_to_addr, thread_id, editor_meta FROM messages LIMIT 0; SELECT direction FROM rules LIMIT 0; SELECT id FROM outbound_attachments LIMIT 0; SELECT id FROM send_events LIMIT 0\"",
+    "dev:wrangler": "bunx wrangler dev --config wrangler.toml",
     "dev:all": "concurrently \"bun run dev\" \"bun run dev:wrangler\"",
     "d1:sync-local": "bun scripts/sync-d1-to-local.ts",
     "build": "next build",
@@ -23,9 +24,9 @@
     "test": "bun test",
     "test:unit": "bun test tests/unit",
     "test:integration": "bun test tests/integration",
-    "deploy:main": "bun run build:worker && wrangler deploy --config .tmp/wrangler.main.toml --env production",
-    "deploy:email": "bun run prepare:wrangler:email && wrangler deploy --config .tmp/wrangler.email.toml",
-    "deploy:scheduled": "bun run prepare:wrangler:scheduled && wrangler deploy --config .tmp/wrangler.scheduled.toml",
+    "deploy:main": "bun run check:production-d1 && bun run build:worker && bunx wrangler deploy --config .tmp/wrangler.main.toml --env production",
+    "deploy:email": "bun run prepare:wrangler:email && bunx wrangler deploy --config .tmp/wrangler.email.toml",
+    "deploy:scheduled": "bun run prepare:wrangler:scheduled && bunx wrangler deploy --config .tmp/wrangler.scheduled.toml",
     "deploy": "bun run prepare:wrangler:email && bun run prepare:wrangler:scheduled && bun run deploy:main && bun run deploy:email && bun run deploy:scheduled"
   },
   "dependencies": {

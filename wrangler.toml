@@ -37,14 +37,12 @@ SEND_ALLOWED_IFRAME_DOMAINS = "youtube.com,youtu.be,vimeo.com,bilibili.com,playe
 SEND_POLICY_MODE = "unrestricted" # unrestricted / whitelist / blacklist
 SEND_RECIPIENT_WHITELIST = "" # example.com,@team.example,vip@example.net
 SEND_RECIPIENT_BLACKLIST = "" # spam.example,blocked@example.net
-ADMIN_TOKEN = "" # 仅用于本地/测试；生产环境建议使用 wrangler secret put
 
 # Secrets（通过 wrangler secret put 设置）
 # - ADMIN_TOKEN
 # - KEY_PEPPER
 # - SESSION_SECRET
 # - TURNSTILE_SECRET_KEY
-# - TURNSTILE_SITE_KEY
 
 # 生产环境配置
 [env.production]
