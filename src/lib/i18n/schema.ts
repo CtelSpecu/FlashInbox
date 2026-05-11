@@ -112,6 +112,8 @@ export interface UserTranslations {
     rows: string;
     columns: string;
     send: string;
+    previewOnlyTitle: string;
+    previewOnlyDescription: string;
     bodyTooLong: string;
     messageQueued: string;
     messageSent: string;

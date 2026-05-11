@@ -10,7 +10,6 @@ import { apiFetch, type ApiError } from '@/lib/client/api';
 import {
   buildComposeSignatureHtml,
   ensureComposeSignatureHtml,
-  htmlToMarkdown,
   type ComposePreset,
   type EditorMeta,
 } from '@/lib/client/compose';
@@ -45,15 +44,6 @@ interface MailboxInfoResponse {
 interface ComposePresetResponse {
   success: true;
   data: ComposePreset;
-}
-
-interface ComposeMessageResponse {
-  success: true;
-  data: {
-    messageId: string;
-    outboundMessageId: string;
-    status: 'queued' | 'sent';
-  };
 }
 
 type Mode = 'new' | 'reply' | 'replyAll' | 'forward';
@@ -110,12 +100,10 @@ export function ComposeClient() {
 
   const [mailboxEmail, setMailboxEmail] = useState('');
   const [mailboxDomain, setMailboxDomain] = useState('');
-  const [sending, setSending] = useState(false);
   const [presetLoading, setPresetLoading] = useState(true);
   const [mode, setMode] = useState<Mode>('new');
   const [state, setState] = useState<ComposeState>(emptyState);
   const [textLength, setTextLength] = useState(0);
-  const [markdown, setMarkdown] = useState('');
   const [sendError, setSendError] = useState<string | null>(null);
   const [preset, setPreset] = useState<ComposePreset | null>(null);
   const [sideCardsHeight, setSideCardsHeight] = useState<number | null>(null);
@@ -255,40 +243,8 @@ export function ComposeClient() {
   }
 
   async function sendMail() {
-    if (textLength > 3000) {
-      setSendError(t.compose.bodyTooLong);
-      return;
-    }
-    setSending(true);
-    setSendError(null);
-    try {
-      const payload = {
-        to: state.to,
-        cc: state.cc,
-        subject: state.subject,
-        html: state.html,
-        text: state.text || htmlToMarkdown(state.html),
-        fromName: state.fromName || undefined,
-        replyToMessageId: state.replyToMessageId,
-        forwardMessageId: state.forwardMessageId,
-        editorMeta: {
-          ...state.editorMeta,
-          markdown,
-        },
-      };
-      const res = await apiFetch<ComposeMessageResponse>('/api/mailbox/send', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        auth: true,
-      });
-      snackbar({ message: res.data.status === 'sent' ? t.compose.messageSent : t.compose.messageQueued });
-      router.push('/inbox?tab=sent');
-    } catch (error: unknown) {
-      const err = error as ApiError;
-      setSendError(getUserErrorMessage(err, t) || t.compose.sendFailed);
-    } finally {
-      setSending(false);
-    }
+    setSendError(t.compose.previewOnlyDescription);
+    snackbar({ message: t.compose.previewOnlyTitle });
   }
 
   const modeLabel = getModeLabel(mode, t);
@@ -315,7 +271,7 @@ export function ComposeClient() {
             <mdui-button
               variant="filled"
               className="fi-btn-filled"
-              {...(sending ? { loading: true } : {})}
+              disabled
               name=""
               type="button"
               onClick={sendMail}
@@ -327,6 +283,14 @@ export function ComposeClient() {
               <Icon icon="mdi:arrow-left" slot="icon" />
               {t.common.back}
             </mdui-button>
+          </div>
+        </div>
+
+        <div className="fi-compose-preview-notice flex items-start gap-3 px-4 py-3">
+          <Icon icon="mdi:alert-circle-outline" className="mt-0.5 h-5 w-5 shrink-0" />
+          <div className="min-w-0">
+            <div className="text-sm font-semibold">{t.compose.previewOnlyTitle}</div>
+            <div className="mt-0.5 text-sm opacity-75">{t.compose.previewOnlyDescription}</div>
           </div>
         </div>
 
@@ -422,7 +386,6 @@ export function ComposeClient() {
                 onChange={(html, meta) => {
                   setState((prev) => ({ ...prev, html, text: meta.markdown }));
                   setTextLength(meta.textLength);
-                  setMarkdown(meta.markdown);
                 }}
               />
             </section>

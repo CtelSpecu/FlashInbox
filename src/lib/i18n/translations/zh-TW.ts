@@ -120,6 +120,8 @@ export const zhTW = {
     rows: '列數',
     columns: '欄數',
     send: '發送',
+    previewOnlyTitle: '僅供預覽，暫不開放',
+    previewOnlyDescription: 'Cloudflare Email 發送能力需要付費啟用。目前可編輯並預覽郵件內容，實際外發暫不開放。',
     bodyTooLong: '正文超過 3000 字元',
     messageQueued: '郵件已排入佇列',
     messageSent: '郵件已發送',

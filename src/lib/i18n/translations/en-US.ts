@@ -117,6 +117,8 @@ export const enUS = {
     rows: 'Rows',
     columns: 'Columns',
     send: 'Send',
+    previewOnlyTitle: 'Preview only, not yet available',
+    previewOnlyDescription: 'Cloudflare Email sending requires a paid capability. You can compose and preview mail now, but actual outbound delivery is not open yet.',
     bodyTooLong: 'Body exceeds 3000 characters.',
     messageQueued: 'Message queued',
     messageSent: 'Message sent',

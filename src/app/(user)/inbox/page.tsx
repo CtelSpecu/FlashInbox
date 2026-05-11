@@ -105,6 +105,179 @@ function enableExternalImages(html: string): string {
   }
 }
 
+function buildWangEditorPreviewDocument(html: string): string {
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --mdui-color-primary: #6750A4;
+      --mdui-color-on-surface: #1D1B20;
+      --mdui-color-on-surface-variant: #49454F;
+      --mdui-color-outline: #79747E;
+      --mdui-color-outline-variant: #CAC4D0;
+      --mdui-color-surface: #FFFBFE;
+      --mdui-color-surface-container: #F3EDF7;
+      --mdui-color-surface-container-low: #F7F2FA;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #FFFFFF;
+      color: var(--mdui-color-on-surface);
+      font-family: Inter, Roboto, Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+    }
+    .fi-sent-html-preview {
+      min-height: 100vh;
+      padding: 12px 16px 24px;
+    }
+    .fi-sent-html-preview p,
+    .fi-sent-html-preview li {
+      margin: 0 0 0.75rem;
+    }
+    .fi-sent-html-preview a {
+      color: var(--mdui-color-primary);
+    }
+    .fi-sent-html-preview h1,
+    .fi-sent-html-preview h2,
+    .fi-sent-html-preview h3,
+    .fi-sent-html-preview h4,
+    .fi-sent-html-preview h5 {
+      margin: 0.75rem 0 0.65rem;
+      color: var(--mdui-color-on-surface);
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    .fi-sent-html-preview h1 { font-size: 1.8rem; }
+    .fi-sent-html-preview h2 { font-size: 1.45rem; }
+    .fi-sent-html-preview h3 { font-size: 1.22rem; }
+    .fi-sent-html-preview h4,
+    .fi-sent-html-preview h5 { font-size: 1.05rem; }
+    .fi-sent-html-preview code {
+      border: 1px solid color-mix(in srgb, rgb(235, 233, 244) 70%, var(--mdui-color-outline));
+      border-radius: 0.35rem;
+      background: rgb(235, 233, 244);
+      color: var(--mdui-color-on-surface);
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      padding: 0.12rem 0.35rem;
+    }
+    .fi-sent-html-preview pre > code {
+      display: block;
+      overflow-x: auto;
+      padding: 0.75rem;
+    }
+    .fi-sent-html-preview .table-container {
+      margin: 1rem 0;
+      border: 1px solid var(--mdui-color-outline) !important;
+      border-radius: 0.75rem;
+      background: var(--mdui-color-surface);
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .fi-sent-html-preview table {
+      width: 100%;
+      border-collapse: collapse !important;
+      border-spacing: 0;
+      border: 1px solid var(--mdui-color-outline) !important;
+      table-layout: fixed;
+    }
+    .fi-sent-html-preview table col {
+      border-inline-end: 1px solid var(--mdui-color-outline) !important;
+    }
+    .fi-sent-html-preview table td,
+    .fi-sent-html-preview table th {
+      min-width: 5rem;
+      border: 1px solid var(--mdui-color-outline) !important;
+      padding: 0.55rem 0.65rem;
+      vertical-align: top;
+    }
+    .fi-sent-html-preview table th,
+    .fi-sent-html-preview table td[data-is-header="true"] {
+      background: rgb(235, 233, 244);
+      font-weight: 600;
+    }
+    .fi-sent-html-preview .w-e-textarea-divider {
+      margin: 1rem 0;
+      padding: 0.75rem 0;
+    }
+    .fi-sent-html-preview .w-e-textarea-divider hr,
+    .fi-sent-html-preview hr {
+      display: block;
+      height: 1px;
+      border: 0;
+      background: var(--mdui-color-outline);
+    }
+    .fi-sent-html-preview [data-fi-compose-signature-divider] {
+      margin: 1rem 0 0.75rem;
+      height: 1px;
+      border: 0;
+      background: var(--mdui-color-outline-variant);
+    }
+    .fi-sent-html-preview .fi-compose-signature {
+      margin: 0 0 0.75rem;
+      color: #000000;
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+    .fi-sent-html-preview .fi-compose-signature a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+    .fi-link-card {
+      display: grid;
+      grid-template-columns: 88px minmax(0, 1fr);
+      width: min(640px, 100%);
+      margin: 0.75rem auto;
+      gap: 0.75rem;
+      align-items: center;
+      padding: 0.875rem;
+      border: 1px solid var(--mdui-color-outline-variant);
+      border-radius: 0.75rem;
+      background: var(--mdui-color-surface-container-low);
+      color: inherit;
+      text-decoration: none;
+      box-shadow: 0 1px 2px rgba(29, 25, 43, 0.08);
+    }
+    .fi-link-card__image {
+      width: 88px;
+      height: 88px;
+      object-fit: cover;
+      border-radius: 0.625rem;
+      background: rgb(235, 233, 244);
+    }
+    .fi-link-card__body {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .fi-link-card__body strong,
+    .fi-link-card__body span {
+      overflow-wrap: anywhere;
+    }
+    .fi-link-card__body span {
+      color: var(--mdui-color-on-surface-variant);
+      line-height: 1.45;
+    }
+    img, video {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <main class="fi-sent-html-preview">${html}</main>
+</body>
+</html>`;
+}
+
 export default function InboxPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -146,6 +319,7 @@ export default function InboxPage() {
   const [copied, setCopied] = useState(false);
   const seenMessageIdsRef = useRef<Set<string>>(new Set());
   const hasLoadedMessagesRef = useRef(false);
+  const tabParam = searchParams.get('tab') === 'sent' ? 'sent' : 'inbox';
 
   useEffect(() => {
     try {
@@ -221,11 +395,10 @@ export default function InboxPage() {
 
       setMessages(list);
       setHasMore(hasMoreNext);
-      if (list.length === 0) {
-        setSelectedId(null);
-      } else if (!selectedId || !list.some((message) => message.id === selectedId)) {
-        setSelectedId(list[0].id);
-      }
+      setSelectedId((current) => {
+        if (list.length === 0) return null;
+        return current && list.some((message) => message.id === current) ? current : list[0].id;
+      });
     } catch (e: unknown) {
       const err = e as ApiError;
       if (err.status === 401) {
@@ -276,13 +449,12 @@ export default function InboxPage() {
   }, []);
 
   useEffect(() => {
-    const tab = searchParams.get('tab');
-    const nextTab = tab === 'sent' ? 'sent' : 'inbox';
-    setMailTab(nextTab);
+    if (mailTab === tabParam) return;
+    setMailTab(tabParam);
     setSelectedId(null);
     setDetail(null);
     setPage(1);
-  }, [searchParams]);
+  }, [mailTab, tabParam]);
 
   useEffect(() => {
     loadList();
@@ -304,8 +476,9 @@ export default function InboxPage() {
 
   const htmlForDisplay = useMemo(() => {
     if (!detail?.htmlBody) return '';
-    return loadExternal ? enableExternalImages(detail.htmlBody) : detail.htmlBody;
-  }, [detail?.htmlBody, loadExternal]);
+    const html = loadExternal ? enableExternalImages(detail.htmlBody) : detail.htmlBody;
+    return mailTab === 'sent' ? buildWangEditorPreviewDocument(html) : html;
+  }, [detail?.htmlBody, loadExternal, mailTab]);
 
   async function renewKey() {
     setRenewLoading(true);

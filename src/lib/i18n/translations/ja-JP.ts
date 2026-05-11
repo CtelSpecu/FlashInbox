@@ -116,6 +116,8 @@ export const jaJP = {
     rows: '行数',
     columns: '列数',
     send: '送信',
+    previewOnlyTitle: 'プレビューのみ、現在は未公開',
+    previewOnlyDescription: 'Cloudflare Email の送信機能は有料機能が必要です。現在は作成とプレビューのみ利用でき、実際の外部送信はまだ開放していません。',
     bodyTooLong: '本文が 3000 文字を超えています。',
     messageQueued: 'メッセージをキューに追加しました',
     messageSent: 'メッセージを送信しました',

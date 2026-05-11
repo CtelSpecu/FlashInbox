@@ -116,6 +116,8 @@ export const deDE = {
     rows: 'Zeilen',
     columns: 'Spalten',
     send: 'Senden',
+    previewOnlyTitle: 'Nur Vorschau, noch nicht verfügbar',
+    previewOnlyDescription: 'Der Versand über Cloudflare Email erfordert eine kostenpflichtige Funktion. Sie können E-Mails verfassen und ansehen, aber der tatsächliche Versand ist noch nicht geöffnet.',
     bodyTooLong: 'Der Inhalt überschreitet 3000 Zeichen.',
     messageQueued: 'Nachricht in die Warteschlange gestellt',
     messageSent: 'Nachricht gesendet',

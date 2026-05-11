@@ -120,6 +120,8 @@ export const zhCN = {
     rows: '行数',
     columns: '列数',
     send: '发送',
+    previewOnlyTitle: '仅供预览，暂不开放',
+    previewOnlyDescription: 'Cloudflare Email 发送能力需要付费启用。当前可编辑并预览邮件内容，实际外发暂不开放。',
     bodyTooLong: '正文超过 3000 字符',
     messageQueued: '邮件已入队',
     messageSent: '邮件已发送',

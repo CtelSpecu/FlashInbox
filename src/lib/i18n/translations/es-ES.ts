@@ -116,6 +116,8 @@ export const esES = {
     rows: 'Filas',
     columns: 'Columnas',
     send: 'Enviar',
+    previewOnlyTitle: 'Solo vista previa, aún no disponible',
+    previewOnlyDescription: 'El envío con Cloudflare Email requiere una función de pago. Puedes redactar y previsualizar el correo, pero el envío real todavía no está abierto.',
     bodyTooLong: 'El contenido supera los 3000 caracteres.',
     messageQueued: 'Mensaje en cola',
     messageSent: 'Mensaje enviado',
