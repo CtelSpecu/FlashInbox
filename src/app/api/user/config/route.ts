@@ -8,16 +8,18 @@ import { success } from '@/lib/utils/response';
 export async function GET(request: NextRequest) {
   const env = getCloudflareEnv();
   const host = request.headers.get('host');
+  const isLocal = isLocalTurnstileHost(host);
   const turnstileSiteKey = isLocalTurnstileHost(host)
     ? TURNSTILE_LOCAL_DEV_SITE_KEY
     : env.TURNSTILE_SITE_KEY || '';
   const domains: Array<{ id: number; name: string }> = [];
+  let defaultDomain = env.DEFAULT_DOMAIN || '';
 
   if (env.DB) {
     const repo = new DomainRepository(env.DB);
     let enabledDomains = await repo.findEnabled();
 
-    if (enabledDomains.length === 0 && env.DEFAULT_DOMAIN) {
+    if (enabledDomains.length === 0 && env.DEFAULT_DOMAIN && isLocal) {
       try {
         await repo.create({ name: env.DEFAULT_DOMAIN, status: 'enabled', note: 'auto-created for local dev' });
       } catch {
@@ -26,11 +28,16 @@ export async function GET(request: NextRequest) {
       enabledDomains = await repo.findEnabled();
     }
 
-    domains.push(...enabledDomains.map((domain) => ({ id: domain.id, name: domain.name })));
+    const visibleDomains = enabledDomains.filter((domain) => domain.name);
+    if (!visibleDomains.some((domain) => domain.name === defaultDomain)) {
+      defaultDomain = visibleDomains[0]?.name || defaultDomain;
+    }
+
+    domains.push(...visibleDomains.map((domain) => ({ id: domain.id, name: domain.name })));
   }
 
   return success({
-    defaultDomain: env.DEFAULT_DOMAIN,
+    defaultDomain,
     domains,
     turnstileSiteKey,
     umami: env.UMAMI_SCRIPT_URL && env.UMAMI_WEBSITE_ID

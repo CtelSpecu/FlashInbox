@@ -1,10 +1,12 @@
 import { NextRequest } from 'next/server';
 import { getCloudflareEnv, getAppConfig } from '@/lib/env';
 import { createRepositories } from '@/lib/db';
+import type { CreateAuditLogInput } from '@/lib/db/audit-log-repo';
 import { DomainRepository } from '@/lib/db/domain-repo';
 import { createMailboxService } from '@/lib/services/mailbox';
 import { createRateLimitService } from '@/lib/services/rate-limit';
 import { createTurnstileService } from '@/lib/services/turnstile';
+import { isLocalTurnstileHost } from '@/lib/turnstile/local-dev';
 import { hashKey } from '@/lib/utils/crypto';
 import { success, error, ErrorCodes, parseJsonBody, rateLimited } from '@/lib/utils/response';
 
@@ -16,72 +18,88 @@ interface CreateMailboxRequest {
 }
 
 export async function POST(request: NextRequest) {
-  const env = getCloudflareEnv();
-  const config = getAppConfig();
-  const repos = createRepositories(env.DB);
-
-  // 限流检查
-  const rateLimitService = createRateLimitService(env.DB);
-  const rateLimitResult = await rateLimitService.check(request, {
-    action: 'create',
-    config: config.rateLimit.create,
-  });
-
-  if (!rateLimitResult.allowed) {
-    await repos.auditLogs.create({
-      action: 'user.create',
-      actorType: 'user',
-      success: false,
-      errorCode: ErrorCodes.RATE_LIMITED,
-      ipAddress: request.headers.get('cf-connecting-ip') || undefined,
-      asn: request.headers.get('cf-ipcountry') || undefined,
-      userAgent: request.headers.get('user-agent') || undefined,
-    });
-    return rateLimited(rateLimitResult.retryAfter!);
-  }
-
-  // 解析请求
-  const body = await parseJsonBody<CreateMailboxRequest>(request);
-  const mode = body?.mode || 'random';
-
-  if (!body?.turnstileToken) {
-    return error(ErrorCodes.INVALID_REQUEST, 'Turnstile token is required', 400);
-  }
-
-  // 获取请求信息
+  let env: CloudflareEnv;
+  let config: ReturnType<typeof getAppConfig>;
+  let repos: ReturnType<typeof createRepositories> | undefined;
   const ipAddress = request.headers.get('cf-connecting-ip') || undefined;
   const asn = request.headers.get('cf-ipcountry') || undefined;
   const userAgent = request.headers.get('user-agent') || undefined;
+  const host = request.headers.get('host') || undefined;
 
-  // Turnstile 验证
-  const turnstileService = createTurnstileService(env.TURNSTILE_SECRET_KEY);
-  const turnstileResult = await turnstileService.verify(
-    body.turnstileToken,
-    ipAddress,
-    request.headers.get('host') || undefined
-  );
-
-  if (!turnstileResult.success) {
-    await repos.auditLogs.create({
-      action: 'user.create',
-      actorType: 'user',
-      success: false,
-      errorCode: ErrorCodes.TURNSTILE_FAILED,
-      ipAddress,
-      asn,
-      userAgent,
-    });
-    return error(ErrorCodes.TURNSTILE_FAILED, 'Turnstile verification failed', 400);
+  async function writeAuditLog(input: CreateAuditLogInput) {
+    if (!repos) return;
+    try {
+      await repos.auditLogs.create(input);
+    } catch (auditError) {
+      console.error('Create mailbox audit log error:', auditError);
+    }
   }
 
   try {
+    env = getCloudflareEnv();
+    config = getAppConfig();
+    repos = createRepositories(env.DB);
+
+    // 限流检查
+    const rateLimitService = createRateLimitService(env.DB);
+    const rateLimitResult = await rateLimitService.check(request, {
+      action: 'create',
+      config: config.rateLimit.create,
+    });
+
+    if (!rateLimitResult.allowed) {
+      await writeAuditLog({
+        action: 'user.create',
+        actorType: 'user',
+        success: false,
+        errorCode: ErrorCodes.RATE_LIMITED,
+        ipAddress,
+        asn,
+        userAgent,
+      });
+      return rateLimited(rateLimitResult.retryAfter!);
+    }
+
+    // 解析请求
+    const body = await parseJsonBody<CreateMailboxRequest>(request);
+    const mode = body?.mode || 'random';
+
+    if (!body?.turnstileToken) {
+      return error(ErrorCodes.INVALID_REQUEST, 'Turnstile token is required', 400);
+    }
+
+    // Turnstile 验证
+    const turnstileService = createTurnstileService(env.TURNSTILE_SECRET_KEY);
+    const turnstileResult = await turnstileService.verify(
+      body.turnstileToken,
+      ipAddress,
+      host
+    );
+
+    if (!turnstileResult.success) {
+      await writeAuditLog({
+        action: 'user.create',
+        actorType: 'user',
+        success: false,
+        errorCode: ErrorCodes.TURNSTILE_FAILED,
+        ipAddress,
+        asn,
+        userAgent,
+      });
+      return error(ErrorCodes.TURNSTILE_FAILED, 'Turnstile verification failed', 400);
+    }
+
     // DX: ensure default domain exists when client doesn't specify domainId
-    if (!body?.domainId) {
+    if (!body?.domainId && config.defaultDomain && isLocalTurnstileHost(host)) {
       const domainRepo = new DomainRepository(env.DB);
       const existing = await domainRepo.findByName(config.defaultDomain);
       if (!existing) {
         try {
-          await domainRepo.create({ name: config.defaultDomain, status: 'enabled', note: 'auto-created for local dev' });
+          await domainRepo.create({
+            name: config.defaultDomain,
+            status: 'enabled',
+            note: 'auto-created for local dev',
+          });
         } catch {
           // ignore
         }
@@ -111,7 +129,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 返回创建结果
-    await repos.auditLogs.create({
+    await writeAuditLog({
       action: 'user.create',
       actorType: 'user',
       actorId: result.mailbox.id,
@@ -167,7 +185,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.error('Create mailbox error:', err);
-    await repos.auditLogs.create({
+    await writeAuditLog({
       action: 'user.create',
       actorType: 'user',
       success: false,

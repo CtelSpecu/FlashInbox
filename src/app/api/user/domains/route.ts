@@ -1,15 +1,17 @@
 import { NextRequest } from 'next/server';
 import { getCloudflareEnv } from '@/lib/env';
 import { DomainRepository } from '@/lib/db/domain-repo';
+import { isLocalTurnstileHost } from '@/lib/turnstile/local-dev';
 import { success } from '@/lib/utils/response';
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   const env = getCloudflareEnv();
+  const host = request.headers.get('host');
   const repo = new DomainRepository(env.DB);
   let domains = await repo.findEnabled();
 
   // DX: if no domain exists locally, ensure the DEFAULT_DOMAIN is present so user flows work.
-  if (domains.length === 0 && env.DEFAULT_DOMAIN) {
+  if (domains.length === 0 && env.DEFAULT_DOMAIN && isLocalTurnstileHost(host)) {
     try {
       await repo.create({ name: env.DEFAULT_DOMAIN, status: 'enabled', note: 'auto-created for local dev' });
     } catch {
@@ -19,11 +21,11 @@ export async function GET(_request: NextRequest) {
   }
 
   return success({
-    domains: domains.map((d) => ({
-      id: d.id,
-      name: d.name,
-    })),
+    domains: domains
+      .filter((d) => d.name)
+      .map((d) => ({
+        id: d.id,
+        name: d.name,
+      })),
   });
 }
-
-
