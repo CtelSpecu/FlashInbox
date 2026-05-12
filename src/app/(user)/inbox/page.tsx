@@ -17,7 +17,13 @@ import type { ThemeMode } from '@/lib/theme/types';
 interface MailboxInfoResponse {
   success: true;
   data: {
-    mailbox: { email: string; keyExpiresAt: number | null };
+    mailbox: {
+      email: string;
+      keyExpiresAt: number | null;
+      canSend?: boolean;
+      domainCanSend?: boolean;
+      effectiveCanSend?: boolean;
+    };
     stats: { unreadCount: number };
   };
 }
@@ -297,6 +303,8 @@ export default function InboxPage() {
   const [email, setEmail] = useState<string>('');
   const [unreadCount, setUnreadCount] = useState(0);
   const [keyExpiresAt, setKeyExpiresAt] = useState<number | null>(null);
+  const [canSendMail, setCanSendMail] = useState(false);
+  const [mailboxLoaded, setMailboxLoaded] = useState(false);
 
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
@@ -368,6 +376,11 @@ export default function InboxPage() {
     setEmail(res.data.mailbox.email);
     setUnreadCount(res.data.stats.unreadCount);
     setKeyExpiresAt(res.data.mailbox.keyExpiresAt);
+    setCanSendMail(
+      res.data.mailbox.effectiveCanSend ??
+        Boolean(res.data.mailbox.canSend && res.data.mailbox.domainCanSend)
+    );
+    setMailboxLoaded(true);
   }
 
   async function loadList() {
@@ -457,9 +470,10 @@ export default function InboxPage() {
   }, [mailTab, tabParam]);
 
   useEffect(() => {
+    if (!mailboxLoaded) return;
     loadList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queryString, mailTab]);
+  }, [queryString, mailTab, mailboxLoaded]);
 
   // reset to first page when filters change
   useEffect(() => {
@@ -609,15 +623,17 @@ export default function InboxPage() {
 
           <div className="flex flex-wrap items-center gap-2">
             {renewNotice && <span className="text-xs opacity-70 animate-in fade-in slide-in-from-right-2">{renewNotice}</span>}
-            <mdui-button
-              variant="filled"
-              className="fi-btn-filled"
-              data-sound="notice"
-              onClick={() => router.push('/compose')}
-            >
-              <Icon icon="mdi:pencil" slot="icon" />
-              {t.compose.title}
-            </mdui-button>
+            {canSendMail ? (
+              <mdui-button
+                variant="filled"
+                className="fi-btn-filled"
+                data-sound="notice"
+                onClick={() => router.push('/compose')}
+              >
+                <Icon icon="mdi:pencil" slot="icon" />
+                {t.compose.title}
+              </mdui-button>
+            ) : null}
             <mdui-button
               variant="tonal"
               className="fi-btn-tonal"
@@ -840,7 +856,7 @@ export default function InboxPage() {
                 </button>
               </div>
 
-              {detail && mailTab === 'inbox' ? (
+              {detail && mailTab === 'inbox' && canSendMail ? (
                 <>
                   <mdui-button
                     variant="tonal"

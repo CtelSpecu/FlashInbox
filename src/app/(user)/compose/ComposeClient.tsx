@@ -34,6 +34,7 @@ interface MailboxInfoResponse {
       domainName: string;
       email: string;
       status: string;
+      effectiveCanSend?: boolean;
       creationType: string;
       keyExpiresAt: number | null;
     };
@@ -106,6 +107,7 @@ export function ComposeClient() {
   const [textLength, setTextLength] = useState(0);
   const [sendError, setSendError] = useState<string | null>(null);
   const [preset, setPreset] = useState<ComposePreset | null>(null);
+  const [composeAuthorized, setComposeAuthorized] = useState(false);
   const [sideCardsHeight, setSideCardsHeight] = useState<number | null>(null);
   const recipientsPanelRef = useRef<HTMLElement | null>(null);
   const inspectorPanelRef = useRef<HTMLElement | null>(null);
@@ -162,8 +164,13 @@ export function ComposeClient() {
     apiFetch<MailboxInfoResponse>('/api/mailbox/info', { auth: true })
       .then((mailbox) => {
         if (!active) return;
+        if (mailbox.data.mailbox.effectiveCanSend === false) {
+          router.replace('/inbox');
+          return;
+        }
         setMailboxEmail(mailbox.data.mailbox.email);
         setMailboxDomain(mailbox.data.mailbox.domainName);
+        setComposeAuthorized(true);
       })
       .catch((error: unknown) => {
         if (!active) return;
@@ -185,6 +192,7 @@ export function ComposeClient() {
 
     let active = true;
     async function loadPreset() {
+      if (!composeAuthorized) return;
       setPresetLoading(true);
       try {
         if (replyTo || replyAllTo || forward) {
@@ -235,7 +243,7 @@ export function ComposeClient() {
     return () => {
       active = false;
     };
-  }, [initialHtml, router, searchParams, t]);
+  }, [composeAuthorized, initialHtml, router, searchParams, t]);
 
   function updateField(field: AddressField, value: string) {
     const next = splitValues(value);

@@ -8,6 +8,13 @@ export interface ApiError extends Error {
   retryAfter?: number;
 }
 
+function createApiError(message: string, status: number, code?: string): ApiError {
+  const err: ApiError = new Error(message);
+  err.status = status;
+  err.code = code;
+  return err;
+}
+
 async function parseError(response: Response): Promise<ApiError> {
   const err: ApiError = new Error('Request failed');
   err.status = response.status;
@@ -42,9 +49,10 @@ export async function apiFetch<T>(
 
   if (auth) {
     const token = getSessionToken();
-    if (token) {
-      headers.set('Authorization', `Bearer ${token}`);
+    if (!token) {
+      throw createApiError('Session token is missing', 401, 'SESSION_EXPIRED');
     }
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
   const res = await fetch(input, { ...init, headers });
@@ -53,4 +61,3 @@ export async function apiFetch<T>(
   }
   return (await res.json()) as T;
 }
-

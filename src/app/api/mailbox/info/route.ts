@@ -27,6 +27,13 @@ async function mailboxInfoHandler(
       domainName: domain?.name || '',
       email: `${context.mailbox.username}@${domain?.name || ''}`,
       status: context.mailbox.status,
+      canReceive: context.mailbox.canReceive,
+      canSend: context.mailbox.canSend,
+      domainCanReceive: domain?.canReceive ?? false,
+      domainCanSend: domain?.canSend ?? false,
+      effectiveCanSend: Boolean(
+        domain?.canSend && context.mailbox.canSend && context.mailbox.status === 'claimed'
+      ),
       creationType: context.mailbox.creationType,
       createdAt: context.mailbox.createdAt,
       claimedAt: context.mailbox.claimedAt,
@@ -39,4 +46,3 @@ async function mailboxInfoHandler(
 }
 
 export const GET = withAuth(mailboxInfoHandler);
-
